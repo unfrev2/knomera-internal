@@ -108,6 +108,13 @@ CREATE TABLE IF NOT EXISTS assumption_history (
   changed_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Tracks applied files from supabase/migrations/ (existing DBs use npm run db:migrate).
+CREATE TABLE IF NOT EXISTS schema_migrations (
+  version TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- ---------------------------------------------------------------------------
 -- Indexes
 -- ---------------------------------------------------------------------------
@@ -203,6 +210,7 @@ REVOKE ALL ON TABLE workspaces FROM anon, authenticated;
 REVOKE ALL ON TABLE assumptions FROM anon, authenticated;
 REVOKE ALL ON TABLE evidence FROM anon, authenticated;
 REVOKE ALL ON TABLE assumption_history FROM anon, authenticated;
+REVOKE ALL ON TABLE schema_migrations FROM anon, authenticated;
 
 REVOKE ALL ON SCHEMA public FROM anon, authenticated;
 GRANT USAGE ON SCHEMA public TO postgres, service_role;
@@ -211,6 +219,7 @@ ALTER TABLE workspaces ENABLE ROW LEVEL SECURITY;
 ALTER TABLE assumptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE evidence ENABLE ROW LEVEL SECURITY;
 ALTER TABLE assumption_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE schema_migrations ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS deny_all_workspaces ON workspaces;
 CREATE POLICY deny_all_workspaces ON workspaces FOR ALL TO anon, authenticated USING (false);
@@ -223,3 +232,6 @@ CREATE POLICY deny_all_evidence ON evidence FOR ALL TO anon, authenticated USING
 
 DROP POLICY IF EXISTS deny_all_assumption_history ON assumption_history;
 CREATE POLICY deny_all_assumption_history ON assumption_history FOR ALL TO anon, authenticated USING (false);
+
+DROP POLICY IF EXISTS deny_all_schema_migrations ON schema_migrations;
+CREATE POLICY deny_all_schema_migrations ON schema_migrations FOR ALL TO anon, authenticated USING (false);

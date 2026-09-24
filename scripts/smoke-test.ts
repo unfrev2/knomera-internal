@@ -6,6 +6,7 @@ import { listAssumptionHistory } from "../src/lib/db/history";
 import { getWorkspaceBySlug } from "../src/lib/db/workspaces";
 import { rankAssumptionsForValidation } from "../src/lib/domain/priority";
 import { listEvidenceByAssumptionIds } from "../src/lib/db/evidence";
+import { searchWorkspaceObjects } from "../src/lib/db/search";
 import { getDb } from "../src/lib/db/client";
 import { createSessionToken, readSessionToken } from "../src/lib/auth/session";
 
@@ -48,6 +49,46 @@ async function main() {
   await assert(assumptions.length === 112, `112 assumptions present (got ${assumptions.length})`);
   const categories = new Set(assumptions.map((a) => a.category));
   await assert(categories.size === 11, "11 categories present");
+
+  console.log("Stage 1 migration tracking");
+  const sql = getDb();
+  const migrationTable = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = 'schema_migrations'
+    ) AS exists
+  `;
+  await assert(migrationTable[0]?.exists === true, "schema_migrations table exists");
+  const migrations = await sql<{ version: string; name: string }[]>`
+    SELECT version, name FROM schema_migrations ORDER BY version
+  `;
+  await assert(
+    migrations.some((row) => row.version === "20250924163500"),
+    "Stage 1 foundation migration recorded",
+  );
+
+  const preserved = await sql<{ assumptions: number; evidence: number }[]>`
+    SELECT
+      (SELECT COUNT(*)::int FROM assumptions WHERE workspace_id = ${workspace.id}) AS assumptions,
+      (SELECT COUNT(*)::int FROM evidence WHERE workspace_id = ${workspace.id}) AS evidence
+  `;
+  await assert(preserved[0]?.assumptions === 112, "Assumptions count preserved after migrate");
+  await assert(
+    typeof preserved[0]?.evidence === "number",
+    `Evidence rows preserved (count=${preserved[0]?.evidence})`,
+  );
+
+  console.log("Workspace object search");
+  const searchHits = await searchWorkspaceObjects(workspace.id, {
+    query: "experiment",
+    types: ["assumption"],
+    limit: 5,
+  });
+  await assert(searchHits.length > 0, "Assumption search returns matches");
+  await assert(
+    searchHits.every((hit) => hit.type === "assumption" && hit.href.startsWith("/assumptions/")),
+    "Search results are typed assumptions with hrefs",
+  );
 
   console.log("Priority ranking");
   const evidence = await listEvidenceByAssumptionIds(
@@ -133,7 +174,6 @@ async function main() {
   await assert(after?.confidence === "medium", "Confidence unchanged by evidence add");
 
   // Cleanup smoke data
-  const sql = getDb();
   await sql`DELETE FROM assumptions WHERE id = ${created.id}`;
   console.log("  ✓ Cleaned up smoke-test assumption");
 

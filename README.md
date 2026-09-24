@@ -1,8 +1,24 @@
-# Knomera Internal — Assumption Log
+# Knomera Internal
 
-Internal web application for Knomera founders to manage product assumptions and evidence.
+Internal operating system for Knomera founders: structured memory for what the company believes, learns, decides and chooses to pursue.
 
-> What does Knomera currently believe, why do we believe it, and what should we test next?
+> Strategy → Problems → Assumptions → Evidence → Decisions → Bets → Outcomes
+
+Today the live product remains the **Assumption Log** (assumptions, evidence, confidence, validation priority). Stage 1 prepares non-destructive expansion; later stages add Strategy, Problems, Discovery, Decisions, Ideas, Bets, Commercial and Focus without replacing existing data.
+
+## Domain model (target)
+
+```text
+Strategy → Problems → Assumptions → Evidence → Decisions → Bets → Outcomes
+                ↑           ↑
+             Ideas    Discovery / Commercial (generate evidence)
+```
+
+- **Discovery** and **Commercial** activity generate evidence against assumptions.
+- **Ideas** address problems; **Bets** address problems and may depend on / test assumptions.
+- **Decisions** preserve the evidence and assumptions known at the time.
+
+This is not Jira, Notion, Miro or a CRM — it is the company decision and learning system.
 
 ## Stack
 
@@ -73,30 +89,35 @@ Restart the dev server after changing `.env.local` — environment variables are
 
 ### 4. Initialise the database
 
+**Fresh install**
+
 ```bash
 npm run db:setup
 ```
 
-This applies `supabase/schema.sql`, upserts the Knomera workspace, seeds all 112 assumptions from structured data, regenerates `supabase/seed.sql`, and verifies:
+This applies `supabase/schema.sql`, runs pending files in `supabase/migrations/`, upserts the Knomera workspace, seeds all 112 assumptions from structured data, regenerates `supabase/seed.sql`, and verifies the seed.
 
-- exactly 112 assumptions
-- all 11 categories present
-- importance, confidence, status and next action populated
-- no evidence rows
-- owners and target dates null
-- `created_by = jon`
+**Existing Knomera database (production / already seeded)**
 
-You can also run the steps separately:
+```bash
+npm run db:migrate
+```
+
+Migrations are additive. They must not drop tables, truncate data, or re-seed over founder edits. See `docs/stage-1-audit.md` and `supabase/migrations/README.md`.
+
+You can also run steps separately:
 
 ```bash
 npm run db:schema
+npm run db:migrate
 npm run db:seed
 ```
 
-Or apply the SQL manually in the Supabase SQL editor:
+Or apply SQL manually in the Supabase SQL editor:
 
-1. Run `supabase/schema.sql`
-2. Run `supabase/seed.sql`
+1. Run `supabase/schema.sql` (fresh only)
+2. Run pending files from `supabase/migrations/` in filename order
+3. Run `supabase/seed.sql` only for a brand-new empty database
 
 ### 5. Start the app
 
@@ -118,6 +139,14 @@ Users:
 Both map server-side to the `knomera` workspace.
 
 Sessions are independent of Supabase Auth so the product can later move to Supabase Auth or Google Workspace SSO without rewriting domain logic.
+
+## Architecture notes (Stage 1)
+
+- Workspace-scoped queries via `workspace_id` (single Knomera workspace in use; no switcher).
+- Reusable linking UI: `LinkedObjectList`, `ObjectPicker` (`src/components/links/`).
+- Workspace search: `searchWorkspaceObjects` (assumptions + evidence today; more types in later stages).
+- Migration ledger: `schema_migrations`.
+- Audit snapshot: `docs/stage-1-audit.md`.
 
 ## Cloudflare deployment
 
@@ -312,16 +341,18 @@ Do not hard-code the hostname in the app.
 | `npm run build` | Production Next.js build (used by OpenNext) |
 | `npm run build:worker` | OpenNext Cloudflare Worker build (use this in CI) |
 | `npm run lint` | ESLint |
-| `npm run db:schema` | Apply schema |
-| `npm run db:seed` | Seed + verify |
-| `npm run db:setup` | Schema + seed |
+| `npm run db:schema` | Apply full `schema.sql` (fresh / idempotent) |
+| `npm run db:migrate` | Apply pending `supabase/migrations/*` |
+| `npm run db:seed` | Seed + verify (bootstrap only — do not overwrite production edits) |
+| `npm run db:setup` | Schema + migrate + seed |
+| `npm run smoke` | Auth, workspace, CRUD, history, migration checks |
 | `npm run hash-password` | Generate bcrypt hash |
 | `npm run deploy` | Build and deploy to Cloudflare |
 | `npm run preview` | Build and preview on Cloudflare runtime locally |
 
 ## Product notes
 
-Central objects are **assumptions** and **evidence**.
+Central objects today are **assumptions** and **evidence**.
 
 - Founder confidence is never auto-updated when evidence is added.
 - “Evidence suggests” is a deterministic decision aid only.
