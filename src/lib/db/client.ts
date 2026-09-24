@@ -38,10 +38,13 @@ export function getDatabaseUrl(): string {
   );
 }
 
+type HyperdriveBinding = { connectionString: string };
+
 function resolveConnection(): { url: string; viaHyperdrive: boolean } {
   try {
     const { env } = getCloudflareContext();
-    const hyperdrive = env.HYPERDRIVE;
+    // Cast: OpenNext's CloudflareEnv may not include HYPERDRIVE until cf-typegen runs.
+    const hyperdrive = (env as { HYPERDRIVE?: HyperdriveBinding }).HYPERDRIVE;
     if (hyperdrive?.connectionString) {
       return { url: hyperdrive.connectionString, viaHyperdrive: true };
     }
