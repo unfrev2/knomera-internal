@@ -64,12 +64,19 @@ export function DiscoveryListClient({
                   </td>
                   <td className="px-4 py-3">
                     <Link
-                      href={`/discovery/${session.id}`}
+                      href={`/organisations/${session.organisation_id}`}
                       className="font-medium text-navy hover:underline"
                     >
                       {session.organisation_name ?? "Organisation"}
                     </Link>
-                    <p className="mt-0.5 text-xs text-muted">{session.title}</p>
+                    <p className="mt-0.5 text-xs text-muted">
+                      <Link
+                        href={`/discovery/${session.id}`}
+                        className="hover:underline"
+                      >
+                        {session.title}
+                      </Link>
+                    </p>
                   </td>
                   <td className="px-4 py-3 text-navy/80">
                     {session.contact_name ?? "—"}

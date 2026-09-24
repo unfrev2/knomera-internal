@@ -103,34 +103,17 @@ export async function searchWorkspaceObjects(
   }
 
   if (types.includes("organisation")) {
-    const rows = await sql<
-      {
-        id: string;
-        name: string;
-        organisation_type: string;
-        latest_session_id: string | null;
-      }[]
-    >`
-      SELECT
-        o.id,
-        o.name,
-        o.organisation_type::text,
-        (
-          SELECT s.id
-          FROM discovery_sessions s
-          WHERE s.organisation_id = o.id
-          ORDER BY s.session_date DESC NULLS LAST, s.created_at DESC
-          LIMIT 1
-        ) AS latest_session_id
-      FROM organisations o
-      WHERE o.workspace_id = ${workspaceId}
+    const rows = await sql<{ id: string; name: string; organisation_type: string }[]>`
+      SELECT id, name, organisation_type::text
+      FROM organisations
+      WHERE workspace_id = ${workspaceId}
         AND (
           ${query} = ''
-          OR o.name ILIKE ${pattern}
-          OR COALESCE(o.website, '') ILIKE ${pattern}
+          OR name ILIKE ${pattern}
+          OR COALESCE(website, '') ILIKE ${pattern}
         )
-        ${exclude.length > 0 ? sql`AND o.id NOT IN ${sql(exclude)}` : sql``}
-      ORDER BY o.name ASC
+        ${exclude.length > 0 ? sql`AND id NOT IN ${sql(exclude)}` : sql``}
+      ORDER BY name ASC
       LIMIT ${limit}
     `;
 
@@ -140,9 +123,7 @@ export async function searchWorkspaceObjects(
         id: row.id,
         title: row.name,
         subtitle: row.organisation_type,
-        href: row.latest_session_id
-          ? hrefForLinkable("discovery_session", row.latest_session_id)
-          : hrefForLinkable("organisation", row.id),
+        href: hrefForLinkable("organisation", row.id),
       });
     }
   }
@@ -152,23 +133,17 @@ export async function searchWorkspaceObjects(
       {
         id: string;
         name: string;
+        organisation_id: string;
         organisation_name: string;
         role: string | null;
-        latest_session_id: string | null;
       }[]
     >`
       SELECT
         c.id,
         c.name,
+        c.organisation_id,
         o.name AS organisation_name,
-        c.role,
-        (
-          SELECT s.id
-          FROM discovery_sessions s
-          WHERE s.contact_id = c.id
-          ORDER BY s.session_date DESC NULLS LAST, s.created_at DESC
-          LIMIT 1
-        ) AS latest_session_id
+        c.role
       FROM contacts c
       INNER JOIN organisations o ON o.id = c.organisation_id
       WHERE c.workspace_id = ${workspaceId}
@@ -191,9 +166,7 @@ export async function searchWorkspaceObjects(
         title: row.name,
         subtitle: row.organisation_name,
         meta: row.role,
-        href: row.latest_session_id
-          ? hrefForLinkable("discovery_session", row.latest_session_id)
-          : hrefForLinkable("contact", row.id),
+        href: `${hrefForLinkable("organisation", row.organisation_id)}#contacts`,
       });
     }
   }

@@ -135,7 +135,16 @@ export function OpportunitiesTable({
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-navy/80">
-                    {opportunity.organisation_name ?? "—"}
+                    {opportunity.organisation_name ? (
+                      <Link
+                        href={`/organisations/${opportunity.organisation_id}`}
+                        className="hover:underline"
+                      >
+                        {opportunity.organisation_name}
+                      </Link>
+                    ) : (
+                      "—"
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <Badge

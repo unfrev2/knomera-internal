@@ -457,6 +457,19 @@ async function main() {
   );
   await deleteFocusItem(workspace.id, focus.id);
 
+  console.log("Organisation history");
+  const { getOrganisationDetail } = await import("../src/lib/db/organisations");
+  const orgDetail = await getOrganisationDetail(workspace.id, orgRows[0].id);
+  await assert(orgDetail !== null, "Organisation detail loads");
+  await assert(
+    orgDetail!.sessions.some((s) => s.id === sessionRows[0].id),
+    "Organisation detail lists discovery sessions",
+  );
+  await assert(
+    orgDetail!.opportunities.some((o) => o.id === opportunity.id),
+    "Organisation detail lists opportunities",
+  );
+
   const timeline = await listEvidenceForAssumption(workspace.id, created.id);
   await assert(timeline.length === 5, "Evidence timeline has all five items");
 

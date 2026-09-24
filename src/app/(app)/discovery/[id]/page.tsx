@@ -89,7 +89,12 @@ export default async function DiscoveryDetailPage({
           <div>
             <dt className="text-muted">Organisation</dt>
             <dd className="font-medium text-navy">
-              {session.organisation_name}
+              <Link
+                href={`/organisations/${session.organisation_id}`}
+                className="hover:underline"
+              >
+                {session.organisation_name}
+              </Link>
             </dd>
           </div>
           <div>

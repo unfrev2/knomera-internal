@@ -74,10 +74,9 @@ export function hrefForLinkable(
     case "idea":
       return `/ideas/${id}`;
     case "organisation":
-      // No org detail page yet — Discovery is where organisations surface.
-      return `/discovery`;
+      return `/organisations/${id}`;
     case "contact":
-      // Contacts live on discovery sessions; prefer session href from search when known.
+      // Prefer search/caller to use organisation href + #contacts.
       return `/discovery`;
     case "discovery_session":
       return `/discovery/${id}`;

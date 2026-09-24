@@ -64,7 +64,12 @@ export default async function OpportunityDetailPage({
             </h1>
             {opportunity.organisation_name ? (
               <p className="text-sm text-muted">
-                {opportunity.organisation_name}
+                <Link
+                  href={`/organisations/${opportunity.organisation_id}`}
+                  className="hover:underline"
+                >
+                  {opportunity.organisation_name}
+                </Link>
               </p>
             ) : null}
           </div>

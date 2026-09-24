@@ -370,6 +370,8 @@ Central objects today are **strategy**, **problems**, **assumptions**, **evidenc
 
 **Home** answers four questions from live data: what needs attention, what we’re learning, what we’re doing, and whether we’re getting closer to a business. Recent activity is secondary. Global search (shell) is plain text, grouped by type — not semantic.
 
+**Organisation** detail (`/organisations/[id]`) is compact customer history (contacts, discovery, problems discussed, evidence provenance, opportunities) — not a CRM.
+
 - Ideas are cheap; bets represent commitment. Do not conflate them.
 - Bet outcomes do not auto-update linked assumptions. Evidence is created only when founders interpret an outcome as such.
 - Commercial opportunities reuse organisations from Discovery. Stage changes (won/lost) are not evidence until interpreted.
