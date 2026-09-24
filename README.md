@@ -289,6 +289,7 @@ Do not hard-code the hostname in the app.
 | --- | --- |
 | Login always fails | Wrong / stale password hashes; regenerate and `wrangler secret put` again |
 | “Database unavailable” / TLS `internal_tls_wrap` / 500 on `/` | Worker is dialing Supabase directly — create Hyperdrive, set `wrangler.jsonc` `hyperdrive[0].id`, redeploy |
+| Deploy fails: no local Hyperdrive connection string | OpenNext deploy calls Wrangler’s local proxy — ensure `hyperdrive.localConnectionString` is set in `wrangler.jsonc` (placeholder is fine for CI) |
 | Env works locally but not on CF | Secrets not set on the Worker, or set on the wrong Worker name |
 | Cookie / auth oddities | `SESSION_SECRET` changed after users already had cookies — sign out / clear cookies |
 | Could not find compiled Open Next config | CI Build command is still `npm run build` — change it to `npm run build:worker` |

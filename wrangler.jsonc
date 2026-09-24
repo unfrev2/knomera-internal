@@ -19,7 +19,11 @@
 	"hyperdrive": [
 		{
 			"binding": "HYPERDRIVE",
-			"id": "2cd971811ce64e15aaa631e45ff2f009"
+			"id": "2cd971811ce64e15aaa631e45ff2f009",
+			// Placeholder for Wrangler/OpenNext getPlatformProxy during CI deploy.
+			// Production uses the Hyperdrive id above. Override locally with:
+			// CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE=$DATABASE_URL
+			"localConnectionString": "postgresql://postgres:postgres@127.0.0.1:5432/postgres"
 		}
 	]
 }
