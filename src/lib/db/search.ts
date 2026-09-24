@@ -25,7 +25,7 @@ export async function searchWorkspaceObjects(
   const limit = Math.min(Math.max(options.limit ?? 20, 1), 50);
   const types = options.types?.length
     ? options.types
-    : (["assumption", "evidence"] as SearchableObjectType[]);
+    : (["assumption", "evidence", "problem"] as SearchableObjectType[]);
   const exclude = options.excludeIds ?? [];
   const pattern = query ? `%${query}%` : "%";
 
@@ -57,6 +57,36 @@ export async function searchWorkspaceObjects(
         subtitle: row.category,
         meta: row.confidence,
         href: hrefForLinkable("assumption", row.id),
+      });
+    }
+  }
+
+  if (types.includes("problem")) {
+    const rows = await sql<
+      { id: string; title: string; status: string; severity: string }[]
+    >`
+      SELECT id, title, status::text, severity::text
+      FROM problems
+      WHERE workspace_id = ${workspaceId}
+        AND (
+          ${query} = ''
+          OR title ILIKE ${pattern}
+          OR COALESCE(description, '') ILIKE ${pattern}
+          OR COALESCE(target_customer, '') ILIKE ${pattern}
+        )
+        ${exclude.length > 0 ? sql`AND id NOT IN ${sql(exclude)}` : sql``}
+      ORDER BY title ASC
+      LIMIT ${limit}
+    `;
+
+    for (const row of rows) {
+      results.push({
+        type: "problem",
+        id: row.id,
+        title: row.title,
+        subtitle: row.status,
+        meta: row.severity,
+        href: hrefForLinkable("problem", row.id),
       });
     }
   }

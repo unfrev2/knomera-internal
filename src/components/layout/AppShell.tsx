@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  CircleHelp,
+  Compass,
   FileSearch,
   LayoutDashboard,
   ListChecks,
@@ -26,6 +28,18 @@ const NAV_ITEMS: NavItem[] = [
     label: "Overview",
     icon: LayoutDashboard,
     match: (path) => path === "/" || path.startsWith("/overview"),
+  },
+  {
+    href: "/strategy",
+    label: "Strategy",
+    icon: Compass,
+    match: (path) => path.startsWith("/strategy"),
+  },
+  {
+    href: "/problems",
+    label: "Problems",
+    icon: CircleHelp,
+    match: (path) => path.startsWith("/problems"),
   },
   {
     href: "/assumptions",

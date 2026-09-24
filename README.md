@@ -101,9 +101,12 @@ This applies `supabase/schema.sql`, runs pending files in `supabase/migrations/`
 
 ```bash
 npm run db:migrate
+npm run db:seed:stage2
 ```
 
 Migrations are additive. They must not drop tables, truncate data, or re-seed over founder edits. See `docs/stage-1-audit.md` and `supabase/migrations/README.md`.
+
+`db:seed:stage2` upserts strategy statements and problems by `seed_key` and links them to existing assumptions. It does **not** modify assumption rows.
 
 You can also run steps separately:
 
@@ -140,13 +143,14 @@ Both map server-side to the `knomera` workspace.
 
 Sessions are independent of Supabase Auth so the product can later move to Supabase Auth or Google Workspace SSO without rewriting domain logic.
 
-## Architecture notes (Stage 1)
+## Architecture notes (Stage 1–2)
 
 - Workspace-scoped queries via `workspace_id` (single Knomera workspace in use; no switcher).
 - Reusable linking UI: `LinkedObjectList`, `ObjectPicker` (`src/components/links/`).
-- Workspace search: `searchWorkspaceObjects` (assumptions + evidence today; more types in later stages).
+- Workspace search: `searchWorkspaceObjects` (assumptions, evidence, problems).
 - Migration ledger: `schema_migrations`.
 - Audit snapshot: `docs/stage-1-audit.md`.
+- **Strategy** (`strategy_items`) and **Problems** (`problems` + `problem_assumptions`) orient assumptions around customer problems without duplicating evidence.
 
 ## Cloudflare deployment
 
@@ -343,8 +347,9 @@ Do not hard-code the hostname in the app.
 | `npm run lint` | ESLint |
 | `npm run db:schema` | Apply full `schema.sql` (fresh / idempotent) |
 | `npm run db:migrate` | Apply pending `supabase/migrations/*` |
-| `npm run db:seed` | Seed + verify (bootstrap only — do not overwrite production edits) |
-| `npm run db:setup` | Schema + migrate + seed |
+| `npm run db:seed` | Seed assumptions + verify (bootstrap only — do not overwrite production edits) |
+| `npm run db:seed:stage2` | Upsert strategy + problems + assumption links (safe re-run) |
+| `npm run db:setup` | Schema + migrate + assumption seed + Stage 2 seed |
 | `npm run smoke` | Auth, workspace, CRUD, history, migration checks |
 | `npm run hash-password` | Generate bcrypt hash |
 | `npm run deploy` | Build and deploy to Cloudflare |
@@ -352,8 +357,9 @@ Do not hard-code the hostname in the app.
 
 ## Product notes
 
-Central objects today are **assumptions** and **evidence**.
+Central objects today are **strategy**, **problems**, **assumptions** and **evidence**.
 
+- Problems surface evidence through linked assumptions (no duplicated evidence records).
 - Founder confidence is never auto-updated when evidence is added.
 - “Evidence suggests” is a deterministic decision aid only.
 - Validation priority ranking is deterministic and lives in `src/lib/domain/priority.ts`.

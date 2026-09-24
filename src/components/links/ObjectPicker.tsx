@@ -153,7 +153,7 @@ export function ObjectPicker({
             <li className="px-3 py-2 text-sm text-muted">
               {query.trim()
                 ? "No matching records."
-                : "Type to search assumptions and evidence."}
+                : "Type to search the workspace."}
             </li>
           ) : null}
           {results.map((item, index) => (

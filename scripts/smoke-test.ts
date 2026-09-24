@@ -66,6 +66,10 @@ async function main() {
     migrations.some((row) => row.version === "20250924163500"),
     "Stage 1 foundation migration recorded",
   );
+  await assert(
+    migrations.some((row) => row.version === "20250924170000"),
+    "Stage 2 strategy/problems migration recorded",
+  );
 
   const preserved = await sql<{ assumptions: number; evidence: number }[]>`
     SELECT
@@ -78,6 +82,21 @@ async function main() {
     `Evidence rows preserved (count=${preserved[0]?.evidence})`,
   );
 
+  console.log("Stage 2 strategy + problems");
+  const stage2 = await sql<{
+    strategy: number;
+    problems: number;
+    links: number;
+  }[]>`
+    SELECT
+      (SELECT COUNT(*)::int FROM strategy_items WHERE workspace_id = ${workspace.id}) AS strategy,
+      (SELECT COUNT(*)::int FROM problems WHERE workspace_id = ${workspace.id}) AS problems,
+      (SELECT COUNT(*)::int FROM problem_assumptions WHERE workspace_id = ${workspace.id}) AS links
+  `;
+  await assert(stage2[0]?.strategy >= 3, `Strategy items present (got ${stage2[0]?.strategy})`);
+  await assert(stage2[0]?.problems >= 7, `Problems present (got ${stage2[0]?.problems})`);
+  await assert(stage2[0]?.links > 0, `Problem–assumption links present (got ${stage2[0]?.links})`);
+
   console.log("Workspace object search");
   const searchHits = await searchWorkspaceObjects(workspace.id, {
     query: "experiment",
@@ -89,6 +108,12 @@ async function main() {
     searchHits.every((hit) => hit.type === "assumption" && hit.href.startsWith("/assumptions/")),
     "Search results are typed assumptions with hrefs",
   );
+  const problemHits = await searchWorkspaceObjects(workspace.id, {
+    query: "capacity",
+    types: ["problem"],
+    limit: 5,
+  });
+  await assert(problemHits.length > 0, "Problem search returns matches");
 
   console.log("Priority ranking");
   const evidence = await listEvidenceByAssumptionIds(

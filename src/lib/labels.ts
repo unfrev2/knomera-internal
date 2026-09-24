@@ -5,7 +5,11 @@ import type {
   EvidenceDirection,
   EvidenceType,
   Importance,
+  ProblemAssumptionRelationship,
+  ProblemStatus,
   SessionUser,
+  StrategyItemStatus,
+  StrategyItemType,
 } from "@/lib/types";
 
 export const APP_USERS: Record<AppUserId, SessionUser> = {
@@ -65,6 +69,37 @@ export const DIRECTION_LABELS: Record<EvidenceDirection, string> = {
   supports: "Supports",
   challenges: "Challenges",
   neutral: "Neutral",
+};
+
+export const STRATEGY_TYPE_LABELS: Record<StrategyItemType, string> = {
+  north_star: "North star",
+  positioning: "Positioning",
+  target_customer: "Target customer",
+  initial_wedge: "Initial wedge",
+  principle: "Principle",
+  vision: "Vision",
+};
+
+export const STRATEGY_STATUS_LABELS: Record<StrategyItemStatus, string> = {
+  draft: "Draft",
+  active: "Active",
+  retired: "Retired",
+};
+
+export const PROBLEM_STATUS_LABELS: Record<ProblemStatus, string> = {
+  observed: "Observed",
+  validating: "Validating",
+  validated: "Validated",
+  deprioritised: "Deprioritised",
+};
+
+export const PROBLEM_RELATIONSHIP_LABELS: Record<
+  ProblemAssumptionRelationship,
+  string
+> = {
+  supports_problem: "Supports problem",
+  depends_on: "Depends on",
+  related: "Related",
 };
 
 export const EVIDENCE_STRENGTH = [

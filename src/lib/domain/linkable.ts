@@ -18,8 +18,12 @@ export const LINKABLE_OBJECT_TYPES = [
 
 export type LinkableObjectType = (typeof LINKABLE_OBJECT_TYPES)[number];
 
-/** Types that already have tables and can be searched in Stage 1. */
-export const SEARCHABLE_OBJECT_TYPES = ["assumption", "evidence"] as const;
+/** Types that already have tables and can be searched. */
+export const SEARCHABLE_OBJECT_TYPES = [
+  "assumption",
+  "evidence",
+  "problem",
+] as const;
 
 export type SearchableObjectType = (typeof SEARCHABLE_OBJECT_TYPES)[number];
 

@@ -2,11 +2,14 @@ import { AssumptionDetailActions } from "@/components/assumptions/AssumptionDeta
 import { ConfidencePrompt } from "@/components/assumptions/ConfidencePrompt";
 import { EvidenceTimeline } from "@/components/assumptions/EvidenceTimeline";
 import { HistoryList } from "@/components/assumptions/HistoryList";
+import { LinkedObjectList } from "@/components/links/LinkedObjectList";
 import { Badge } from "@/components/ui/Badge";
 import { requirePageContext } from "@/lib/auth/context";
 import { getAssumption } from "@/lib/db/assumptions";
 import { listEvidenceForAssumption, listEvidenceSources } from "@/lib/db/evidence";
 import { listAssumptionHistory } from "@/lib/db/history";
+import { listProblemsForAssumption } from "@/lib/db/problems";
+import { hrefForLinkable } from "@/lib/domain/linkable";
 import { suggestConfidence } from "@/lib/domain/suggested-confidence";
 import { formatDate, formatDateShort } from "@/lib/format";
 import {
@@ -31,15 +34,18 @@ export default async function AssumptionDetailPage({
   let evidence;
   let history;
   let sourceOptions: string[] = [];
+  let relatedProblems: Awaited<ReturnType<typeof listProblemsForAssumption>> =
+    [];
 
   try {
     assumption = await getAssumption(workspace.id, id);
     if (!assumption) notFound();
 
-    [evidence, history, sourceOptions] = await Promise.all([
+    [evidence, history, sourceOptions, relatedProblems] = await Promise.all([
       listEvidenceForAssumption(workspace.id, id),
       listAssumptionHistory(workspace.id, id),
       listEvidenceSources(workspace.id),
+      listProblemsForAssumption(workspace.id, id),
     ]);
   } catch {
     return (
@@ -140,6 +146,19 @@ export default async function AssumptionDetailPage({
         <h2 className="text-lg font-semibold text-navy">Evidence</h2>
         <EvidenceTimeline items={evidence} sourceOptions={sourceOptions} />
       </section>
+
+      <LinkedObjectList
+        title="Related problems"
+        emptyMessage="Not linked to a problem yet."
+        items={relatedProblems.map((problem) => ({
+          type: "problem" as const,
+          id: problem.id,
+          title: problem.title,
+          subtitle: problem.status,
+          meta: problem.severity,
+          href: hrefForLinkable("problem", problem.id),
+        }))}
+      />
 
       <section className="space-y-3 rounded border border-line bg-white/60 px-5 py-5">
         <h2 className="text-lg font-semibold text-navy">Suggested confidence</h2>
