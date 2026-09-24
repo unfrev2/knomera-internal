@@ -65,6 +65,13 @@ export const PROBLEM_ASSUMPTION_RELATIONSHIPS = [
   "related",
 ] as const;
 
+export const ORGANISATION_TYPES = [
+  "prospect",
+  "customer",
+  "partner",
+  "other",
+] as const;
+
 export type Importance = (typeof IMPORTANCE_LEVELS)[number];
 export type Confidence = (typeof CONFIDENCE_LEVELS)[number];
 export type AssumptionStatus = (typeof ASSUMPTION_STATUSES)[number];
@@ -77,6 +84,7 @@ export type ProblemAssumptionRelationship =
   (typeof PROBLEM_ASSUMPTION_RELATIONSHIPS)[number];
 /** Problem severity reuses the importance vocabulary. */
 export type ProblemSeverity = Importance;
+export type OrganisationType = (typeof ORGANISATION_TYPES)[number];
 
 export type AppUserId = "jon" | "ahmed";
 
@@ -119,6 +127,7 @@ export type Evidence = {
   evidence_date: string;
   created_by: string | null;
   created_at: string;
+  discovery_session_id?: string | null;
   assumption_statement?: string;
 };
 
@@ -176,6 +185,50 @@ export type ProblemAssumptionLink = {
   assumption_confidence?: Confidence;
   assumption_importance?: Importance;
   assumption_status?: AssumptionStatus;
+};
+
+export type Organisation = {
+  id: string;
+  workspace_id: string;
+  name: string;
+  website: string | null;
+  organisation_type: OrganisationType;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Contact = {
+  id: string;
+  workspace_id: string;
+  organisation_id: string;
+  name: string;
+  role: string | null;
+  email: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type DiscoverySession = {
+  id: string;
+  workspace_id: string;
+  organisation_id: string;
+  contact_id: string | null;
+  title: string;
+  session_date: string;
+  conducted_by: string | null;
+  summary: string | null;
+  raw_notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  organisation_name?: string;
+  contact_name?: string | null;
+  contact_role?: string | null;
+  evidence_count?: number;
 };
 
 export type SessionUser = {

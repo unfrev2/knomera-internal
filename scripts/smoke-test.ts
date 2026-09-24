@@ -70,6 +70,10 @@ async function main() {
     migrations.some((row) => row.version === "20250924170000"),
     "Stage 2 strategy/problems migration recorded",
   );
+  await assert(
+    migrations.some((row) => row.version === "20250924200000"),
+    "Stage 3 discovery migration recorded",
+  );
 
   const preserved = await sql<{ assumptions: number; evidence: number }[]>`
     SELECT
@@ -96,6 +100,22 @@ async function main() {
   await assert(stage2[0]?.strategy >= 3, `Strategy items present (got ${stage2[0]?.strategy})`);
   await assert(stage2[0]?.problems >= 7, `Problems present (got ${stage2[0]?.problems})`);
   await assert(stage2[0]?.links > 0, `Problem–assumption links present (got ${stage2[0]?.links})`);
+
+  console.log("Stage 3 discovery schema");
+  const discoveryTables = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = 'discovery_sessions'
+    ) AS exists
+  `;
+  await assert(discoveryTables[0]?.exists === true, "discovery_sessions table exists");
+  const evidenceCol = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'evidence' AND column_name = 'discovery_session_id'
+    ) AS exists
+  `;
+  await assert(evidenceCol[0]?.exists === true, "evidence.discovery_session_id column exists");
 
   console.log("Workspace object search");
   const searchHits = await searchWorkspaceObjects(workspace.id, {
@@ -192,15 +212,51 @@ async function main() {
   await assert(supporting.direction === "supports", "Supporting evidence created");
   await assert(challenging.direction === "challenges", "Challenging evidence created");
 
+  console.log("Discovery → evidence provenance");
+  const orgRows = await sql<{ id: string }[]>`
+    INSERT INTO organisations (workspace_id, name, organisation_type, created_by)
+    VALUES (${workspace.id}, ${`Smoke Org ${Date.now()}`}, 'prospect', 'jon')
+    RETURNING id
+  `;
+  const sessionRows = await sql<{ id: string }[]>`
+    INSERT INTO discovery_sessions (
+      workspace_id, organisation_id, title, session_date, conducted_by, created_by
+    ) VALUES (
+      ${workspace.id},
+      ${orgRows[0].id},
+      'Smoke discovery session',
+      ${new Date().toISOString().slice(0, 10)},
+      'jon',
+      'jon'
+    )
+    RETURNING id
+  `;
+  const fromDiscovery = await createEvidence(workspace.id, "jon", {
+    assumption_id: created.id,
+    title: "Discovery-sourced smoke evidence",
+    evidence_type: "customer_interview",
+    strength: 3,
+    direction: "supports",
+    evidence_date: new Date().toISOString().slice(0, 10),
+    source: "Smoke discovery session",
+    discovery_session_id: sessionRows[0].id,
+  });
+  await assert(
+    fromDiscovery.discovery_session_id === sessionRows[0].id,
+    "Evidence records discovery_session_id provenance",
+  );
+
   const timeline = await listEvidenceForAssumption(workspace.id, created.id);
-  await assert(timeline.length === 2, "Evidence timeline has both items");
+  await assert(timeline.length === 3, "Evidence timeline has all three items");
 
   const after = await getAssumption(workspace.id, created.id);
   await assert(after?.confidence === "medium", "Confidence unchanged by evidence add");
 
-  // Cleanup smoke data
+  // Cleanup smoke data (session SET NULL on evidence; then delete assumption cascades evidence)
+  await sql`DELETE FROM discovery_sessions WHERE id = ${sessionRows[0].id}`;
+  await sql`DELETE FROM organisations WHERE id = ${orgRows[0].id}`;
   await sql`DELETE FROM assumptions WHERE id = ${created.id}`;
-  console.log("  ✓ Cleaned up smoke-test assumption");
+  console.log("  ✓ Cleaned up smoke-test discovery + assumption");
 
   console.log("\nAll smoke checks passed.");
   await sql.end({ timeout: 5 });

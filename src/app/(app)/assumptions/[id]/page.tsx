@@ -9,6 +9,7 @@ import { getAssumption } from "@/lib/db/assumptions";
 import { listEvidenceForAssumption, listEvidenceSources } from "@/lib/db/evidence";
 import { listAssumptionHistory } from "@/lib/db/history";
 import { listProblemsForAssumption } from "@/lib/db/problems";
+import { listDiscoverySessionsForAssumption } from "@/lib/db/discovery";
 import { hrefForLinkable } from "@/lib/domain/linkable";
 import { suggestConfidence } from "@/lib/domain/suggested-confidence";
 import { formatDate, formatDateShort } from "@/lib/format";
@@ -36,17 +37,22 @@ export default async function AssumptionDetailPage({
   let sourceOptions: string[] = [];
   let relatedProblems: Awaited<ReturnType<typeof listProblemsForAssumption>> =
     [];
+  let relatedDiscovery: Awaited<
+    ReturnType<typeof listDiscoverySessionsForAssumption>
+  > = [];
 
   try {
     assumption = await getAssumption(workspace.id, id);
     if (!assumption) notFound();
 
-    [evidence, history, sourceOptions, relatedProblems] = await Promise.all([
-      listEvidenceForAssumption(workspace.id, id),
-      listAssumptionHistory(workspace.id, id),
-      listEvidenceSources(workspace.id),
-      listProblemsForAssumption(workspace.id, id),
-    ]);
+    [evidence, history, sourceOptions, relatedProblems, relatedDiscovery] =
+      await Promise.all([
+        listEvidenceForAssumption(workspace.id, id),
+        listAssumptionHistory(workspace.id, id),
+        listEvidenceSources(workspace.id),
+        listProblemsForAssumption(workspace.id, id),
+        listDiscoverySessionsForAssumption(workspace.id, id),
+      ]);
   } catch {
     return (
       <div className="mx-auto max-w-3xl">
@@ -157,6 +163,19 @@ export default async function AssumptionDetailPage({
           subtitle: problem.status,
           meta: problem.severity,
           href: hrefForLinkable("problem", problem.id),
+        }))}
+      />
+
+      <LinkedObjectList
+        title="Related discovery"
+        emptyMessage="No discovery conversations have generated evidence for this assumption yet."
+        items={relatedDiscovery.map((session) => ({
+          type: "discovery_session" as const,
+          id: session.id,
+          title: session.title,
+          subtitle: session.organisation_name,
+          meta: session.session_date,
+          href: hrefForLinkable("discovery_session", session.id),
         }))}
       />
 

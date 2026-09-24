@@ -25,7 +25,13 @@ export async function searchWorkspaceObjects(
   const limit = Math.min(Math.max(options.limit ?? 20, 1), 50);
   const types = options.types?.length
     ? options.types
-    : (["assumption", "evidence", "problem"] as SearchableObjectType[]);
+    : ([
+        "assumption",
+        "evidence",
+        "problem",
+        "organisation",
+        "discovery_session",
+      ] as SearchableObjectType[]);
   const exclude = options.excludeIds ?? [];
   const pattern = query ? `%${query}%` : "%";
 
@@ -87,6 +93,67 @@ export async function searchWorkspaceObjects(
         subtitle: row.status,
         meta: row.severity,
         href: hrefForLinkable("problem", row.id),
+      });
+    }
+  }
+
+  if (types.includes("organisation")) {
+    const rows = await sql<{ id: string; name: string; organisation_type: string }[]>`
+      SELECT id, name, organisation_type::text
+      FROM organisations
+      WHERE workspace_id = ${workspaceId}
+        AND (
+          ${query} = ''
+          OR name ILIKE ${pattern}
+          OR COALESCE(website, '') ILIKE ${pattern}
+        )
+        ${exclude.length > 0 ? sql`AND id NOT IN ${sql(exclude)}` : sql``}
+      ORDER BY name ASC
+      LIMIT ${limit}
+    `;
+
+    for (const row of rows) {
+      results.push({
+        type: "organisation",
+        id: row.id,
+        title: row.name,
+        subtitle: row.organisation_type,
+        href: hrefForLinkable("organisation", row.id),
+      });
+    }
+  }
+
+  if (types.includes("discovery_session")) {
+    const rows = await sql<
+      { id: string; title: string; organisation_name: string; session_date: string }[]
+    >`
+      SELECT
+        s.id,
+        s.title,
+        o.name AS organisation_name,
+        s.session_date::text
+      FROM discovery_sessions s
+      INNER JOIN organisations o ON o.id = s.organisation_id
+      WHERE s.workspace_id = ${workspaceId}
+        AND (
+          ${query} = ''
+          OR s.title ILIKE ${pattern}
+          OR COALESCE(s.summary, '') ILIKE ${pattern}
+          OR o.name ILIKE ${pattern}
+        )
+        ${exclude.length > 0 ? sql`AND s.id NOT IN ${sql(exclude)}` : sql``}
+      ORDER BY s.session_date DESC
+      LIMIT ${limit}
+    `;
+
+    for (const row of rows) {
+      results.push({
+        type: "discovery_session",
+        id: row.id,
+        title: row.title,
+        subtitle: row.organisation_name,
+        meta: row.session_date,
+        href: hrefForLinkable("discovery_session", row.id),
       });
     }
   }

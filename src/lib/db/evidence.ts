@@ -10,6 +10,7 @@ export type EvidenceInput = {
   direction: EvidenceDirection;
   source?: string | null;
   evidence_date: string;
+  discovery_session_id?: string | null;
 };
 
 export type EvidenceFilters = {
@@ -50,7 +51,8 @@ export async function listEvidenceForAssumption(
       source,
       evidence_date::text,
       created_by,
-      created_at::text
+      created_at::text,
+      discovery_session_id
     FROM evidence
     WHERE workspace_id = ${workspaceId}
       AND assumption_id = ${assumptionId}
@@ -85,6 +87,7 @@ export async function listEvidence(
       e.evidence_date::text,
       e.created_by,
       e.created_at::text,
+      e.discovery_session_id,
       a.statement AS assumption_statement
     FROM evidence e
     INNER JOIN assumptions a
@@ -119,7 +122,8 @@ export async function getEvidence(
       source,
       evidence_date::text,
       created_by,
-      created_at::text
+      created_at::text,
+      discovery_session_id
     FROM evidence
     WHERE workspace_id = ${workspaceId} AND id = ${id}
     LIMIT 1
@@ -169,7 +173,8 @@ export async function createEvidence(
       direction,
       source,
       evidence_date,
-      created_by
+      created_by,
+      discovery_session_id
     ) VALUES (
       ${workspaceId},
       ${input.assumption_id},
@@ -180,7 +185,8 @@ export async function createEvidence(
       ${input.direction},
       ${input.source ?? null},
       ${input.evidence_date},
-      ${createdBy}
+      ${createdBy},
+      ${input.discovery_session_id ?? null}
     )
     RETURNING
       id,
@@ -194,7 +200,8 @@ export async function createEvidence(
       source,
       evidence_date::text,
       created_by,
-      created_at::text
+      created_at::text,
+      discovery_session_id
   `;
 
   return rows[0];
@@ -228,7 +235,8 @@ export async function updateEvidence(
       source,
       evidence_date::text,
       created_by,
-      created_at::text
+      created_at::text,
+      discovery_session_id
   `;
   return rows[0] ?? null;
 }
@@ -253,7 +261,8 @@ export async function deleteEvidence(
       source,
       evidence_date::text,
       created_by,
-      created_at::text
+      created_at::text,
+      discovery_session_id
   `;
   return rows[0] ?? null;
 }
@@ -277,7 +286,8 @@ export async function listEvidenceByAssumptionIds(
       source,
       evidence_date::text,
       created_by,
-      created_at::text
+      created_at::text,
+      discovery_session_id
     FROM evidence
     WHERE workspace_id = ${workspaceId}
       AND assumption_id IN ${sql(assumptionIds)}

@@ -8,6 +8,7 @@ import {
   ListChecks,
   LogOut,
   Menu,
+  MessagesSquare,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -46,6 +47,12 @@ const NAV_ITEMS: NavItem[] = [
     label: "Assumptions",
     icon: ListChecks,
     match: (path) => path.startsWith("/assumptions"),
+  },
+  {
+    href: "/discovery",
+    label: "Discovery",
+    icon: MessagesSquare,
+    match: (path) => path.startsWith("/discovery"),
   },
   {
     href: "/evidence",

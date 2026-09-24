@@ -143,14 +143,15 @@ Both map server-side to the `knomera` workspace.
 
 Sessions are independent of Supabase Auth so the product can later move to Supabase Auth or Google Workspace SSO without rewriting domain logic.
 
-## Architecture notes (Stage 1–2)
+## Architecture notes (Stage 1–3)
 
 - Workspace-scoped queries via `workspace_id` (single Knomera workspace in use; no switcher).
 - Reusable linking UI: `LinkedObjectList`, `ObjectPicker` (`src/components/links/`).
-- Workspace search: `searchWorkspaceObjects` (assumptions, evidence, problems).
+- Workspace search: assumptions, evidence, problems, organisations, discovery sessions.
 - Migration ledger: `schema_migrations`.
 - Audit snapshot: `docs/stage-1-audit.md`.
-- **Strategy** (`strategy_items`) and **Problems** (`problems` + `problem_assumptions`) orient assumptions around customer problems without duplicating evidence.
+- **Strategy** and **Problems** orient assumptions around customer problems.
+- **Discovery** turns conversations into evidence (via nullable `evidence.discovery_session_id`) and can link problems discussed.
 
 ## Cloudflare deployment
 
@@ -357,8 +358,9 @@ Do not hard-code the hostname in the app.
 
 ## Product notes
 
-Central objects today are **strategy**, **problems**, **assumptions** and **evidence**.
+Central objects today are **strategy**, **problems**, **assumptions**, **evidence** and **discovery**.
 
+- Discovery generates evidence against assumptions; deleting a session does not delete evidence (`ON DELETE SET NULL`).
 - Problems surface evidence through linked assumptions (no duplicated evidence records).
 - Founder confidence is never auto-updated when evidence is added.
 - “Evidence suggests” is a deterministic decision aid only.

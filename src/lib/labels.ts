@@ -5,6 +5,7 @@ import type {
   EvidenceDirection,
   EvidenceType,
   Importance,
+  OrganisationType,
   ProblemAssumptionRelationship,
   ProblemStatus,
   SessionUser,
@@ -100,6 +101,13 @@ export const PROBLEM_RELATIONSHIP_LABELS: Record<
   supports_problem: "Supports problem",
   depends_on: "Depends on",
   related: "Related",
+};
+
+export const ORGANISATION_TYPE_LABELS: Record<OrganisationType, string> = {
+  prospect: "Prospect",
+  customer: "Customer",
+  partner: "Partner",
+  other: "Other",
 };
 
 export const EVIDENCE_STRENGTH = [

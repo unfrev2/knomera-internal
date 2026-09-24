@@ -33,6 +33,7 @@ const evidenceFieldsSchema = z.object({
 
 const createEvidenceSchema = evidenceFieldsSchema.extend({
   assumption_id: z.string().uuid(),
+  discovery_session_id: z.string().uuid().nullable().optional(),
 });
 
 function parseEvidenceFields(formData: FormData) {
@@ -47,10 +48,17 @@ function parseEvidenceFields(formData: FormData) {
   };
 }
 
-function revalidateEvidencePaths(assumptionId: string) {
+function revalidateEvidencePaths(
+  assumptionId: string,
+  discoverySessionId?: string | null,
+) {
   revalidatePath("/evidence");
   revalidatePath(`/assumptions/${assumptionId}`);
   revalidatePath("/");
+  if (discoverySessionId) {
+    revalidatePath(`/discovery/${discoverySessionId}`);
+    revalidatePath("/discovery");
+  }
 }
 
 export async function createEvidenceAction(formData: FormData) {
@@ -58,6 +66,7 @@ export async function createEvidenceAction(formData: FormData) {
 
   const parsed = createEvidenceSchema.safeParse({
     assumption_id: String(formData.get("assumption_id") ?? ""),
+    discovery_session_id: optionalText(formData.get("discovery_session_id")),
     ...parseEvidenceFields(formData),
   });
   if (!parsed.success) {
@@ -75,9 +84,14 @@ export async function createEvidenceAction(formData: FormData) {
     direction: data.direction,
     source: data.source ?? null,
     evidence_date: data.evidence_date,
+    discovery_session_id: data.discovery_session_id ?? null,
   });
 
-  revalidateEvidencePaths(data.assumption_id);
+  revalidateEvidencePaths(data.assumption_id, data.discovery_session_id);
+
+  if (data.discovery_session_id) {
+    redirect(`/discovery/${data.discovery_session_id}`);
+  }
   redirect(`/assumptions/${data.assumption_id}?evidenceAdded=1`);
 }
 
