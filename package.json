@@ -14,6 +14,7 @@
     "db:seed:stage2": "node --env-file=.env.local --import tsx scripts/seed-stage2.ts",
     "db:seed:stage5": "node --env-file=.env.local --import tsx scripts/seed-stage5.ts",
     "db:setup": "npm run db:schema && npm run db:migrate && npm run db:seed && npm run db:seed:stage2 && npm run db:seed:stage5",
+    "db:export": "node --env-file=.env.local --import tsx scripts/export-db.ts",
     "hash-password": "node --import tsx scripts/hash-password.ts",
     "smoke": "node --env-file=.env.local --import tsx scripts/smoke-test.ts",
     "preview": "npm run build:worker && opennextjs-cloudflare preview",

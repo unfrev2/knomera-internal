@@ -359,6 +359,7 @@ Do not hard-code the hostname in the app.
 | `npm run db:seed:stage2` | Upsert strategy + problems + assumption links (safe re-run) |
 | `npm run db:seed:stage5` | Upsert initial bets + assumption/problem links (safe re-run) |
 | `npm run db:setup` | Schema + migrate + assumption seed + Stage 2 + Stage 5 seeds |
+| `npm run db:export` | Dump live public schema data + inventory for offline review (`exports/`, gitignored) |
 | `npm run smoke` | Auth, workspace, CRUD, history, migration checks |
 | `npm run hash-password` | Generate bcrypt hash |
 | `npm run deploy` | Build and deploy to Cloudflare |
