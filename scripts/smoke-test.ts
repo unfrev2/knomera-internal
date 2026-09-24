@@ -1,0 +1,143 @@
+import bcrypt from "bcryptjs";
+import { normalizePasswordHash } from "../src/lib/auth/passwords";
+import { createAssumption, updateAssumption, listAssumptions, getAssumption } from "../src/lib/db/assumptions";
+import { createEvidence, listEvidenceForAssumption } from "../src/lib/db/evidence";
+import { listAssumptionHistory } from "../src/lib/db/history";
+import { getWorkspaceBySlug } from "../src/lib/db/workspaces";
+import { rankAssumptionsForValidation } from "../src/lib/domain/priority";
+import { listEvidenceByAssumptionIds } from "../src/lib/db/evidence";
+import { getDb } from "../src/lib/db/client";
+import { createSessionToken, readSessionToken } from "../src/lib/auth/session";
+
+async function assert(condition: boolean, message: string) {
+  if (!condition) throw new Error(message);
+  console.log(`  ✓ ${message}`);
+}
+
+async function main() {
+  console.log("Auth env");
+  const jonHash = normalizePasswordHash(process.env.JON_PASSWORD_HASH) ?? "";
+  const ahmedHash = normalizePasswordHash(process.env.AHMED_PASSWORD_HASH) ?? "";
+  await assert(jonHash.startsWith("$2"), "JON_PASSWORD_HASH loaded with bcrypt prefix");
+  await assert(ahmedHash.startsWith("$2"), "AHMED_PASSWORD_HASH loaded with bcrypt prefix");
+  await assert(await bcrypt.compare("jon-dev-password", jonHash), "Jon password verifies");
+  await assert(await bcrypt.compare("ahmed-dev-password", ahmedHash), "Ahmed password verifies");
+  await assert(!(await bcrypt.compare("wrong", jonHash)), "Wrong password rejected");
+
+  console.log("Sessions");
+  const token = await createSessionToken("jon");
+  const session = await readSessionToken(token);
+  await assert(session?.id === "jon", "Session token round-trips for Jon");
+  const ahmedToken = await createSessionToken("ahmed");
+  const ahmedSession = await readSessionToken(ahmedToken);
+  await assert(ahmedSession?.id === "ahmed", "Session token round-trips for Ahmed");
+
+  console.log("Workspace + seed");
+  const workspace = await getWorkspaceBySlug("knomera");
+  await assert(workspace.slug === "knomera", "Knomera workspace exists");
+  const assumptions = await listAssumptions(workspace.id);
+  await assert(assumptions.length === 112, `112 assumptions present (got ${assumptions.length})`);
+  const categories = new Set(assumptions.map((a) => a.category));
+  await assert(categories.size === 11, "11 categories present");
+
+  console.log("Priority ranking");
+  const evidence = await listEvidenceByAssumptionIds(
+    workspace.id,
+    assumptions.map((a) => a.id),
+  );
+  const byAssumption = new Map<string, typeof evidence>();
+  for (const item of evidence) {
+    const list = byAssumption.get(item.assumption_id) ?? [];
+    list.push(item);
+    byAssumption.set(item.assumption_id, list);
+  }
+  const ranked = rankAssumptionsForValidation(
+    assumptions.map((assumption) => ({
+      assumption,
+      evidence: byAssumption.get(assumption.id) ?? [],
+    })),
+  );
+  await assert(ranked.length === 112, "Priority ranking covers all assumptions");
+  const topStatements = ranked.slice(0, 10).map((r) => r.statement);
+  console.log("  Top priorities:");
+  for (const s of topStatements.slice(0, 5)) {
+    console.log(`    - ${s.slice(0, 80)}…`);
+  }
+  await assert(
+    topStatements.some((s) => s.includes("pay specifically for experimentation intelligence")),
+    "Commercial willingness-to-pay surfaces near the top naturally",
+  );
+
+  console.log("CRUD + history + evidence");
+  const created = await createAssumption(workspace.id, "ahmed", {
+    statement: `Smoke test assumption ${Date.now()}`,
+    category: "Founder & Execution",
+    importance: "high",
+    confidence: "low",
+    status: "untested",
+    owner: "Jon",
+    next_action: "Delete after smoke test",
+  });
+  await assert(created.created_by === "ahmed", "Created assumption records Ahmed");
+
+  const updated = await updateAssumption(workspace.id, created.id, "jon", {
+    confidence: "medium",
+    status: "testing",
+  });
+  await assert(updated?.confidence === "medium", "Confidence updated");
+  await assert(updated?.status === "testing", "Status updated");
+
+  const history = await listAssumptionHistory(workspace.id, created.id);
+  await assert(
+    history.some((h) => h.field_changed === "confidence" && h.new_value === "medium"),
+    "History records confidence change",
+  );
+  await assert(
+    history.some((h) => h.changed_by === "jon"),
+    "History records Jon as changed_by",
+  );
+
+  const supporting = await createEvidence(workspace.id, "jon", {
+    assumption_id: created.id,
+    title: "Supporting smoke evidence",
+    evidence_type: "customer_interview",
+    strength: 3,
+    direction: "supports",
+    evidence_date: new Date().toISOString().slice(0, 10),
+    description: "Smoke test supporting note",
+  });
+  const challenging = await createEvidence(workspace.id, "ahmed", {
+    assumption_id: created.id,
+    title: "Challenging smoke evidence",
+    evidence_type: "data_analysis",
+    strength: 2,
+    direction: "challenges",
+    evidence_date: new Date().toISOString().slice(0, 10),
+  });
+  await assert(supporting.direction === "supports", "Supporting evidence created");
+  await assert(challenging.direction === "challenges", "Challenging evidence created");
+
+  const timeline = await listEvidenceForAssumption(workspace.id, created.id);
+  await assert(timeline.length === 2, "Evidence timeline has both items");
+
+  const after = await getAssumption(workspace.id, created.id);
+  await assert(after?.confidence === "medium", "Confidence unchanged by evidence add");
+
+  // Cleanup smoke data
+  const sql = getDb();
+  await sql`DELETE FROM assumptions WHERE id = ${created.id}`;
+  console.log("  ✓ Cleaned up smoke-test assumption");
+
+  console.log("\nAll smoke checks passed.");
+  await sql.end({ timeout: 5 });
+}
+
+main().catch(async (error) => {
+  console.error(error);
+  try {
+    await getDb().end({ timeout: 5 });
+  } catch {
+    /* ignore */
+  }
+  process.exit(1);
+});

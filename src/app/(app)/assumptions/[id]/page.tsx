@@ -1,0 +1,170 @@
+import { AssumptionDetailActions } from "@/components/assumptions/AssumptionDetailActions";
+import { ConfidencePrompt } from "@/components/assumptions/ConfidencePrompt";
+import { EvidenceTimeline } from "@/components/assumptions/EvidenceTimeline";
+import { HistoryList } from "@/components/assumptions/HistoryList";
+import { Badge } from "@/components/ui/Badge";
+import { requirePageContext } from "@/lib/auth/context";
+import { getAssumption } from "@/lib/db/assumptions";
+import { listEvidenceForAssumption } from "@/lib/db/evidence";
+import { listAssumptionHistory } from "@/lib/db/history";
+import { suggestConfidence } from "@/lib/domain/suggested-confidence";
+import { formatDate, formatDateShort } from "@/lib/format";
+import {
+  CONFIDENCE_LABELS,
+  displayName,
+} from "@/lib/labels";
+import { notFound } from "next/navigation";
+
+export default async function AssumptionDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const { workspace } = await requirePageContext();
+  const { id } = await params;
+  const query = await searchParams;
+  const evidenceAdded = query.evidenceAdded === "1";
+
+  let assumption;
+  let evidence;
+  let history;
+
+  try {
+    assumption = await getAssumption(workspace.id, id);
+    if (!assumption) notFound();
+
+    [evidence, history] = await Promise.all([
+      listEvidenceForAssumption(workspace.id, id),
+      listAssumptionHistory(workspace.id, id),
+    ]);
+  } catch {
+    return (
+      <div className="mx-auto max-w-3xl">
+        <p className="rounded border border-coral/30 bg-coral/8 px-4 py-3 text-sm text-navy">
+          We could not load this assumption. Check your connection and try again.
+        </p>
+      </div>
+    );
+  }
+
+  const suggestion = suggestConfidence(evidence);
+
+  return (
+    <div className="mx-auto max-w-3xl space-y-10">
+      <header className="space-y-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 flex-1 space-y-3">
+            <p className="text-xs font-medium tracking-wide text-muted uppercase">
+              {assumption.category}
+            </p>
+            <h1 className="text-2xl font-semibold leading-snug text-navy md:text-3xl">
+              {assumption.statement}
+            </h1>
+          </div>
+          <AssumptionDetailActions assumption={assumption} />
+        </div>
+
+        <ConfidencePrompt assumption={assumption} show={evidenceAdded} />
+
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="importance" value={assumption.importance} />
+          <Badge variant="confidence" value={assumption.confidence} />
+          <Badge variant="status" value={assumption.status} />
+        </div>
+
+        <dl className="grid gap-3 text-sm sm:grid-cols-2">
+          <div>
+            <dt className="text-muted">Owner</dt>
+            <dd className="font-medium text-navy">{displayName(assumption.owner)}</dd>
+          </div>
+          <div>
+            <dt className="text-muted">Target date</dt>
+            <dd className="font-medium text-navy">
+              {assumption.target_date
+                ? formatDateShort(assumption.target_date)
+                : "Not set"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-muted">Created by</dt>
+            <dd className="font-medium text-navy">
+              {displayName(assumption.created_by)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-muted">Created</dt>
+            <dd className="font-medium text-navy">
+              {formatDate(assumption.created_at)}
+            </dd>
+          </div>
+        </dl>
+
+        {assumption.description ? (
+          <div className="rounded border border-line bg-white/60 px-4 py-3">
+            <h2 className="text-xs font-medium tracking-wide text-muted uppercase">
+              Description
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-navy/85">
+              {assumption.description}
+            </p>
+          </div>
+        ) : null}
+      </header>
+
+      <section className="space-y-3 rounded border border-line bg-white/60 px-5 py-5">
+        <h2 className="text-lg font-semibold text-navy">Validation</h2>
+        {assumption.next_action ? (
+          <p className="text-base leading-relaxed text-navy">
+            {assumption.next_action}
+          </p>
+        ) : (
+          <p className="text-sm text-muted">
+            No next action recorded. Edit the assumption to add one.
+          </p>
+        )}
+        {assumption.target_date ? (
+          <p className="text-sm text-muted">
+            Target: {formatDateShort(assumption.target_date)}
+          </p>
+        ) : null}
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold text-navy">Evidence</h2>
+        <EvidenceTimeline items={evidence} />
+      </section>
+
+      <section className="space-y-3 rounded border border-line bg-white/60 px-5 py-5">
+        <h2 className="text-lg font-semibold text-navy">Suggested confidence</h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <p className="text-xs font-medium tracking-wide text-muted uppercase">
+              Founder confidence
+            </p>
+            <p className="mt-1 text-lg font-semibold text-navy">
+              {CONFIDENCE_LABELS[assumption.confidence]}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-medium tracking-wide text-muted uppercase">
+              Evidence suggests
+            </p>
+            <p className="mt-1 text-lg font-semibold text-navy">
+              {suggestion.level
+                ? CONFIDENCE_LABELS[suggestion.level]
+                : "Not enough data"}
+            </p>
+          </div>
+        </div>
+        <p className="text-sm leading-relaxed text-muted">{suggestion.explanation}</p>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-navy">History</h2>
+        <HistoryList items={history} />
+      </section>
+    </div>
+  );
+}
