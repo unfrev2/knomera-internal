@@ -13,6 +13,7 @@ import type {
   BetStatus,
   BetAssumptionRelationship,
   BetOutcomeResult,
+  OpportunityStage,
   SessionUser,
   StrategyItemStatus,
   StrategyItemType,
@@ -150,6 +151,16 @@ export const BET_OUTCOME_RESULT_LABELS: Record<BetOutcomeResult, string> = {
   mixed: "Mixed",
   unsuccessful: "Unsuccessful",
   inconclusive: "Inconclusive",
+};
+
+export const OPPORTUNITY_STAGE_LABELS: Record<OpportunityStage, string> = {
+  prospect: "Prospect",
+  discovery: "Discovery",
+  interested: "Interested",
+  proposal: "Proposal",
+  pilot: "Pilot",
+  won: "Won",
+  lost: "Lost",
 };
 
 export const EVIDENCE_STRENGTH = [

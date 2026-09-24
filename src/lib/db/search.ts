@@ -34,6 +34,7 @@ export async function searchWorkspaceObjects(
         "decision",
         "idea",
         "bet",
+        "opportunity",
       ] as SearchableObjectType[]);
   const exclude = options.excludeIds ?? [];
   const pattern = query ? `%${query}%` : "%";
@@ -244,6 +245,46 @@ export async function searchWorkspaceObjects(
         title: row.title,
         subtitle: row.status,
         href: hrefForLinkable("bet", row.id),
+      });
+    }
+  }
+
+  if (types.includes("opportunity")) {
+    const rows = await sql<
+      {
+        id: string;
+        title: string;
+        stage: string;
+        organisation_name: string;
+      }[]
+    >`
+      SELECT
+        o.id,
+        o.title,
+        o.stage::text,
+        org.name AS organisation_name
+      FROM opportunities o
+      INNER JOIN organisations org ON org.id = o.organisation_id
+      WHERE o.workspace_id = ${workspaceId}
+        AND (
+          ${query} = ''
+          OR o.title ILIKE ${pattern}
+          OR org.name ILIKE ${pattern}
+          OR COALESCE(o.next_action, '') ILIKE ${pattern}
+        )
+        ${exclude.length > 0 ? sql`AND o.id NOT IN ${sql(exclude)}` : sql``}
+      ORDER BY o.updated_at DESC
+      LIMIT ${limit}
+    `;
+
+    for (const row of rows) {
+      results.push({
+        type: "opportunity",
+        id: row.id,
+        title: row.title,
+        subtitle: row.organisation_name,
+        meta: row.stage,
+        href: hrefForLinkable("opportunity", row.id),
       });
     }
   }

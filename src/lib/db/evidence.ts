@@ -12,6 +12,7 @@ export type EvidenceInput = {
   evidence_date: string;
   discovery_session_id?: string | null;
   bet_outcome_id?: string | null;
+  opportunity_id?: string | null;
 };
 
 export type EvidenceFilters = {
@@ -90,6 +91,7 @@ export async function listEvidence(
       e.created_at::text,
       e.discovery_session_id,
       e.bet_outcome_id,
+      e.opportunity_id,
       a.statement AS assumption_statement
     FROM evidence e
     INNER JOIN assumptions a
@@ -126,7 +128,8 @@ export async function getEvidence(
       created_by,
       created_at::text,
       discovery_session_id,
-      bet_outcome_id
+      bet_outcome_id,
+      opportunity_id
     FROM evidence
     WHERE workspace_id = ${workspaceId} AND id = ${id}
     LIMIT 1
@@ -178,7 +181,8 @@ export async function createEvidence(
       evidence_date,
       created_by,
       discovery_session_id,
-      bet_outcome_id
+      bet_outcome_id,
+      opportunity_id
     ) VALUES (
       ${workspaceId},
       ${input.assumption_id},
@@ -191,7 +195,8 @@ export async function createEvidence(
       ${input.evidence_date},
       ${createdBy},
       ${input.discovery_session_id ?? null},
-      ${input.bet_outcome_id ?? null}
+      ${input.bet_outcome_id ?? null},
+      ${input.opportunity_id ?? null}
     )
     RETURNING
       id,
@@ -207,7 +212,8 @@ export async function createEvidence(
       created_by,
       created_at::text,
       discovery_session_id,
-      bet_outcome_id
+      bet_outcome_id,
+      opportunity_id
   `;
 
   return rows[0];

@@ -148,6 +148,19 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 DO $$ BEGIN
+  CREATE TYPE opportunity_stage AS ENUM (
+    'prospect',
+    'discovery',
+    'interested',
+    'proposal',
+    'pilot',
+    'won',
+    'lost'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
   ALTER TYPE evidence_type ADD VALUE IF NOT EXISTS 'bet_outcome';
 EXCEPTION
   WHEN duplicate_object THEN NULL;
@@ -200,6 +213,7 @@ CREATE TABLE IF NOT EXISTS evidence (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   discovery_session_id UUID,
   bet_outcome_id UUID,
+  opportunity_id UUID,
   CONSTRAINT evidence_workspace_assumption_fk
     FOREIGN KEY (assumption_id, workspace_id)
     REFERENCES assumptions (id, workspace_id),
@@ -553,6 +567,28 @@ CREATE TABLE IF NOT EXISTS decision_bets (
     ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS opportunities (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id UUID NOT NULL REFERENCES workspaces (id) ON DELETE CASCADE,
+  organisation_id UUID NOT NULL,
+  title TEXT NOT NULL,
+  stage opportunity_stage NOT NULL DEFAULT 'prospect',
+  potential_value NUMERIC(12, 2),
+  currency TEXT NOT NULL DEFAULT 'GBP',
+  owner TEXT,
+  next_action TEXT,
+  next_action_date DATE,
+  outcome_reason TEXT,
+  created_by TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT opportunities_id_workspace_unique UNIQUE (id, workspace_id),
+  CONSTRAINT opportunities_organisation_fk
+    FOREIGN KEY (organisation_id, workspace_id)
+    REFERENCES organisations (id, workspace_id)
+    ON DELETE CASCADE
+);
+
 -- Evidence may optionally point at a discovery session (set after sessions exist).
 -- Single-column FK: composite ON DELETE SET NULL would also null workspace_id.
 DO $$ BEGIN
@@ -571,6 +607,17 @@ DO $$ BEGIN
     ADD CONSTRAINT evidence_bet_outcome_fk
     FOREIGN KEY (bet_outcome_id)
     REFERENCES bet_outcomes (id)
+    ON DELETE SET NULL;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+  WHEN undefined_column THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE evidence
+    ADD CONSTRAINT evidence_opportunity_fk
+    FOREIGN KEY (opportunity_id)
+    REFERENCES opportunities (id)
     ON DELETE SET NULL;
 EXCEPTION
   WHEN duplicate_object THEN NULL;
@@ -638,6 +685,16 @@ CREATE INDEX IF NOT EXISTS decision_bets_bet_id_idx ON decision_bets (bet_id);
 CREATE INDEX IF NOT EXISTS evidence_bet_outcome_id_idx
   ON evidence (bet_outcome_id)
   WHERE bet_outcome_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS opportunities_workspace_id_idx
+  ON opportunities (workspace_id, stage);
+CREATE INDEX IF NOT EXISTS opportunities_organisation_id_idx
+  ON opportunities (organisation_id);
+CREATE INDEX IF NOT EXISTS opportunities_next_action_date_idx
+  ON opportunities (workspace_id, next_action_date)
+  WHERE next_action_date IS NOT NULL;
+CREATE INDEX IF NOT EXISTS evidence_opportunity_id_idx
+  ON evidence (opportunity_id)
+  WHERE opportunity_id IS NOT NULL;
 
 -- ---------------------------------------------------------------------------
 -- updated_at trigger
@@ -702,6 +759,12 @@ CREATE TRIGGER ideas_set_updated_at
 DROP TRIGGER IF EXISTS bets_set_updated_at ON bets;
 CREATE TRIGGER bets_set_updated_at
   BEFORE UPDATE ON bets
+  FOR EACH ROW
+  EXECUTE FUNCTION set_updated_at();
+
+DROP TRIGGER IF EXISTS opportunities_set_updated_at ON opportunities;
+CREATE TRIGGER opportunities_set_updated_at
+  BEFORE UPDATE ON opportunities
   FOR EACH ROW
   EXECUTE FUNCTION set_updated_at();
 
@@ -786,6 +849,7 @@ REVOKE ALL ON TABLE bet_problems FROM anon, authenticated;
 REVOKE ALL ON TABLE bet_assumptions FROM anon, authenticated;
 REVOKE ALL ON TABLE bet_outcomes FROM anon, authenticated;
 REVOKE ALL ON TABLE decision_bets FROM anon, authenticated;
+REVOKE ALL ON TABLE opportunities FROM anon, authenticated;
 
 REVOKE ALL ON SCHEMA public FROM anon, authenticated;
 GRANT USAGE ON SCHEMA public TO postgres, service_role;
@@ -814,6 +878,7 @@ ALTER TABLE bet_problems ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bet_assumptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bet_outcomes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE decision_bets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE opportunities ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS deny_all_workspaces ON workspaces;
 CREATE POLICY deny_all_workspaces ON workspaces FOR ALL TO anon, authenticated USING (false);
@@ -886,3 +951,6 @@ CREATE POLICY deny_all_bet_outcomes ON bet_outcomes FOR ALL TO anon, authenticat
 
 DROP POLICY IF EXISTS deny_all_decision_bets ON decision_bets;
 CREATE POLICY deny_all_decision_bets ON decision_bets FOR ALL TO anon, authenticated USING (false);
+
+DROP POLICY IF EXISTS deny_all_opportunities ON opportunities;
+CREATE POLICY deny_all_opportunities ON opportunities FOR ALL TO anon, authenticated USING (false);

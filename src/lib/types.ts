@@ -108,6 +108,16 @@ export const BET_OUTCOME_RESULTS = [
   "inconclusive",
 ] as const;
 
+export const OPPORTUNITY_STAGES = [
+  "prospect",
+  "discovery",
+  "interested",
+  "proposal",
+  "pilot",
+  "won",
+  "lost",
+] as const;
+
 export type Importance = (typeof IMPORTANCE_LEVELS)[number];
 export type Confidence = (typeof CONFIDENCE_LEVELS)[number];
 export type AssumptionStatus = (typeof ASSUMPTION_STATUSES)[number];
@@ -127,6 +137,7 @@ export type BetStatus = (typeof BET_STATUSES)[number];
 export type BetAssumptionRelationship =
   (typeof BET_ASSUMPTION_RELATIONSHIPS)[number];
 export type BetOutcomeResult = (typeof BET_OUTCOME_RESULTS)[number];
+export type OpportunityStage = (typeof OPPORTUNITY_STAGES)[number];
 
 export type AppUserId = "jon" | "ahmed";
 
@@ -171,6 +182,7 @@ export type Evidence = {
   created_at: string;
   discovery_session_id?: string | null;
   bet_outcome_id?: string | null;
+  opportunity_id?: string | null;
   assumption_statement?: string;
 };
 
@@ -352,6 +364,25 @@ export type BetOutcome = {
   outcome_date: string;
   created_by: string | null;
   created_at: string;
+};
+
+export type Opportunity = {
+  id: string;
+  workspace_id: string;
+  organisation_id: string;
+  title: string;
+  stage: OpportunityStage;
+  potential_value: number | null;
+  currency: string;
+  owner: string | null;
+  next_action: string | null;
+  next_action_date: string | null;
+  outcome_reason: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  organisation_name?: string;
+  evidence_count?: number;
 };
 
 export type SessionUser = {

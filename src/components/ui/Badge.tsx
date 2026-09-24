@@ -5,6 +5,7 @@ import {
   DIRECTION_LABELS,
   IDEA_STATUS_LABELS,
   IMPORTANCE_LABELS,
+  OPPORTUNITY_STAGE_LABELS,
   PROBLEM_STATUS_LABELS,
   STATUS_LABELS,
 } from "@/lib/labels";
@@ -16,6 +17,7 @@ import type {
   EvidenceDirection,
   IdeaStatus,
   Importance,
+  OpportunityStage,
   ProblemStatus,
 } from "@/lib/types";
 import type { ReactNode } from "react";
@@ -28,6 +30,7 @@ type DomainBadgeProps =
   | { variant: "decision-status"; value: DecisionStatus }
   | { variant: "idea-status"; value: IdeaStatus }
   | { variant: "bet-status"; value: BetStatus }
+  | { variant: "opportunity-stage"; value: OpportunityStage }
   | { variant: "direction"; value: EvidenceDirection }
   | { variant: "neutral"; label: string };
 
@@ -131,6 +134,23 @@ function betStatusTone(value: BetStatus): string {
   }
 }
 
+function opportunityStageTone(value: OpportunityStage): string {
+  switch (value) {
+    case "won":
+      return "bg-[#315f9e]/12 text-[#0b1f3a] ring-1 ring-[#315f9e]/20";
+    case "pilot":
+    case "proposal":
+      return "bg-[#315f9e]/8 text-[#0b1f3a]/90 ring-1 ring-[#315f9e]/15";
+    case "interested":
+    case "discovery":
+      return "bg-[#0b1f3a]/6 text-[#0b1f3a]/85 ring-1 ring-[#0b1f3a]/10";
+    case "lost":
+      return "bg-[#f15b4a]/10 text-[#0b1f3a] ring-1 ring-[#f15b4a]/20";
+    case "prospect":
+      return "bg-[#efece6] text-[#0b1f3a]/70 ring-1 ring-[#0b1f3a]/8";
+  }
+}
+
 function directionTone(value: EvidenceDirection): string {
   switch (value) {
     case "supports":
@@ -158,6 +178,8 @@ function labelFor(props: DomainBadgeProps): string {
       return IDEA_STATUS_LABELS[props.value];
     case "bet-status":
       return BET_STATUS_LABELS[props.value];
+    case "opportunity-stage":
+      return OPPORTUNITY_STAGE_LABELS[props.value];
     case "direction":
       return DIRECTION_LABELS[props.value];
     case "neutral":
@@ -181,6 +203,8 @@ function toneFor(props: DomainBadgeProps): string {
       return ideaStatusTone(props.value);
     case "bet-status":
       return betStatusTone(props.value);
+    case "opportunity-stage":
+      return opportunityStageTone(props.value);
     case "direction":
       return directionTone(props.value);
     case "neutral":

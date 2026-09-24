@@ -168,6 +168,29 @@ async function main() {
     `Seeded bets present (got ${seededBets[0]?.count})`,
   );
 
+  console.log("Stage 6 commercial schema");
+  const opportunitiesTable = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = 'opportunities'
+    ) AS exists
+  `;
+  await assert(opportunitiesTable[0]?.exists === true, "opportunities table exists");
+  const oppCol = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'evidence' AND column_name = 'opportunity_id'
+    ) AS exists
+  `;
+  await assert(
+    oppCol[0]?.exists === true,
+    "evidence.opportunity_id column exists",
+  );
+  await assert(
+    migrations.some((row) => row.version === "20250924230000"),
+    "Stage 6 commercial migration recorded",
+  );
+
   console.log("Workspace object search");
   const searchHits = await searchWorkspaceObjects(workspace.id, {
     query: "experiment",
@@ -365,19 +388,53 @@ async function main() {
     "Bet has one outcome",
   );
 
+  console.log("Opportunities + commercial evidence provenance");
+  const { createOpportunity, getOpportunity } = await import(
+    "../src/lib/db/opportunities"
+  );
+  const opportunity = await createOpportunity(workspace.id, "jon", {
+    organisation_id: orgRows[0].id,
+    title: `Smoke opportunity ${Date.now()}`,
+    stage: "proposal",
+    potential_value: 20000,
+    currency: "GBP",
+    owner: "jon",
+    next_action: "Send pilot proposal",
+  });
+  const fromOpportunity = await createEvidence(workspace.id, "jon", {
+    assumption_id: created.id,
+    title: "Company signed a £20k pilot",
+    evidence_type: "commercial",
+    strength: 5,
+    direction: "supports",
+    evidence_date: new Date().toISOString().slice(0, 10),
+    source: opportunity.title,
+    opportunity_id: opportunity.id,
+  });
+  await assert(
+    fromOpportunity.opportunity_id === opportunity.id,
+    "Evidence records opportunity_id provenance",
+  );
+  const loadedOpp = await getOpportunity(workspace.id, opportunity.id);
+  await assert(
+    (loadedOpp?.evidence_count ?? 0) === 1,
+    "Opportunity shows linked evidence count",
+  );
+
   const timeline = await listEvidenceForAssumption(workspace.id, created.id);
-  await assert(timeline.length === 4, "Evidence timeline has all four items");
+  await assert(timeline.length === 5, "Evidence timeline has all five items");
 
   const after = await getAssumption(workspace.id, created.id);
   await assert(after?.confidence === "medium", "Confidence unchanged by evidence add");
 
   // Cleanup smoke data
+  await sql`DELETE FROM opportunities WHERE id = ${opportunity.id}`;
   await sql`DELETE FROM bets WHERE id = ${bet.id}`;
   await sql`DELETE FROM decisions WHERE id = ${decision.id}`;
   await sql`DELETE FROM discovery_sessions WHERE id = ${sessionRows[0].id}`;
   await sql`DELETE FROM organisations WHERE id = ${orgRows[0].id}`;
   await sql`DELETE FROM assumptions WHERE id = ${created.id}`;
-  console.log("  ✓ Cleaned up smoke-test bet + decision + discovery + assumption");
+  console.log("  ✓ Cleaned up smoke-test commercial + bet + decision + discovery + assumption");
 
   console.log("\nAll smoke checks passed.");
   await sql.end({ timeout: 5 });

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Briefcase,
   CircleHelp,
   Compass,
   FileSearch,
@@ -74,6 +75,12 @@ const NAV_ITEMS: NavItem[] = [
     label: "Bets",
     icon: Target,
     match: (path) => path.startsWith("/bets"),
+  },
+  {
+    href: "/commercial",
+    label: "Commercial",
+    icon: Briefcase,
+    match: (path) => path.startsWith("/commercial"),
   },
   {
     href: "/evidence",

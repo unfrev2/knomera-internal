@@ -35,6 +35,7 @@ const createEvidenceSchema = evidenceFieldsSchema.extend({
   assumption_id: z.string().uuid(),
   discovery_session_id: z.string().uuid().nullable().optional(),
   bet_outcome_id: z.string().uuid().nullable().optional(),
+  opportunity_id: z.string().uuid().nullable().optional(),
 });
 
 function parseEvidenceFields(formData: FormData) {
@@ -54,6 +55,7 @@ function revalidateEvidencePaths(
   options?: {
     discoverySessionId?: string | null;
     betId?: string | null;
+    opportunityId?: string | null;
   },
 ) {
   revalidatePath("/evidence");
@@ -67,6 +69,10 @@ function revalidateEvidencePaths(
     revalidatePath(`/bets/${options.betId}`);
     revalidatePath("/bets");
   }
+  if (options?.opportunityId) {
+    revalidatePath(`/commercial/${options.opportunityId}`);
+    revalidatePath("/commercial");
+  }
 }
 
 export async function createEvidenceAction(formData: FormData) {
@@ -76,6 +82,7 @@ export async function createEvidenceAction(formData: FormData) {
     assumption_id: String(formData.get("assumption_id") ?? ""),
     discovery_session_id: optionalText(formData.get("discovery_session_id")),
     bet_outcome_id: optionalText(formData.get("bet_outcome_id")),
+    opportunity_id: optionalText(formData.get("opportunity_id")),
     ...parseEvidenceFields(formData),
   });
   if (!parsed.success) {
@@ -96,13 +103,18 @@ export async function createEvidenceAction(formData: FormData) {
     evidence_date: data.evidence_date,
     discovery_session_id: data.discovery_session_id ?? null,
     bet_outcome_id: data.bet_outcome_id ?? null,
+    opportunity_id: data.opportunity_id ?? null,
   });
 
   revalidateEvidencePaths(data.assumption_id, {
     discoverySessionId: data.discovery_session_id,
     betId,
+    opportunityId: data.opportunity_id,
   });
 
+  if (data.opportunity_id) {
+    redirect(`/commercial/${data.opportunity_id}`);
+  }
   if (betId) {
     redirect(`/bets/${betId}`);
   }
