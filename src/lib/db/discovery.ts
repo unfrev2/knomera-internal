@@ -268,7 +268,7 @@ export async function listDiscoverySessionsForAssumption(
 ): Promise<DiscoverySession[]> {
   const sql = getDb();
   return sql<DiscoverySession[]>`
-    SELECT DISTINCT
+    SELECT
       s.id,
       s.workspace_id,
       s.organisation_id,
@@ -284,9 +284,14 @@ export async function listDiscoverySessionsForAssumption(
       o.name AS organisation_name
     FROM discovery_sessions s
     INNER JOIN organisations o ON o.id = s.organisation_id
-    INNER JOIN evidence e ON e.discovery_session_id = s.id
-    WHERE e.workspace_id = ${workspaceId}
-      AND e.assumption_id = ${assumptionId}
-    ORDER BY s.session_date DESC
+    WHERE s.workspace_id = ${workspaceId}
+      AND EXISTS (
+        SELECT 1
+        FROM evidence e
+        WHERE e.discovery_session_id = s.id
+          AND e.workspace_id = ${workspaceId}
+          AND e.assumption_id = ${assumptionId}
+      )
+    ORDER BY s.session_date DESC, s.created_at DESC
   `;
 }
