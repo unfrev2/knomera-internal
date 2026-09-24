@@ -5,10 +5,12 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-cream px-4">
       <div className="w-full max-w-sm">
         <header className="mb-8 text-center">
-          <p className="text-lg font-semibold tracking-tight text-navy">
-            Knomera
-          </p>
-          <h1 className="mt-1 text-2xl font-semibold text-navy">
+          <img
+            src="/logo.png"
+            alt="Knomera"
+            className="mx-auto h-[4.5rem] w-auto"
+          />
+          <h1 className="mt-4 text-2xl font-semibold text-navy">
             Assumption Log
           </h1>
           <p className="mt-3 text-sm text-navy/65">Sign in to continue.</p>

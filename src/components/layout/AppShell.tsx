@@ -156,11 +156,12 @@ export function AppShell({
       <div className="mx-auto flex min-h-screen max-w-[1400px]">
         <aside className="hidden w-60 shrink-0 flex-col border-r border-[#0b1f3a]/10 bg-[#f7f5f1] md:flex">
           <div className="px-5 py-6">
-            <Link
-              href="/"
-              className="text-sm font-semibold tracking-wide text-[#0b1f3a]/45 uppercase"
-            >
-              Knomera
+            <Link href="/" className="inline-block">
+              <img
+                src="/logo.png"
+                alt="Knomera"
+                className="h-14 w-auto"
+              />
             </Link>
           </div>
           <NavLinks pathname={pathname} />
@@ -169,11 +170,12 @@ export function AppShell({
 
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="flex items-center justify-between border-b border-[#0b1f3a]/10 bg-[#f7f5f1] px-4 py-3 md:hidden">
-            <Link
-              href="/"
-              className="text-sm font-semibold tracking-wide text-[#0b1f3a]/45 uppercase"
-            >
-              Knomera
+            <Link href="/" className="inline-block">
+              <img
+                src="/logo.png"
+                alt="Knomera"
+                className="h-12 w-auto"
+              />
             </Link>
             <button
               type="button"
@@ -204,9 +206,11 @@ export function AppShell({
           />
           <aside className="relative flex h-full w-[min(100%,17rem)] flex-col bg-[#f7f5f1] shadow-xl">
             <div className="flex items-center justify-between px-4 py-4">
-              <span className="text-sm font-semibold tracking-wide text-[#0b1f3a]/45 uppercase">
-                Knomera
-              </span>
+              <img
+                src="/logo.png"
+                alt="Knomera"
+                className="h-12 w-auto"
+              />
               <button
                 type="button"
                 className="rounded p-2 text-[#0b1f3a]/70 hover:bg-[#efece6]"
