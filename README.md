@@ -121,26 +121,98 @@ Sessions are independent of Supabase Auth so the product can later move to Supab
 
 ## Cloudflare deployment
 
-The app deploys independently of the public Knomera landing page.
+The app deploys to **Cloudflare Workers** via OpenNext (`@opennextjs/cloudflare`). It is independent of the public Knomera landing page.
 
-### 1. Build locally (optional check)
+Worker name (from `wrangler.jsonc`): `knomera-internal`
+
+### Prerequisites
+
+1. A Cloudflare account with Workers enabled.
+2. Database already set up (`npm run db:setup` or SQL in Supabase).
+3. Wrangler logged in locally:
 
 ```bash
-npm run build
+npx wrangler login
 ```
 
-### 2. Configure Cloudflare project secrets
+### 1. Prepare the four secrets
 
-In the Cloudflare dashboard (Workers → your project → Settings → Variables), set:
+You need these **server-only** values (never `NEXT_PUBLIC_*`):
 
-- `DATABASE_URL`
-- `SESSION_SECRET`
-- `JON_PASSWORD_HASH`
-- `AHMED_PASSWORD_HASH`
+| Variable | What to put |
+| --- | --- |
+| `DATABASE_URL` | Supabase Postgres connection string |
+| `SESSION_SECRET` | Long random string (32+ chars) |
+| `JON_PASSWORD_HASH` | Output of `npm run hash-password` |
+| `AHMED_PASSWORD_HASH` | Output of `npm run hash-password` |
 
-Also add the same values as **build** secrets/variables so `next build` can run in CI if needed.
+#### Generate `SESSION_SECRET`
 
-Do not configure a public Supabase anon/publishable key for this app.
+```bash
+openssl rand -hex 32
+```
+
+#### Generate password hashes
+
+```bash
+npm run hash-password -- "jon-strong-password" jon
+npm run hash-password -- "ahmed-strong-password" ahmed
+```
+
+Copy the printed `JON_PASSWORD_HASH=…` and `AHMED_PASSWORD_HASH=…` values (base64 — safe to paste as-is).
+
+#### Build `DATABASE_URL`
+
+From the Supabase dashboard → **Project Settings → Database**:
+
+Prefer the **connection pooler** URI for Cloudflare Workers (transaction mode, port `6543`), for example:
+
+```text
+postgresql://postgres.PROJECT_REF:PASSWORD@aws-0-REGION.pooler.supabase.com:6543/postgres
+```
+
+Direct DB URLs also work in many setups:
+
+```text
+postgresql://postgres:PASSWORD@db.PROJECT_REF.supabase.co:5432/postgres
+```
+
+URL-encode special characters in the password (`?` → `%3F`, etc.).
+
+If TCP from Workers is unreliable, add a Cloudflare **Hyperdrive** config pointing at Supabase and use Hyperdrive’s connection string as `DATABASE_URL`.
+
+### 2. Set secrets in Cloudflare
+
+Use **Secrets** (encrypted), not plain text vars, for all four.
+
+#### Option A — CLI (recommended)
+
+From the project root, after `npx wrangler login`:
+
+```bash
+npx wrangler secret put DATABASE_URL
+npx wrangler secret put SESSION_SECRET
+npx wrangler secret put JON_PASSWORD_HASH
+npx wrangler secret put AHMED_PASSWORD_HASH
+```
+
+Paste each value when prompted. Secrets are attached to the `knomera-internal` Worker.
+
+#### Option B — Dashboard
+
+1. Open [Cloudflare Dashboard](https://dash.cloudflare.com) → **Workers & Pages**.
+2. Open the `knomera-internal` Worker (create it on first deploy if it does not exist yet).
+3. Go to **Settings → Variables and Secrets**.
+4. Under **Secrets**, add:
+
+   - `DATABASE_URL`
+   - `SESSION_SECRET`
+   - `JON_PASSWORD_HASH`
+   - `AHMED_PASSWORD_HASH`
+
+5. Save. Do **not** mark these as “Text” / public.
+
+Optional for CI builds: if Cloudflare builds the app for you, also add the same names under **Build variables / secrets**. For the default `npm run deploy` flow (build on your machine), runtime secrets are enough.
 
 ### 3. Deploy
 
@@ -148,23 +220,65 @@ Do not configure a public Supabase anon/publishable key for this app.
 npm run deploy
 ```
 
-This runs OpenNext + Wrangler (`opennextjs-cloudflare build && opennextjs-cloudflare deploy`).
+This runs:
 
-Preview Workers locally:
+1. `opennextjs-cloudflare build` (Next.js + Worker adapter)
+2. `opennextjs-cloudflare deploy` (upload to Cloudflare)
+
+On success, Wrangler prints a `*.workers.dev` URL.
+
+Preview the Worker runtime locally before deploying:
 
 ```bash
 npm run preview
 ```
 
-### 4. Custom subdomain
+(`preview` still needs local env — use `.dev.vars` with the same four keys if you want a Workers-local preview.)
 
-In Cloudflare:
+Example `.dev.vars` (gitignored; same shape as production secrets):
 
-1. Open the Worker/Pages project.
-2. Add a custom domain such as `assumptions.knomera.com`.
-3. Confirm DNS for the Knomera zone points at the Worker.
+```bash
+DATABASE_URL=postgresql://...
+SESSION_SECRET=...
+JON_PASSWORD_HASH=...
+AHMED_PASSWORD_HASH=...
+```
 
-Do not hard-code the hostname in application code.
+### 4. Attach a custom subdomain
+
+Example: `assumptions.knomera.com`
+
+1. Cloudflare Dashboard → **Workers & Pages** → `knomera-internal`.
+2. **Settings → Domains & Routes** (or **Triggers → Custom Domains**).
+3. **Add Custom Domain** → enter `assumptions.knomera.com`.
+4. If the Knomera zone is already on Cloudflare, DNS is created automatically.
+5. Wait for the certificate / DNS to become active.
+
+Do not hard-code the hostname in the app.
+
+### 5. Smoke-check production
+
+1. Open the Worker URL or custom domain → should redirect to `/login`.
+2. Sign in as Jon and Ahmed with the passwords you hashed.
+3. Confirm Overview loads the 112 assumptions.
+4. Confirm Sign out clears the session.
+
+### Troubleshooting
+
+| Symptom | Likely cause |
+| --- | --- |
+| Login always fails | Wrong / stale password hashes; regenerate and `wrangler secret put` again |
+| “Database unavailable” | Bad `DATABASE_URL`, wrong password encoding, or Workers cannot reach Postgres — try pooler URI or Hyperdrive |
+| Env works locally but not on CF | Secrets not set on the Worker, or set on the wrong Worker name |
+| Cookie / auth oddities | `SESSION_SECRET` changed after users already had cookies — sign out / clear cookies |
+
+### Security checklist
+
+- [ ] No Supabase service-role or DB password in `NEXT_PUBLIC_*`
+- [ ] `.env.local` and `.supabase-connection` stay gitignored
+- [ ] All four values stored as Cloudflare **Secrets**
+- [ ] Founder passwords are strong and unique
+
 
 ## Scripts
 
