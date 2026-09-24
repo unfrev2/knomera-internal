@@ -1,3 +1,4 @@
+import { EvidenceItemActions } from "@/components/assumptions/EvidenceItemActions";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatDate } from "@/lib/format";
@@ -10,9 +11,13 @@ import type { Evidence } from "@/lib/types";
 
 export type EvidenceTimelineProps = {
   items: Evidence[];
+  sourceOptions?: string[];
 };
 
-export function EvidenceTimeline({ items }: EvidenceTimelineProps) {
+export function EvidenceTimeline({
+  items,
+  sourceOptions = [],
+}: EvidenceTimelineProps) {
   if (items.length === 0) {
     return (
       <EmptyState
@@ -56,9 +61,15 @@ export function EvidenceTimeline({ items }: EvidenceTimelineProps) {
                 />
               </div>
               <p className="mt-2 text-xs text-muted">{strength.explanation}</p>
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
-                {item.source ? <span>Source: {item.source}</span> : null}
-                <span>Added by {displayName(item.created_by)}</span>
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
+                  {item.source ? <span>Source: {item.source}</span> : null}
+                  <span>Added by {displayName(item.created_by)}</span>
+                </div>
+                <EvidenceItemActions
+                  evidence={item}
+                  sourceOptions={sourceOptions}
+                />
               </div>
             </div>
           </li>

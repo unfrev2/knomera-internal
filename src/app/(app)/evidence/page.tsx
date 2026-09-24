@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { requirePageContext } from "@/lib/auth/context";
 import { listAssumptions } from "@/lib/db/assumptions";
-import { listEvidence } from "@/lib/db/evidence";
+import { listEvidence, listEvidenceSources } from "@/lib/db/evidence";
 import {
   EVIDENCE_STRENGTH,
   EVIDENCE_TYPE_LABELS,
@@ -46,24 +46,28 @@ export default async function EvidencePage({
     strength: parseStrength(pick("strength")),
     direction: parseEnum(pick("direction"), EVIDENCE_DIRECTIONS),
     assumption_id: pick("assumption"),
+    source: pick("source"),
     date_from: pick("from"),
     date_to: pick("to"),
   };
 
   let items: Evidence[] = [];
   let assumptions: Assumption[] = [];
+  let sources: string[] = [];
   let dbError: string | null = null;
 
   try {
-    [items, assumptions] = await Promise.all([
+    [items, assumptions, sources] = await Promise.all([
       listEvidence(workspace.id, filters),
       listAssumptions(workspace.id),
+      listEvidenceSources(workspace.id),
     ]);
   } catch {
     dbError =
       "We could not load evidence. Check your database connection and try again.";
     items = [];
     assumptions = [];
+    sources = [];
   }
 
   const hasFilters = Boolean(
@@ -71,6 +75,7 @@ export default async function EvidencePage({
       filters.strength ||
       filters.direction ||
       filters.assumption_id ||
+      filters.source ||
       filters.date_from ||
       filters.date_to,
   );
@@ -146,6 +151,19 @@ export default async function EvidencePage({
             </Select>
           </div>
           <div>
+            <label htmlFor="source" className="mb-1.5 block text-sm font-medium text-navy">
+              Source
+            </label>
+            <Select id="source" name="source" defaultValue={filters.source ?? ""}>
+              <option value="">All sources</option>
+              {sources.map((source) => (
+                <option key={source} value={source}>
+                  {source}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="sm:col-span-2">
             <label htmlFor="assumption" className="mb-1.5 block text-sm font-medium text-navy">
               Assumption
             </label>
@@ -195,7 +213,7 @@ export default async function EvidencePage({
         </div>
       </form>
 
-      <EvidenceFeed items={items} />
+      <EvidenceFeed items={items} sourceOptions={sources} />
     </div>
   );
 }

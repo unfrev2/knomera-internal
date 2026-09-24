@@ -17,8 +17,19 @@ export type EvidenceFilters = {
   strength?: number;
   direction?: EvidenceDirection;
   assumption_id?: string;
+  source?: string;
   date_from?: string;
   date_to?: string;
+};
+
+export type EvidenceUpdateInput = {
+  title: string;
+  description?: string | null;
+  evidence_type: EvidenceType;
+  strength: number;
+  direction: EvidenceDirection;
+  source?: string | null;
+  evidence_date: string;
 };
 
 export async function listEvidenceForAssumption(
@@ -56,6 +67,7 @@ export async function listEvidence(
   const strength = filters.strength ?? null;
   const direction = filters.direction ?? null;
   const assumptionId = filters.assumption_id ?? null;
+  const source = filters.source?.trim() ?? "";
   const dateFrom = filters.date_from ?? null;
   const dateTo = filters.date_to ?? null;
 
@@ -82,10 +94,52 @@ export async function listEvidence(
       AND (${strength}::int IS NULL OR e.strength = ${strength})
       AND (${direction}::text IS NULL OR e.direction::text = ${direction})
       AND (${assumptionId}::uuid IS NULL OR e.assumption_id = ${assumptionId}::uuid)
+      AND (${source} = '' OR e.source = ${source})
       AND (${dateFrom}::date IS NULL OR e.evidence_date >= ${dateFrom}::date)
       AND (${dateTo}::date IS NULL OR e.evidence_date <= ${dateTo}::date)
     ORDER BY e.evidence_date DESC, e.created_at DESC
   `;
+}
+
+export async function getEvidence(
+  workspaceId: string,
+  id: string,
+): Promise<Evidence | null> {
+  const sql = getDb();
+  const rows = await sql<Evidence[]>`
+    SELECT
+      id,
+      workspace_id,
+      assumption_id,
+      title,
+      description,
+      evidence_type,
+      strength,
+      direction,
+      source,
+      evidence_date::text,
+      created_by,
+      created_at::text
+    FROM evidence
+    WHERE workspace_id = ${workspaceId} AND id = ${id}
+    LIMIT 1
+  `;
+  return rows[0] ?? null;
+}
+
+export async function listEvidenceSources(
+  workspaceId: string,
+): Promise<string[]> {
+  const sql = getDb();
+  const rows = await sql<{ source: string }[]>`
+    SELECT DISTINCT source
+    FROM evidence
+    WHERE workspace_id = ${workspaceId}
+      AND source IS NOT NULL
+      AND trim(source) <> ''
+    ORDER BY source ASC
+  `;
+  return rows.map((row) => row.source);
 }
 
 export async function createEvidence(
@@ -144,6 +198,64 @@ export async function createEvidence(
   `;
 
   return rows[0];
+}
+
+export async function updateEvidence(
+  workspaceId: string,
+  id: string,
+  input: EvidenceUpdateInput,
+): Promise<Evidence | null> {
+  const sql = getDb();
+  const rows = await sql<Evidence[]>`
+    UPDATE evidence SET
+      title = ${input.title},
+      description = ${input.description ?? null},
+      evidence_type = ${input.evidence_type},
+      strength = ${input.strength},
+      direction = ${input.direction},
+      source = ${input.source ?? null},
+      evidence_date = ${input.evidence_date}
+    WHERE workspace_id = ${workspaceId} AND id = ${id}
+    RETURNING
+      id,
+      workspace_id,
+      assumption_id,
+      title,
+      description,
+      evidence_type,
+      strength,
+      direction,
+      source,
+      evidence_date::text,
+      created_by,
+      created_at::text
+  `;
+  return rows[0] ?? null;
+}
+
+export async function deleteEvidence(
+  workspaceId: string,
+  id: string,
+): Promise<Evidence | null> {
+  const sql = getDb();
+  const rows = await sql<Evidence[]>`
+    DELETE FROM evidence
+    WHERE workspace_id = ${workspaceId} AND id = ${id}
+    RETURNING
+      id,
+      workspace_id,
+      assumption_id,
+      title,
+      description,
+      evidence_type,
+      strength,
+      direction,
+      source,
+      evidence_date::text,
+      created_by,
+      created_at::text
+  `;
+  return rows[0] ?? null;
 }
 
 export async function listEvidenceByAssumptionIds(

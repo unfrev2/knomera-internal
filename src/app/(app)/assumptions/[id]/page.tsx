@@ -5,7 +5,7 @@ import { HistoryList } from "@/components/assumptions/HistoryList";
 import { Badge } from "@/components/ui/Badge";
 import { requirePageContext } from "@/lib/auth/context";
 import { getAssumption } from "@/lib/db/assumptions";
-import { listEvidenceForAssumption } from "@/lib/db/evidence";
+import { listEvidenceForAssumption, listEvidenceSources } from "@/lib/db/evidence";
 import { listAssumptionHistory } from "@/lib/db/history";
 import { suggestConfidence } from "@/lib/domain/suggested-confidence";
 import { formatDate, formatDateShort } from "@/lib/format";
@@ -30,14 +30,16 @@ export default async function AssumptionDetailPage({
   let assumption;
   let evidence;
   let history;
+  let sourceOptions: string[] = [];
 
   try {
     assumption = await getAssumption(workspace.id, id);
     if (!assumption) notFound();
 
-    [evidence, history] = await Promise.all([
+    [evidence, history, sourceOptions] = await Promise.all([
       listEvidenceForAssumption(workspace.id, id),
       listAssumptionHistory(workspace.id, id),
+      listEvidenceSources(workspace.id),
     ]);
   } catch {
     return (
@@ -63,7 +65,10 @@ export default async function AssumptionDetailPage({
               {assumption.statement}
             </h1>
           </div>
-          <AssumptionDetailActions assumption={assumption} />
+          <AssumptionDetailActions
+            assumption={assumption}
+            sourceOptions={sourceOptions}
+          />
         </div>
 
         <ConfidencePrompt assumption={assumption} show={evidenceAdded} />
@@ -133,7 +138,7 @@ export default async function AssumptionDetailPage({
 
       <section className="space-y-4">
         <h2 className="text-lg font-semibold text-navy">Evidence</h2>
-        <EvidenceTimeline items={evidence} />
+        <EvidenceTimeline items={evidence} sourceOptions={sourceOptions} />
       </section>
 
       <section className="space-y-3 rounded border border-line bg-white/60 px-5 py-5">

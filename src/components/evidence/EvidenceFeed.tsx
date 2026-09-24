@@ -1,3 +1,4 @@
+import { EvidenceItemActions } from "@/components/assumptions/EvidenceItemActions";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatDate } from "@/lib/format";
@@ -11,9 +12,13 @@ import Link from "next/link";
 
 export type EvidenceFeedProps = {
   items: Evidence[];
+  sourceOptions?: string[];
 };
 
-export function EvidenceFeed({ items }: EvidenceFeedProps) {
+export function EvidenceFeed({
+  items,
+  sourceOptions = [],
+}: EvidenceFeedProps) {
   if (items.length === 0) {
     return (
       <EmptyState
@@ -61,10 +66,16 @@ export function EvidenceFeed({ items }: EvidenceFeedProps) {
                 label={`${strength.label} (${item.strength}/5)`}
               />
             </div>
-            <p className="mt-2 text-xs text-muted">
-              {item.source ? `${item.source} · ` : ""}
-              {displayName(item.created_by)}
-            </p>
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs text-muted">
+                {item.source ? `${item.source} · ` : ""}
+                {displayName(item.created_by)}
+              </p>
+              <EvidenceItemActions
+                evidence={item}
+                sourceOptions={sourceOptions}
+              />
+            </div>
           </li>
         );
       })}

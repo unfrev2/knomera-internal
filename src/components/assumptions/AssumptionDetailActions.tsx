@@ -8,10 +8,12 @@ import { useState } from "react";
 
 export type AssumptionDetailActionsProps = {
   assumption: Assumption;
+  sourceOptions?: string[];
 };
 
 export function AssumptionDetailActions({
   assumption,
+  sourceOptions = [],
 }: AssumptionDetailActionsProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
@@ -36,6 +38,7 @@ export function AssumptionDetailActions({
         open={evidenceOpen}
         onClose={() => setEvidenceOpen(false)}
         assumptionId={assumption.id}
+        sourceOptions={sourceOptions}
       />
     </>
   );
