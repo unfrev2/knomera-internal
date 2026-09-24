@@ -35,7 +35,8 @@ export default async function OverviewPage() {
       countAssumptions(workspace.id),
       listAssumptions(workspace.id),
     ]);
-  } catch {
+  } catch (error) {
+    console.error("Overview assumptions load failed:", error);
     dbError =
       "We could not load assumptions from the database. Check your connection and try again.";
     stats = {

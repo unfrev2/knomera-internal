@@ -58,7 +58,8 @@ export default async function AssumptionsPage({
       status: filters.status,
       owner: filters.owner,
     });
-  } catch {
+  } catch (error) {
+    console.error("Assumptions list load failed:", error);
     dbError =
       "We could not load assumptions. Check your database connection and try again.";
     assumptions = [];

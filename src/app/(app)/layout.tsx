@@ -14,7 +14,8 @@ export default async function AppLayout({
 
   try {
     await getWorkspaceForUser(user.workspaceSlug);
-  } catch {
+  } catch (error) {
+    console.error("Workspace load failed:", error);
     return (
       <AppShell userDisplayName={user.displayName} signOutAction={signOut}>
         <div className="mx-auto max-w-lg space-y-3 py-16">
