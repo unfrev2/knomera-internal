@@ -1,149 +1,65 @@
-import { ConfidenceMatrix } from "@/components/overview/ConfidenceMatrix";
-import { PriorityList } from "@/components/overview/PriorityList";
-import { StatsStrip } from "@/components/overview/StatsStrip";
+import {
+  ActivitySection,
+  AttentionSection,
+  CloserSection,
+  DoingSection,
+  LearningSection,
+} from "@/components/overview/HomeSections";
 import { PageAlert, PageFrame, PageHeader } from "@/components/layout/Page";
 import { requirePageContext } from "@/lib/auth/context";
-import { countAssumptions, listAssumptions } from "@/lib/db/assumptions";
-import { listEvidenceByAssumptionIds } from "@/lib/db/evidence";
-import {
-  explainPriority,
-  rankAssumptionsForValidation,
-} from "@/lib/domain/priority";
-import type { Assumption, Evidence } from "@/lib/types";
-import Link from "next/link";
+import { getHomeDashboard } from "@/lib/db/home";
+import type { HomeDashboard } from "@/lib/db/home";
 
-function groupEvidenceByAssumption<
-  T extends { assumption_id: string },
->(items: T[]): Map<string, T[]> {
-  const map = new Map<string, T[]>();
-  for (const item of items) {
-    const list = map.get(item.assumption_id) ?? [];
-    list.push(item);
-    map.set(item.assumption_id, list);
-  }
-  return map;
-}
+const EMPTY: HomeDashboard = {
+  attention: [],
+  learning: [],
+  activeBets: [],
+  jonFocus: [],
+  ahmedFocus: [],
+  closer: {
+    discovery_sessions: 0,
+    organisations: 0,
+    active_opportunities: 0,
+    proposal_or_pilot: 0,
+    commercial_evidence: 0,
+    pipeline_value: null,
+    pipeline_currency: "GBP",
+  },
+  activity: [],
+};
 
 export default async function OverviewPage() {
   const { workspace } = await requirePageContext();
 
-  let stats: Awaited<ReturnType<typeof countAssumptions>>;
-  let assumptions: Assumption[];
+  let dashboard = EMPTY;
   let dbError: string | null = null;
 
   try {
-    [stats, assumptions] = await Promise.all([
-      countAssumptions(workspace.id),
-      listAssumptions(workspace.id),
-    ]);
+    dashboard = await getHomeDashboard(workspace.id);
   } catch (error) {
-    console.error("Overview assumptions load failed:", error);
+    console.error("Home dashboard load failed:", error);
     dbError =
-      "We could not load assumptions from the database. Check your connection and try again.";
-    stats = {
-      total: 0,
-      critical: 0,
-      critical_low: 0,
-      testing: 0,
-      supported: 0,
-      disproved: 0,
-    };
-    assumptions = [];
+      "We could not load the home dashboard. Check your connection and try again.";
   }
-
-  let evidence: Evidence[] = [];
-  if (!dbError) {
-    try {
-      evidence = await listEvidenceByAssumptionIds(
-        workspace.id,
-        assumptions.map((item) => item.id),
-      );
-    } catch {
-      evidence = [];
-    }
-  }
-
-  const evidenceByAssumption = groupEvidenceByAssumption(evidence);
-
-  const ranked = rankAssumptionsForValidation(
-    assumptions.map((assumption) => ({
-      assumption,
-      evidence: evidenceByAssumption.get(assumption.id) ?? [],
-    })),
-  );
-
-  const topPriority = ranked[0];
-  const provenOrSupported = assumptions.filter(
-    (item) => item.confidence === "proven" || item.status === "supported",
-  ).length;
 
   return (
     <PageFrame width="wide">
       <PageHeader
-        title="Overview"
-        description={
-          dbError ? undefined : assumptions.length === 0 ? (
-            "No assumptions logged yet. Add your first assumption to start tracking what you believe and what to validate."
-          ) : topPriority ? (
-            <>
-              We are tracking{" "}
-              <span className="font-medium text-navy">
-                {assumptions.length} assumptions
-              </span>
-              , with{" "}
-              <span className="font-medium text-navy">
-                {provenOrSupported} well supported or proven
-              </span>
-              . The highest priority to test next is{" "}
-              <Link
-                href={`/assumptions/${topPriority.assumptionId}`}
-                className="font-medium text-blue underline-offset-2 hover:underline"
-              >
-                {topPriority.statement}
-              </Link>
-              {explainPriority(topPriority)
-                ? ` — ${explainPriority(topPriority)}.`
-                : "."}
-            </>
-          ) : (
-            "Assumptions are loaded. Review the matrix and priority list below."
-          )
-        }
+        title="Home"
+        description="Where Knomera stands — what needs attention, what we're learning, what we're doing, and whether we're getting closer to a business."
       >
         {dbError ? <PageAlert>{dbError}</PageAlert> : null}
       </PageHeader>
 
-      <StatsStrip
-        total={stats.total}
-        critical={stats.critical}
-        criticalLowConfidence={stats.critical_low}
-        testing={stats.testing}
-        supported={stats.supported}
-        disproved={stats.disproved}
+      <AttentionSection items={dashboard.attention} />
+      <LearningSection items={dashboard.learning} />
+      <DoingSection
+        bets={dashboard.activeBets}
+        jonFocus={dashboard.jonFocus}
+        ahmedFocus={dashboard.ahmedFocus}
       />
-
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-navy">
-          Confidence matrix
-        </h2>
-        {assumptions.length === 0 && !dbError ? (
-          <p className="text-sm text-muted">
-            The matrix will populate once you add assumptions.
-          </p>
-        ) : (
-          <ConfidenceMatrix assumptions={assumptions} />
-        )}
-      </section>
-
-      <PriorityList
-        items={ranked.map((item) => ({
-          assumptionId: item.assumptionId,
-          statement: item.statement,
-          reasons: item.reasons,
-          importance: item.importance,
-          confidence: item.confidence,
-        }))}
-      />
+      <CloserSection metrics={dashboard.closer} />
+      <ActivitySection items={dashboard.activity} />
     </PageFrame>
   );
 }

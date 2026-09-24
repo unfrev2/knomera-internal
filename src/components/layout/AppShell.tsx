@@ -20,6 +20,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import { GlobalSearch } from "@/components/layout/GlobalSearch";
 
 type NavItem = {
   href: string;
@@ -31,7 +32,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   {
     href: "/",
-    label: "Overview",
+    label: "Home",
     icon: LayoutDashboard,
     match: (path) => path === "/" || path.startsWith("/overview"),
   },
@@ -244,34 +245,42 @@ export function AppShell({
 
         <div className="flex min-w-0 flex-1 flex-col">
           {/* Mobile top bar: identity + menu always visible */}
-          <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-line bg-cream/95 px-4 py-3 backdrop-blur-sm md:hidden">
-            <Link href="/" className="inline-block shrink-0">
-              <img src="/logo.png" alt="Knomera" className="h-10 w-auto" />
-            </Link>
-            <div className="flex min-w-0 items-center gap-1">
-              <span className="truncate text-sm font-medium text-navy">
-                {userDisplayName}
-              </span>
-              <SignOutControl
-                signOutAction={signOutAction}
-                onSignOut={onSignOut}
-                compact
-              />
-              <button
-                type="button"
-                className="rounded p-2 text-navy/70 hover:bg-cream-tint"
-                aria-label={mobileOpen ? "Close menu" : "Open menu"}
-                aria-expanded={mobileOpen}
-                onClick={() => setMobileOpen((open) => !open)}
-              >
-                {mobileOpen ? (
-                  <X className="size-5" aria-hidden />
-                ) : (
-                  <Menu className="size-5" aria-hidden />
-                )}
-              </button>
+          <header className="sticky top-0 z-30 flex flex-col gap-2 border-b border-line bg-cream/95 px-4 py-3 backdrop-blur-sm md:hidden">
+            <div className="flex items-center justify-between gap-3">
+              <Link href="/" className="inline-block shrink-0">
+                <img src="/logo.png" alt="Knomera" className="h-10 w-auto" />
+              </Link>
+              <div className="flex min-w-0 items-center gap-1">
+                <span className="truncate text-sm font-medium text-navy">
+                  {userDisplayName}
+                </span>
+                <SignOutControl
+                  signOutAction={signOutAction}
+                  onSignOut={onSignOut}
+                  compact
+                />
+                <button
+                  type="button"
+                  className="rounded p-2 text-navy/70 hover:bg-cream-tint"
+                  aria-label={mobileOpen ? "Close menu" : "Open menu"}
+                  aria-expanded={mobileOpen}
+                  onClick={() => setMobileOpen((open) => !open)}
+                >
+                  {mobileOpen ? (
+                    <X className="size-5" aria-hidden />
+                  ) : (
+                    <Menu className="size-5" aria-hidden />
+                  )}
+                </button>
+              </div>
             </div>
+            <GlobalSearch compact />
           </header>
+
+          {/* Desktop search bar */}
+          <div className="hidden items-center justify-end border-b border-line px-8 py-3 md:flex">
+            <GlobalSearch />
+          </div>
 
           <main className="flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
         </div>

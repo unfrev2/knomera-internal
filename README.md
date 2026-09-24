@@ -143,12 +143,13 @@ Both map server-side to the `knomera` workspace.
 
 Sessions are independent of Supabase Auth so the product can later move to Supabase Auth or Google Workspace SSO without rewriting domain logic.
 
-## Architecture notes (Stage 1–7)
+## Architecture notes (Stage 1–8)
 
 - Workspace-scoped queries via `workspace_id` (single Knomera workspace in use; no switcher).
 - Reusable linking UI: `LinkedObjectList`, `ObjectPicker` (`src/components/links/`).
 - Shared page layout: `PageFrame` / `PageHeader` (`src/components/layout/Page.tsx`).
-- Workspace search: assumptions, evidence, problems, organisations, discovery sessions, decisions, ideas, bets, opportunities.
+- Global text search in the shell across assumptions, problems, evidence, discovery, decisions, ideas, bets, opportunities, organisations.
+- **Home** answers four questions: attention, learning, doing, closer to a business — plus a secondary activity strip.
 - Migration ledger: `schema_migrations`.
 - Audit snapshot: `docs/stage-1-audit.md`.
 - **Strategy** and **Problems** orient assumptions around customer problems.
@@ -367,6 +368,8 @@ Do not hard-code the hostname in the app.
 
 Central objects today are **strategy**, **problems**, **assumptions**, **evidence**, **discovery**, **decisions**, **ideas**, **bets**, **opportunities** and **focus**.
 
+**Home** answers four questions from live data: what needs attention, what we’re learning, what we’re doing, and whether we’re getting closer to a business. Recent activity is secondary. Global search (shell) is plain text, grouped by type — not semantic.
+
 - Ideas are cheap; bets represent commitment. Do not conflate them.
 - Bet outcomes do not auto-update linked assumptions. Evidence is created only when founders interpret an outcome as such.
 - Commercial opportunities reuse organisations from Discovery. Stage changes (won/lost) are not evidence until interpreted.
@@ -378,3 +381,4 @@ Central objects today are **strategy**, **problems**, **assumptions**, **evidenc
 - “Evidence suggests” is a deterministic decision aid only.
 - Validation priority ranking is deterministic and lives in `src/lib/domain/priority.ts`.
 - Important field changes are recorded in `assumption_history` via a database trigger (with `app.changed_by` set by the server).
+- Home closer metrics are early commercial indicators only — no vanity dashboards.

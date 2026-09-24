@@ -24,6 +24,7 @@ export const SEARCHABLE_OBJECT_TYPES = [
   "evidence",
   "problem",
   "organisation",
+  "contact",
   "discovery_session",
   "decision",
   "idea",
@@ -73,9 +74,11 @@ export function hrefForLinkable(
     case "idea":
       return `/ideas/${id}`;
     case "organisation":
-      return `/organisations/${id}`;
+      // No org detail page yet — Discovery is where organisations surface.
+      return `/discovery`;
     case "contact":
-      return `/contacts/${id}`;
+      // Contacts live on discovery sessions; prefer session href from search when known.
+      return `/discovery`;
     case "discovery_session":
       return `/discovery/${id}`;
     case "opportunity":

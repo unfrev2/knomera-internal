@@ -472,6 +472,13 @@ async function main() {
   await sql`DELETE FROM assumptions WHERE id = ${created.id}`;
   console.log("  ✓ Cleaned up smoke-test focus + commercial + bet + decision + discovery + assumption");
 
+  console.log("Home dashboard");
+  const { getHomeDashboard } = await import("../src/lib/db/home");
+  const home = await getHomeDashboard(workspace.id);
+  await assert(Array.isArray(home.attention), "Home attention section loads");
+  await assert(Array.isArray(home.learning), "Home learning section loads");
+  await assert(typeof home.closer.discovery_sessions === "number", "Home closer metrics load");
+
   console.log("\nAll smoke checks passed.");
   await sql.end({ timeout: 5 });
 }
