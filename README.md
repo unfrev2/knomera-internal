@@ -227,6 +227,21 @@ This runs:
 
 On success, Wrangler prints a `*.workers.dev` URL.
 
+### Git-connected Cloudflare builds
+
+If the Worker is connected to GitHub/GitLab, Cloudflare defaults to `npm run build` then `npx wrangler deploy`. That fails for OpenNext because `npm run build` is only `next build` — it never writes `.open-next/`, so deploy errors with **Could not find compiled Open Next config**.
+
+In **Workers & Pages → knomera-internal → Settings → Builds**, set:
+
+| Setting | Value |
+| --- | --- |
+| **Build command** | `npm run build:worker` |
+| **Deploy command** | `npx wrangler deploy` |
+
+(`build:worker` runs `opennextjs-cloudflare build`, which runs Next.js and produces the Worker bundle Wrangler expects.)
+
+Alternatively for a one-shot local-style CI deploy: Build command `npm run deploy`, and leave Deploy as a no-op only if your Cloudflare UI allows it — prefer the two-step settings above.
+
 Preview the Worker runtime locally before deploying:
 
 ```bash
@@ -271,6 +286,7 @@ Do not hard-code the hostname in the app.
 | “Database unavailable” | Bad `DATABASE_URL`, wrong password encoding, or Workers cannot reach Postgres — try pooler URI or Hyperdrive |
 | Env works locally but not on CF | Secrets not set on the Worker, or set on the wrong Worker name |
 | Cookie / auth oddities | `SESSION_SECRET` changed after users already had cookies — sign out / clear cookies |
+| Could not find compiled Open Next config | CI Build command is still `npm run build` — change it to `npm run build:worker` |
 
 ### Security checklist
 
@@ -285,7 +301,8 @@ Do not hard-code the hostname in the app.
 | Script | Description |
 | --- | --- |
 | `npm run dev` | Next.js development server |
-| `npm run build` | Production Next.js build |
+| `npm run build` | Production Next.js build (used by OpenNext) |
+| `npm run build:worker` | OpenNext Cloudflare Worker build (use this in CI) |
 | `npm run lint` | ESLint |
 | `npm run db:schema` | Apply schema |
 | `npm run db:seed` | Seed + verify |
