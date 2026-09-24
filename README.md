@@ -143,7 +143,7 @@ Both map server-side to the `knomera` workspace.
 
 Sessions are independent of Supabase Auth so the product can later move to Supabase Auth or Google Workspace SSO without rewriting domain logic.
 
-## Architecture notes (Stage 1–6)
+## Architecture notes (Stage 1–7)
 
 - Workspace-scoped queries via `workspace_id` (single Knomera workspace in use; no switcher).
 - Reusable linking UI: `LinkedObjectList`, `ObjectPicker` (`src/components/links/`).
@@ -157,6 +157,7 @@ Sessions are independent of Supabase Auth so the product can later move to Supab
 - **Ideas** are a lightweight inbox (no scoring/roadmaps). **Bets** are meaningful commitments with hypotheses and outcomes.
 - Bet outcomes are not evidence until someone explicitly interprets them (`evidence.bet_outcome_id` + `bet_outcome` type).
 - **Commercial** tracks opportunities against existing organisations — not a CRM. Won/lost never auto-creates evidence (`evidence.opportunity_id` + `commercial` type).
+- **Focus** answers “what are Jon and Ahmed focusing on this week?” — no backlog, Kanban, or subtasks.
 
 ## Cloudflare deployment
 
@@ -364,11 +365,12 @@ Do not hard-code the hostname in the app.
 
 ## Product notes
 
-Central objects today are **strategy**, **problems**, **assumptions**, **evidence**, **discovery**, **decisions**, **ideas**, **bets** and **opportunities**.
+Central objects today are **strategy**, **problems**, **assumptions**, **evidence**, **discovery**, **decisions**, **ideas**, **bets**, **opportunities** and **focus**.
 
 - Ideas are cheap; bets represent commitment. Do not conflate them.
 - Bet outcomes do not auto-update linked assumptions. Evidence is created only when founders interpret an outcome as such.
 - Commercial opportunities reuse organisations from Discovery. Stage changes (won/lost) are not evidence until interpreted.
+- Focus is weekly and personal — if it starts resembling Linear, stop.
 - Decisions are historical records — changing current knowledge should not silently rewrite why a decision was made.
 - Discovery generates evidence against assumptions; deleting a session does not delete evidence (`ON DELETE SET NULL`).
 - Problems surface evidence through linked assumptions (no duplicated evidence records).

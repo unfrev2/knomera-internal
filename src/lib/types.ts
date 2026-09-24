@@ -118,6 +118,13 @@ export const OPPORTUNITY_STAGES = [
   "lost",
 ] as const;
 
+export const FOCUS_ITEM_STATUSES = [
+  "planned",
+  "active",
+  "done",
+  "dropped",
+] as const;
+
 export type Importance = (typeof IMPORTANCE_LEVELS)[number];
 export type Confidence = (typeof CONFIDENCE_LEVELS)[number];
 export type AssumptionStatus = (typeof ASSUMPTION_STATUSES)[number];
@@ -138,6 +145,7 @@ export type BetAssumptionRelationship =
   (typeof BET_ASSUMPTION_RELATIONSHIPS)[number];
 export type BetOutcomeResult = (typeof BET_OUTCOME_RESULTS)[number];
 export type OpportunityStage = (typeof OPPORTUNITY_STAGES)[number];
+export type FocusItemStatus = (typeof FOCUS_ITEM_STATUSES)[number];
 
 export type AppUserId = "jon" | "ahmed";
 
@@ -383,6 +391,23 @@ export type Opportunity = {
   updated_at: string;
   organisation_name?: string;
   evidence_count?: number;
+};
+
+export type FocusItem = {
+  id: string;
+  workspace_id: string;
+  title: string;
+  owner: string;
+  week_start: string;
+  status: FocusItemStatus;
+  linked_assumption_id: string | null;
+  linked_bet_id: string | null;
+  linked_opportunity_id: string | null;
+  created_by: string | null;
+  created_at: string;
+  linked_assumption_statement?: string | null;
+  linked_bet_title?: string | null;
+  linked_opportunity_title?: string | null;
 };
 
 export type SessionUser = {

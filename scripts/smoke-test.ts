@@ -191,6 +191,19 @@ async function main() {
     "Stage 6 commercial migration recorded",
   );
 
+  console.log("Stage 7 focus schema");
+  const focusTable = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = 'focus_items'
+    ) AS exists
+  `;
+  await assert(focusTable[0]?.exists === true, "focus_items table exists");
+  await assert(
+    migrations.some((row) => row.version === "20250924240000"),
+    "Stage 7 focus migration recorded",
+  );
+
   console.log("Workspace object search");
   const searchHits = await searchWorkspaceObjects(workspace.id, {
     query: "experiment",
@@ -421,6 +434,29 @@ async function main() {
     "Opportunity shows linked evidence count",
   );
 
+  console.log("Focus items");
+  const { createFocusItem, listFocusItems, deleteFocusItem } = await import(
+    "../src/lib/db/focus"
+  );
+  const { weekStartISO } = await import("../src/lib/format");
+  const week = weekStartISO();
+  const focus = await createFocusItem(workspace.id, "jon", {
+    title: `Smoke focus ${Date.now()}`,
+    owner: "jon",
+    week_start: week,
+    status: "active",
+    linked_assumption_id: created.id,
+  });
+  const focusList = await listFocusItems(workspace.id, {
+    week_start: week,
+    owner: "jon",
+  });
+  await assert(
+    focusList.some((item) => item.id === focus.id),
+    "Focus item listed for week",
+  );
+  await deleteFocusItem(workspace.id, focus.id);
+
   const timeline = await listEvidenceForAssumption(workspace.id, created.id);
   await assert(timeline.length === 5, "Evidence timeline has all five items");
 
@@ -434,7 +470,7 @@ async function main() {
   await sql`DELETE FROM discovery_sessions WHERE id = ${sessionRows[0].id}`;
   await sql`DELETE FROM organisations WHERE id = ${orgRows[0].id}`;
   await sql`DELETE FROM assumptions WHERE id = ${created.id}`;
-  console.log("  ✓ Cleaned up smoke-test commercial + bet + decision + discovery + assumption");
+  console.log("  ✓ Cleaned up smoke-test focus + commercial + bet + decision + discovery + assumption");
 
   console.log("\nAll smoke checks passed.");
   await sql.end({ timeout: 5 });

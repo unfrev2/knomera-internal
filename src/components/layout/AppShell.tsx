@@ -4,6 +4,7 @@ import {
   Briefcase,
   CircleHelp,
   Compass,
+  Crosshair,
   FileSearch,
   LayoutDashboard,
   Lightbulb,
@@ -33,6 +34,12 @@ const NAV_ITEMS: NavItem[] = [
     label: "Overview",
     icon: LayoutDashboard,
     match: (path) => path === "/" || path.startsWith("/overview"),
+  },
+  {
+    href: "/focus",
+    label: "Focus",
+    icon: Crosshair,
+    match: (path) => path.startsWith("/focus"),
   },
   {
     href: "/strategy",

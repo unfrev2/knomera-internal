@@ -14,6 +14,7 @@ import type {
   BetAssumptionRelationship,
   BetOutcomeResult,
   OpportunityStage,
+  FocusItemStatus,
   SessionUser,
   StrategyItemStatus,
   StrategyItemType,
@@ -161,6 +162,13 @@ export const OPPORTUNITY_STAGE_LABELS: Record<OpportunityStage, string> = {
   pilot: "Pilot",
   won: "Won",
   lost: "Lost",
+};
+
+export const FOCUS_STATUS_LABELS: Record<FocusItemStatus, string> = {
+  planned: "Planned",
+  active: "Active",
+  done: "Done",
+  dropped: "Dropped",
 };
 
 export const EVIDENCE_STRENGTH = [

@@ -161,6 +161,16 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 DO $$ BEGIN
+  CREATE TYPE focus_item_status AS ENUM (
+    'planned',
+    'active',
+    'done',
+    'dropped'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
   ALTER TYPE evidence_type ADD VALUE IF NOT EXISTS 'bet_outcome';
 EXCEPTION
   WHEN duplicate_object THEN NULL;
@@ -589,6 +599,21 @@ CREATE TABLE IF NOT EXISTS opportunities (
     ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS focus_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id UUID NOT NULL REFERENCES workspaces (id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  owner TEXT NOT NULL,
+  week_start DATE NOT NULL,
+  status focus_item_status NOT NULL DEFAULT 'planned',
+  linked_assumption_id UUID,
+  linked_bet_id UUID,
+  linked_opportunity_id UUID,
+  created_by TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT focus_items_id_workspace_unique UNIQUE (id, workspace_id)
+);
+
 -- Evidence may optionally point at a discovery session (set after sessions exist).
 -- Single-column FK: composite ON DELETE SET NULL would also null workspace_id.
 DO $$ BEGIN
@@ -622,6 +647,33 @@ DO $$ BEGIN
 EXCEPTION
   WHEN duplicate_object THEN NULL;
   WHEN undefined_column THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE focus_items
+    ADD CONSTRAINT focus_items_assumption_fk
+    FOREIGN KEY (linked_assumption_id)
+    REFERENCES assumptions (id)
+    ON DELETE SET NULL;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE focus_items
+    ADD CONSTRAINT focus_items_bet_fk
+    FOREIGN KEY (linked_bet_id)
+    REFERENCES bets (id)
+    ON DELETE SET NULL;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE focus_items
+    ADD CONSTRAINT focus_items_opportunity_fk
+    FOREIGN KEY (linked_opportunity_id)
+    REFERENCES opportunities (id)
+    ON DELETE SET NULL;
+EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 -- ---------------------------------------------------------------------------
@@ -695,6 +747,10 @@ CREATE INDEX IF NOT EXISTS opportunities_next_action_date_idx
 CREATE INDEX IF NOT EXISTS evidence_opportunity_id_idx
   ON evidence (opportunity_id)
   WHERE opportunity_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS focus_items_workspace_week_idx
+  ON focus_items (workspace_id, week_start DESC, owner);
+CREATE INDEX IF NOT EXISTS focus_items_status_idx
+  ON focus_items (workspace_id, status);
 
 -- ---------------------------------------------------------------------------
 -- updated_at trigger
@@ -850,6 +906,7 @@ REVOKE ALL ON TABLE bet_assumptions FROM anon, authenticated;
 REVOKE ALL ON TABLE bet_outcomes FROM anon, authenticated;
 REVOKE ALL ON TABLE decision_bets FROM anon, authenticated;
 REVOKE ALL ON TABLE opportunities FROM anon, authenticated;
+REVOKE ALL ON TABLE focus_items FROM anon, authenticated;
 
 REVOKE ALL ON SCHEMA public FROM anon, authenticated;
 GRANT USAGE ON SCHEMA public TO postgres, service_role;
@@ -879,6 +936,7 @@ ALTER TABLE bet_assumptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bet_outcomes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE decision_bets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE opportunities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE focus_items ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS deny_all_workspaces ON workspaces;
 CREATE POLICY deny_all_workspaces ON workspaces FOR ALL TO anon, authenticated USING (false);
@@ -954,3 +1012,6 @@ CREATE POLICY deny_all_decision_bets ON decision_bets FOR ALL TO anon, authentic
 
 DROP POLICY IF EXISTS deny_all_opportunities ON opportunities;
 CREATE POLICY deny_all_opportunities ON opportunities FOR ALL TO anon, authenticated USING (false);
+
+DROP POLICY IF EXISTS deny_all_focus_items ON focus_items;
+CREATE POLICY deny_all_focus_items ON focus_items FOR ALL TO anon, authenticated USING (false);
