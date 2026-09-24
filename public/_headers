@@ -1,6 +1,4 @@
-/*
-  HTTP cache headers for static assets served by Cloudflare.
-  See OpenNext Cloudflare docs for static asset caching.
-*/
+# HTTP cache headers for static assets served by Cloudflare.
+# See OpenNext Cloudflare docs for static asset caching.
 /_next/static/*
   Cache-Control: public,max-age=31536000,immutable

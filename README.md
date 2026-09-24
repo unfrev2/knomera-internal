@@ -287,6 +287,7 @@ Do not hard-code the hostname in the app.
 | Env works locally but not on CF | Secrets not set on the Worker, or set on the wrong Worker name |
 | Cookie / auth oddities | `SESSION_SECRET` changed after users already had cookies — sign out / clear cookies |
 | Could not find compiled Open Next config | CI Build command is still `npm run build` — change it to `npm run build:worker` |
+| Invalid `_headers` configuration | `public/_headers` must use `#` comments and `Name: value` pairs — not `/* */` block comments |
 
 ### Security checklist
 
