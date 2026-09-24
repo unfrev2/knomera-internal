@@ -280,6 +280,6 @@ export async function listEvidenceByAssumptionIds(
       created_at::text
     FROM evidence
     WHERE workspace_id = ${workspaceId}
-      AND assumption_id = ANY(${sql.array(assumptionIds)}::uuid[])
+      AND assumption_id IN ${sql(assumptionIds)}
   `;
 }

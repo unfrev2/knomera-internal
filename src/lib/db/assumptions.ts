@@ -44,8 +44,8 @@ export async function listAssumptions(
   const search = filters.search?.trim() ?? "";
   const owner = filters.owner?.trim() ?? "";
 
-  // Never bind empty JS arrays into ANY() — with fetch_types:false / Hyperdrive
-  // postgres.js serializes [] as "", which Postgres rejects as a malformed array literal.
+  // Use IN (...values) instead of ANY(array) — Hyperdrive + fetch_types:false
+  // mangles JS array parameters into invalid Postgres array literals.
   const rows = await sql<Assumption[]>`
     SELECT
       a.id,
@@ -68,10 +68,10 @@ export async function listAssumptions(
     LEFT JOIN evidence e ON e.assumption_id = a.id
     WHERE a.workspace_id = ${workspaceId}
       AND (${search} = '' OR a.statement ILIKE ${"%" + search + "%"} OR COALESCE(a.description, '') ILIKE ${"%" + search + "%"} OR COALESCE(a.next_action, '') ILIKE ${"%" + search + "%"})
-      ${categories.length > 0 ? sql`AND a.category = ANY(${sql.array(categories)})` : sql``}
-      ${importance.length > 0 ? sql`AND a.importance::text = ANY(${sql.array(importance)})` : sql``}
-      ${confidence.length > 0 ? sql`AND a.confidence::text = ANY(${sql.array(confidence)})` : sql``}
-      ${status.length > 0 ? sql`AND a.status::text = ANY(${sql.array(status)})` : sql``}
+      ${categories.length > 0 ? sql`AND a.category IN ${sql(categories)}` : sql``}
+      ${importance.length > 0 ? sql`AND a.importance::text IN ${sql(importance)}` : sql``}
+      ${confidence.length > 0 ? sql`AND a.confidence::text IN ${sql(confidence)}` : sql``}
+      ${status.length > 0 ? sql`AND a.status::text IN ${sql(status)}` : sql``}
       AND (${owner === ""} OR a.owner ILIKE ${owner})
     GROUP BY a.id
     ORDER BY a.created_at ASC
