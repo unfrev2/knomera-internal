@@ -68,7 +68,7 @@ export async function createProblemAction(formData: FormData) {
 }
 
 export async function updateProblemAction(formData: FormData) {
-  const { workspace } = await requirePageContext();
+  const { user, workspace } = await requirePageContext();
   const id = optionalText(formData.get("id"));
   if (!id) throw new Error("Missing problem id.");
 
@@ -77,7 +77,7 @@ export async function updateProblemAction(formData: FormData) {
     throw new Error(parsed.error.errors[0]?.message ?? "Invalid form data.");
   }
 
-  const updated = await updateProblem(workspace.id, id, {
+  const updated = await updateProblem(workspace.id, id, user.id, {
     title: parsed.data.title,
     description: parsed.data.description ?? null,
     status: parsed.data.status,

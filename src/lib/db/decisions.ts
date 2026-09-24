@@ -1,4 +1,4 @@
-import { getDb } from "@/lib/db/client";
+import { getDb, withChangedBy } from "@/lib/db/client";
 import type {
   Assumption,
   Decision,
@@ -170,59 +170,61 @@ export async function createDecision(
 export async function updateDecision(
   workspaceId: string,
   id: string,
+  changedBy: string,
   input: Partial<DecisionInput>,
 ): Promise<Decision | null> {
-  const current = await getDecision(workspaceId, id);
-  if (!current) return null;
-  const sql = getDb();
-  const rows = await sql<Decision[]>`
-    UPDATE decisions SET
-      title = ${input.title ?? current.title},
-      decision = ${input.decision ?? current.decision},
-      context = ${input.context === undefined ? current.context : input.context},
-      rationale = ${
-        input.rationale === undefined ? current.rationale : input.rationale
-      },
-      status = ${input.status ?? current.status},
-      decision_date = ${input.decision_date ?? current.decision_date},
-      decided_by = ${
-        input.decided_by === undefined ? current.decided_by : input.decided_by
-      },
-      revisit_trigger = ${
-        input.revisit_trigger === undefined
-          ? current.revisit_trigger
-          : input.revisit_trigger
-      },
-      revisit_date = ${
-        input.revisit_date === undefined
-          ? current.revisit_date
-          : input.revisit_date
-      }
-    WHERE workspace_id = ${workspaceId} AND id = ${id}
-    RETURNING
-      id,
-      workspace_id,
-      title,
-      decision,
-      context,
-      rationale,
-      status,
-      decision_date::text,
-      decided_by,
-      revisit_trigger,
-      revisit_date::text,
-      created_by,
-      created_at::text,
-      updated_at::text
-  `;
-  return rows[0]
-    ? {
-        ...rows[0],
-        linked_assumption_count: current.linked_assumption_count,
-        linked_evidence_count: current.linked_evidence_count,
-        linked_problem_count: current.linked_problem_count,
-      }
-    : null;
+  return withChangedBy(changedBy, async (sql) => {
+    const current = await getDecision(workspaceId, id);
+    if (!current) return null;
+    const rows = await sql<Decision[]>`
+      UPDATE decisions SET
+        title = ${input.title ?? current.title},
+        decision = ${input.decision ?? current.decision},
+        context = ${input.context === undefined ? current.context : input.context},
+        rationale = ${
+          input.rationale === undefined ? current.rationale : input.rationale
+        },
+        status = ${input.status ?? current.status},
+        decision_date = ${input.decision_date ?? current.decision_date},
+        decided_by = ${
+          input.decided_by === undefined ? current.decided_by : input.decided_by
+        },
+        revisit_trigger = ${
+          input.revisit_trigger === undefined
+            ? current.revisit_trigger
+            : input.revisit_trigger
+        },
+        revisit_date = ${
+          input.revisit_date === undefined
+            ? current.revisit_date
+            : input.revisit_date
+        }
+      WHERE workspace_id = ${workspaceId} AND id = ${id}
+      RETURNING
+        id,
+        workspace_id,
+        title,
+        decision,
+        context,
+        rationale,
+        status,
+        decision_date::text,
+        decided_by,
+        revisit_trigger,
+        revisit_date::text,
+        created_by,
+        created_at::text,
+        updated_at::text
+    `;
+    return rows[0]
+      ? {
+          ...rows[0],
+          linked_assumption_count: current.linked_assumption_count,
+          linked_evidence_count: current.linked_evidence_count,
+          linked_problem_count: current.linked_problem_count,
+        }
+      : null;
+  });
 }
 
 export async function listAssumptionsForDecision(

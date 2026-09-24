@@ -1,4 +1,5 @@
 import { OpportunityDetailActions } from "@/components/commercial/OpportunityDetailActions";
+import { HistoryList } from "@/components/history/HistoryList";
 import { PageAlert, PageFrame } from "@/components/layout/Page";
 import { Badge } from "@/components/ui/Badge";
 import { requirePageContext } from "@/lib/auth/context";
@@ -6,6 +7,7 @@ import {
   getOpportunity,
   listEvidenceForOpportunity,
 } from "@/lib/db/opportunities";
+import { listEntityHistory } from "@/lib/db/history";
 import { hrefForLinkable } from "@/lib/domain/linkable";
 import { formatDate, formatDateShort } from "@/lib/format";
 import { displayName } from "@/lib/labels";
@@ -35,11 +37,15 @@ export default async function OpportunityDetailPage({
 
   let opportunity;
   let evidence;
+  let history;
 
   try {
     opportunity = await getOpportunity(workspace.id, id);
     if (!opportunity) notFound();
-    evidence = await listEvidenceForOpportunity(workspace.id, id);
+    [evidence, history] = await Promise.all([
+      listEvidenceForOpportunity(workspace.id, id),
+      listEntityHistory(workspace.id, "opportunity", id),
+    ]);
   } catch {
     return (
       <PageFrame width="narrow">
@@ -162,6 +168,11 @@ export default async function OpportunityDetailPage({
             ))}
           </ul>
         )}
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-navy">History</h2>
+        <HistoryList items={history} />
       </section>
     </PageFrame>
   );

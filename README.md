@@ -383,4 +383,6 @@ Central objects today are **strategy**, **problems**, **assumptions**, **evidenc
 - “Evidence suggests” is a deterministic decision aid only.
 - Validation priority ranking is deterministic and lives in `src/lib/domain/priority.ts`.
 - Important field changes are recorded in `assumption_history` via a database trigger (with `app.changed_by` set by the server).
+- Problem, decision, bet and opportunity changes are recorded in `entity_history` the same way.
+- Detail pages show relationship counts (evidence, discovery, bets, organisations) — contextual indicators, not vanity scores.
 - Home closer metrics are early commercial indicators only — no vanity dashboards.

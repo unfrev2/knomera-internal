@@ -210,16 +210,38 @@ export function strengthMeta(strength: number) {
 export const HISTORY_FIELD_LABELS: Record<string, string> = {
   confidence: "Confidence",
   importance: "Importance",
+  severity: "Severity",
   status: "Status",
+  stage: "Stage",
   owner: "Owner",
+  decided_by: "Decided by",
+  decision_date: "Decision date",
+  revisit_date: "Revisit date",
   next_action: "Next action",
+  next_action_date: "Next action date",
   target_date: "Target date",
 };
 
 export function formatHistoryValue(field: string, value: string | null): string {
   if (value == null || value === "") return "None";
   if (field === "confidence") return CONFIDENCE_LABELS[value as Confidence] ?? value;
-  if (field === "importance") return IMPORTANCE_LABELS[value as Importance] ?? value;
-  if (field === "status") return STATUS_LABELS[value as AssumptionStatus] ?? value;
+  if (field === "importance" || field === "severity") {
+    return IMPORTANCE_LABELS[value as Importance] ?? value;
+  }
+  if (field === "stage") {
+    return OPPORTUNITY_STAGE_LABELS[value as OpportunityStage] ?? value;
+  }
+  if (field === "status") {
+    return (
+      STATUS_LABELS[value as AssumptionStatus] ??
+      PROBLEM_STATUS_LABELS[value as ProblemStatus] ??
+      DECISION_STATUS_LABELS[value as DecisionStatus] ??
+      BET_STATUS_LABELS[value as BetStatus] ??
+      value
+    );
+  }
+  if (field === "owner" || field === "decided_by") {
+    return displayName(value);
+  }
   return value;
 }

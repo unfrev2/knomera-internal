@@ -4,6 +4,7 @@ import {
   DecisionEvidencePanel,
   DecisionProblemsPanel,
 } from "@/components/decisions/DecisionLinksPanels";
+import { HistoryList } from "@/components/history/HistoryList";
 import { PageAlert, PageFrame } from "@/components/layout/Page";
 import { Badge } from "@/components/ui/Badge";
 import { requirePageContext } from "@/lib/auth/context";
@@ -13,6 +14,7 @@ import {
   listEvidenceForDecision,
   listProblemsForDecision,
 } from "@/lib/db/decisions";
+import { listEntityHistory } from "@/lib/db/history";
 import { formatDate, formatDateShort } from "@/lib/format";
 import { displayName } from "@/lib/labels";
 import { notFound } from "next/navigation";
@@ -29,14 +31,16 @@ export default async function DecisionDetailPage({
   let assumptions;
   let evidence;
   let problems;
+  let history;
 
   try {
     decision = await getDecision(workspace.id, id);
     if (!decision) notFound();
-    [assumptions, evidence, problems] = await Promise.all([
+    [assumptions, evidence, problems, history] = await Promise.all([
       listAssumptionsForDecision(workspace.id, id),
       listEvidenceForDecision(workspace.id, id),
       listProblemsForDecision(workspace.id, id),
+      listEntityHistory(workspace.id, "decision", id),
     ]);
   } catch {
     return (
@@ -130,6 +134,11 @@ export default async function DecisionDetailPage({
         <p className="text-sm leading-relaxed text-navy/85 whitespace-pre-wrap">
           {decision.revisit_trigger ?? "Not specified yet."}
         </p>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-navy">History</h2>
+        <HistoryList items={history} />
       </section>
     </PageFrame>
   );

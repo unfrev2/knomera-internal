@@ -1,14 +1,16 @@
 import { AssumptionDetailActions } from "@/components/assumptions/AssumptionDetailActions";
 import { ConfidencePrompt } from "@/components/assumptions/ConfidencePrompt";
 import { EvidenceTimeline } from "@/components/assumptions/EvidenceTimeline";
-import { HistoryList } from "@/components/assumptions/HistoryList";
+import { HistoryList } from "@/components/history/HistoryList";
 import { LinkedObjectList } from "@/components/links/LinkedObjectList";
+import { RelationshipCounts } from "@/components/links/RelationshipCounts";
 import { PageAlert, PageFrame } from "@/components/layout/Page";
 import { Badge } from "@/components/ui/Badge";
 import { requirePageContext } from "@/lib/auth/context";
 import { getAssumption } from "@/lib/db/assumptions";
 import { listEvidenceForAssumption, listEvidenceSources } from "@/lib/db/evidence";
 import { listAssumptionHistory } from "@/lib/db/history";
+import { getAssumptionRelationshipCounts } from "@/lib/db/relationship-counts";
 import { listProblemsForAssumption } from "@/lib/db/problems";
 import { listDiscoverySessionsForAssumption } from "@/lib/db/discovery";
 import { listDecisionsForAssumption } from "@/lib/db/decisions";
@@ -39,6 +41,7 @@ export default async function AssumptionDetailPage({
   let assumption;
   let evidence;
   let history;
+  let counts;
   let sourceOptions: string[] = [];
   let relatedProblems: Awaited<ReturnType<typeof listProblemsForAssumption>> =
     [];
@@ -57,6 +60,7 @@ export default async function AssumptionDetailPage({
     [
       evidence,
       history,
+      counts,
       sourceOptions,
       relatedProblems,
       relatedDiscovery,
@@ -66,6 +70,7 @@ export default async function AssumptionDetailPage({
     ] = await Promise.all([
       listEvidenceForAssumption(workspace.id, id),
       listAssumptionHistory(workspace.id, id),
+      getAssumptionRelationshipCounts(workspace.id, id),
       listEvidenceSources(workspace.id),
       listProblemsForAssumption(workspace.id, id),
       listDiscoverySessionsForAssumption(workspace.id, id),
@@ -137,6 +142,24 @@ export default async function AssumptionDetailPage({
             </dd>
           </div>
         </dl>
+
+        <RelationshipCounts
+          items={[
+            {
+              label: "Supporting evidence",
+              value: counts.supporting_evidence,
+            },
+            {
+              label: "Challenging evidence",
+              value: counts.challenging_evidence,
+            },
+            {
+              label: "Discovery conversations",
+              value: counts.discovery_sessions,
+            },
+            { label: "Active bets", value: counts.active_bets },
+          ]}
+        />
 
         {assumption.description ? (
           <div className="rounded border border-line bg-white/60 px-4 py-3">

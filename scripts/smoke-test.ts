@@ -204,6 +204,22 @@ async function main() {
     "Stage 7 focus migration recorded",
   );
 
+  console.log("Entity history schema");
+  const entityHistoryTable = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = 'entity_history'
+    ) AS exists
+  `;
+  await assert(
+    entityHistoryTable[0]?.exists === true,
+    "entity_history table exists",
+  );
+  await assert(
+    migrations.some((row) => row.version === "20250924250000"),
+    "Entity history migration recorded",
+  );
+
   console.log("Workspace object search");
   const searchHits = await searchWorkspaceObjects(workspace.id, {
     query: "experiment",
@@ -357,6 +373,26 @@ async function main() {
     "Decision links one evidence record",
   );
 
+  const { updateDecision } = await import("../src/lib/db/decisions");
+  const { listEntityHistory } = await import("../src/lib/db/history");
+  await updateDecision(workspace.id, decision.id, "ahmed", {
+    status: "revisiting",
+  });
+  const decisionHistory = await listEntityHistory(
+    workspace.id,
+    "decision",
+    decision.id,
+  );
+  await assert(
+    decisionHistory.some(
+      (h) =>
+        h.field_changed === "status" &&
+        h.new_value === "revisiting" &&
+        h.changed_by === "ahmed",
+    ),
+    "Decision status change recorded with actor",
+  );
+
   console.log("Bets + outcomes + evidence provenance");
   const {
     createBet,
@@ -459,6 +495,10 @@ async function main() {
 
   console.log("Organisation history");
   const { getOrganisationDetail } = await import("../src/lib/db/organisations");
+  const {
+    getAssumptionRelationshipCounts,
+    getProblemRelationshipCounts,
+  } = await import("../src/lib/db/relationship-counts");
   const orgDetail = await getOrganisationDetail(workspace.id, orgRows[0].id);
   await assert(orgDetail !== null, "Organisation detail loads");
   await assert(
@@ -470,6 +510,33 @@ async function main() {
     "Organisation detail lists opportunities",
   );
 
+  const assumptionCounts = await getAssumptionRelationshipCounts(
+    workspace.id,
+    created.id,
+  );
+  await assert(
+    assumptionCounts.supporting_evidence >= 1,
+    "Assumption relationship counts include supporting evidence",
+  );
+  await assert(
+    assumptionCounts.active_bets >= 1,
+    "Assumption relationship counts include active bets",
+  );
+
+  const seededProblem = await sql<{ id: string }[]>`
+    SELECT id FROM problems WHERE workspace_id = ${workspace.id} LIMIT 1
+  `;
+  if (seededProblem[0]) {
+    const problemCounts = await getProblemRelationshipCounts(
+      workspace.id,
+      seededProblem[0].id,
+    );
+    await assert(
+      typeof problemCounts.linked_assumptions === "number",
+      "Problem relationship counts load",
+    );
+  }
+
   const timeline = await listEvidenceForAssumption(workspace.id, created.id);
   await assert(timeline.length === 5, "Evidence timeline has all five items");
 
@@ -477,6 +544,7 @@ async function main() {
   await assert(after?.confidence === "medium", "Confidence unchanged by evidence add");
 
   // Cleanup smoke data
+  await sql`DELETE FROM entity_history WHERE entity_id IN (${decision.id}, ${bet.id}, ${opportunity.id})`;
   await sql`DELETE FROM opportunities WHERE id = ${opportunity.id}`;
   await sql`DELETE FROM bets WHERE id = ${bet.id}`;
   await sql`DELETE FROM decisions WHERE id = ${decision.id}`;

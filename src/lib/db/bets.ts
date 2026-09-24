@@ -1,4 +1,4 @@
-import { getDb } from "@/lib/db/client";
+import { getDb, withChangedBy } from "@/lib/db/client";
 import type {
   Assumption,
   Bet,
@@ -187,64 +187,70 @@ export async function createBet(
 export async function updateBet(
   workspaceId: string,
   id: string,
+  changedBy: string,
   input: Partial<BetInput>,
 ): Promise<Bet | null> {
-  const current = await getBet(workspaceId, id);
-  if (!current) return null;
-  const sql = getDb();
-  const rows = await sql<Bet[]>`
-    UPDATE bets SET
-      title = ${input.title ?? current.title},
-      description = ${
-        input.description === undefined ? current.description : input.description
-      },
-      hypothesis = ${
-        input.hypothesis === undefined ? current.hypothesis : input.hypothesis
-      },
-      status = ${input.status ?? current.status},
-      owner = ${input.owner === undefined ? current.owner : input.owner},
-      started_at = ${
-        input.started_at === undefined ? current.started_at : input.started_at
-      },
-      target_date = ${
-        input.target_date === undefined ? current.target_date : input.target_date
-      },
-      success_criteria = ${
-        input.success_criteria === undefined
-          ? current.success_criteria
-          : input.success_criteria
-      },
-      expected_outcome = ${
-        input.expected_outcome === undefined
-          ? current.expected_outcome
-          : input.expected_outcome
-      }
-    WHERE workspace_id = ${workspaceId} AND id = ${id}
-    RETURNING
-      id,
-      workspace_id,
-      seed_key,
-      title,
-      description,
-      hypothesis,
-      status,
-      owner,
-      started_at::text,
-      target_date::text,
-      success_criteria,
-      expected_outcome,
-      created_by,
-      created_at::text,
-      updated_at::text
-  `;
-  return rows[0]
-    ? {
-        ...rows[0],
-        linked_problem_count: current.linked_problem_count,
-        linked_assumption_count: current.linked_assumption_count,
-        outcome_count: current.outcome_count,
-      }
-    : null;
+  return withChangedBy(changedBy, async (sql) => {
+    const current = await getBet(workspaceId, id);
+    if (!current) return null;
+    const rows = await sql<Bet[]>`
+      UPDATE bets SET
+        title = ${input.title ?? current.title},
+        description = ${
+          input.description === undefined
+            ? current.description
+            : input.description
+        },
+        hypothesis = ${
+          input.hypothesis === undefined ? current.hypothesis : input.hypothesis
+        },
+        status = ${input.status ?? current.status},
+        owner = ${input.owner === undefined ? current.owner : input.owner},
+        started_at = ${
+          input.started_at === undefined ? current.started_at : input.started_at
+        },
+        target_date = ${
+          input.target_date === undefined
+            ? current.target_date
+            : input.target_date
+        },
+        success_criteria = ${
+          input.success_criteria === undefined
+            ? current.success_criteria
+            : input.success_criteria
+        },
+        expected_outcome = ${
+          input.expected_outcome === undefined
+            ? current.expected_outcome
+            : input.expected_outcome
+        }
+      WHERE workspace_id = ${workspaceId} AND id = ${id}
+      RETURNING
+        id,
+        workspace_id,
+        seed_key,
+        title,
+        description,
+        hypothesis,
+        status,
+        owner,
+        started_at::text,
+        target_date::text,
+        success_criteria,
+        expected_outcome,
+        created_by,
+        created_at::text,
+        updated_at::text
+    `;
+    return rows[0]
+      ? {
+          ...rows[0],
+          linked_problem_count: current.linked_problem_count,
+          linked_assumption_count: current.linked_assumption_count,
+          outcome_count: current.outcome_count,
+        }
+      : null;
+  });
 }
 
 export async function listProblemsForBet(

@@ -1,4 +1,4 @@
-import { getDb } from "@/lib/db/client";
+import { getDb, withChangedBy } from "@/lib/db/client";
 import type {
   Evidence,
   Opportunity,
@@ -189,72 +189,74 @@ export async function createOpportunity(
 export async function updateOpportunity(
   workspaceId: string,
   id: string,
+  changedBy: string,
   input: Partial<OpportunityInput>,
 ): Promise<Opportunity | null> {
-  const current = await getOpportunity(workspaceId, id);
-  if (!current) return null;
-  const sql = getDb();
+  return withChangedBy(changedBy, async (sql) => {
+    const current = await getOpportunity(workspaceId, id);
+    if (!current) return null;
 
-  if (input.organisation_id) {
-    const org = await sql<{ id: string }[]>`
-      SELECT id FROM organisations
-      WHERE id = ${input.organisation_id} AND workspace_id = ${workspaceId}
-      LIMIT 1
+    if (input.organisation_id) {
+      const org = await sql<{ id: string }[]>`
+        SELECT id FROM organisations
+        WHERE id = ${input.organisation_id} AND workspace_id = ${workspaceId}
+        LIMIT 1
+      `;
+      if (!org[0]) throw new Error("Organisation not found in this workspace.");
+    }
+
+    const rows = await sql<Opportunity[]>`
+      UPDATE opportunities SET
+        organisation_id = ${input.organisation_id ?? current.organisation_id},
+        title = ${input.title ?? current.title},
+        stage = ${input.stage ?? current.stage},
+        potential_value = ${
+          input.potential_value === undefined
+            ? current.potential_value
+            : input.potential_value
+        },
+        currency = ${input.currency ?? current.currency},
+        owner = ${input.owner === undefined ? current.owner : input.owner},
+        next_action = ${
+          input.next_action === undefined
+            ? current.next_action
+            : input.next_action
+        },
+        next_action_date = ${
+          input.next_action_date === undefined
+            ? current.next_action_date
+            : input.next_action_date
+        },
+        outcome_reason = ${
+          input.outcome_reason === undefined
+            ? current.outcome_reason
+            : input.outcome_reason
+        }
+      WHERE workspace_id = ${workspaceId} AND id = ${id}
+      RETURNING
+        id,
+        workspace_id,
+        organisation_id,
+        title,
+        stage,
+        potential_value,
+        currency,
+        owner,
+        next_action,
+        next_action_date::text,
+        outcome_reason,
+        created_by,
+        created_at::text,
+        updated_at::text
     `;
-    if (!org[0]) throw new Error("Organisation not found in this workspace.");
-  }
-
-  const rows = await sql<Opportunity[]>`
-    UPDATE opportunities SET
-      organisation_id = ${input.organisation_id ?? current.organisation_id},
-      title = ${input.title ?? current.title},
-      stage = ${input.stage ?? current.stage},
-      potential_value = ${
-        input.potential_value === undefined
-          ? current.potential_value
-          : input.potential_value
-      },
-      currency = ${input.currency ?? current.currency},
-      owner = ${input.owner === undefined ? current.owner : input.owner},
-      next_action = ${
-        input.next_action === undefined
-          ? current.next_action
-          : input.next_action
-      },
-      next_action_date = ${
-        input.next_action_date === undefined
-          ? current.next_action_date
-          : input.next_action_date
-      },
-      outcome_reason = ${
-        input.outcome_reason === undefined
-          ? current.outcome_reason
-          : input.outcome_reason
-      }
-    WHERE workspace_id = ${workspaceId} AND id = ${id}
-    RETURNING
-      id,
-      workspace_id,
-      organisation_id,
-      title,
-      stage,
-      potential_value,
-      currency,
-      owner,
-      next_action,
-      next_action_date::text,
-      outcome_reason,
-      created_by,
-      created_at::text,
-      updated_at::text
-  `;
-  return rows[0]
-    ? {
-        ...mapOpportunity(rows[0]),
-        organisation_name: current.organisation_name,
-        evidence_count: current.evidence_count,
-      }
-    : null;
+    return rows[0]
+      ? {
+          ...mapOpportunity(rows[0]),
+          organisation_name: current.organisation_name,
+          evidence_count: current.evidence_count,
+        }
+      : null;
+  });
 }
 
 export async function listEvidenceForOpportunity(

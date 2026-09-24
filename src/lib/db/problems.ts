@@ -1,5 +1,6 @@
-import { getDb } from "@/lib/db/client";
+import { getDb, withChangedBy } from "@/lib/db/client";
 import type {
+  Assumption,
   Confidence,
   Problem,
   ProblemAssumptionLink,
@@ -172,51 +173,55 @@ export async function createProblem(
 export async function updateProblem(
   workspaceId: string,
   id: string,
+  changedBy: string,
   input: Partial<ProblemInput>,
 ): Promise<Problem | null> {
-  const current = await getProblem(workspaceId, id);
-  if (!current) return null;
+  return withChangedBy(changedBy, async (sql) => {
+    const current = await getProblem(workspaceId, id);
+    if (!current) return null;
 
-  const sql = getDb();
-  const rows = await sql<Problem[]>`
-    UPDATE problems SET
-      title = ${input.title ?? current.title},
-      description = ${
-        input.description === undefined ? current.description : input.description
-      },
-      status = ${input.status ?? current.status},
-      severity = ${input.severity ?? current.severity},
-      confidence = ${input.confidence ?? current.confidence},
-      target_customer = ${
-        input.target_customer === undefined
-          ? current.target_customer
-          : input.target_customer
-      },
-      owner = ${input.owner === undefined ? current.owner : input.owner}
-    WHERE workspace_id = ${workspaceId} AND id = ${id}
-    RETURNING
-      id,
-      workspace_id,
-      seed_key,
-      title,
-      description,
-      status,
-      severity,
-      confidence,
-      target_customer,
-      owner,
-      created_by,
-      created_at::text,
-      updated_at::text
-  `;
+    const rows = await sql<Problem[]>`
+      UPDATE problems SET
+        title = ${input.title ?? current.title},
+        description = ${
+          input.description === undefined
+            ? current.description
+            : input.description
+        },
+        status = ${input.status ?? current.status},
+        severity = ${input.severity ?? current.severity},
+        confidence = ${input.confidence ?? current.confidence},
+        target_customer = ${
+          input.target_customer === undefined
+            ? current.target_customer
+            : input.target_customer
+        },
+        owner = ${input.owner === undefined ? current.owner : input.owner}
+      WHERE workspace_id = ${workspaceId} AND id = ${id}
+      RETURNING
+        id,
+        workspace_id,
+        seed_key,
+        title,
+        description,
+        status,
+        severity,
+        confidence,
+        target_customer,
+        owner,
+        created_by,
+        created_at::text,
+        updated_at::text
+    `;
 
-  return rows[0]
-    ? {
-        ...rows[0],
-        linked_assumption_count: current.linked_assumption_count,
-        evidence_count: current.evidence_count,
-      }
-    : null;
+    return rows[0]
+      ? {
+          ...rows[0],
+          linked_assumption_count: current.linked_assumption_count,
+          evidence_count: current.evidence_count,
+        }
+      : null;
+  });
 }
 
 export async function upsertProblemBySeedKey(

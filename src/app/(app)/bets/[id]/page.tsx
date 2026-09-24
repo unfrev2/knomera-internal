@@ -4,6 +4,7 @@ import {
   BetOutcomesPanel,
   BetProblemsPanel,
 } from "@/components/bets/BetLinksPanels";
+import { HistoryList } from "@/components/history/HistoryList";
 import { LinkedObjectList } from "@/components/links/LinkedObjectList";
 import { PageAlert, PageFrame } from "@/components/layout/Page";
 import { Badge } from "@/components/ui/Badge";
@@ -15,6 +16,7 @@ import {
   listOutcomesForBet,
   listProblemsForBet,
 } from "@/lib/db/bets";
+import { listEntityHistory } from "@/lib/db/history";
 import { hrefForLinkable } from "@/lib/domain/linkable";
 import { formatDate, formatDateShort } from "@/lib/format";
 import { displayName } from "@/lib/labels";
@@ -38,16 +40,19 @@ export default async function BetDetailPage({
   let assumptionLinks;
   let outcomes;
   let decisions;
+  let history;
 
   try {
     bet = await getBet(workspace.id, id);
     if (!bet) notFound();
-    [problems, assumptionLinks, outcomes, decisions] = await Promise.all([
-      listProblemsForBet(workspace.id, id),
-      listAssumptionsForBet(workspace.id, id),
-      listOutcomesForBet(workspace.id, id),
-      listDecisionsForBet(workspace.id, id),
-    ]);
+    [problems, assumptionLinks, outcomes, decisions, history] =
+      await Promise.all([
+        listProblemsForBet(workspace.id, id),
+        listAssumptionsForBet(workspace.id, id),
+        listOutcomesForBet(workspace.id, id),
+        listDecisionsForBet(workspace.id, id),
+        listEntityHistory(workspace.id, "bet", id),
+      ]);
   } catch {
     return (
       <PageFrame width="narrow">
@@ -153,6 +158,11 @@ export default async function BetDetailPage({
           href: hrefForLinkable("decision", decision.id),
         }))}
       />
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-navy">History</h2>
+        <HistoryList items={history} />
+      </section>
     </PageFrame>
   );
 }

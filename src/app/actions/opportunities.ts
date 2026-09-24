@@ -87,7 +87,7 @@ export async function createOpportunityAction(formData: FormData) {
 }
 
 export async function updateOpportunityAction(formData: FormData) {
-  const { workspace } = await requirePageContext();
+  const { user, workspace } = await requirePageContext();
   const id = optionalText(formData.get("id"));
   if (!id) throw new Error("Missing opportunity id.");
 
@@ -96,7 +96,7 @@ export async function updateOpportunityAction(formData: FormData) {
     throw new Error(parsed.error.errors[0]?.message ?? "Invalid form data.");
   }
 
-  const updated = await updateOpportunity(workspace.id, id, {
+  const updated = await updateOpportunity(workspace.id, id, user.id, {
     organisation_id: parsed.data.organisation_id,
     title: parsed.data.title,
     stage: parsed.data.stage,

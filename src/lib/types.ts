@@ -205,6 +205,34 @@ export type AssumptionHistory = {
   changed_at: string;
 };
 
+export type EntityHistoryType =
+  | "problem"
+  | "decision"
+  | "bet"
+  | "opportunity";
+
+export type EntityHistory = {
+  id: string;
+  workspace_id: string;
+  entity_type: EntityHistoryType;
+  entity_id: string;
+  field_changed: string;
+  old_value: string | null;
+  new_value: string | null;
+  changed_by: string | null;
+  changed_at: string;
+};
+
+/** Shared shape for history list UI. */
+export type HistoryEntry = {
+  id: string;
+  field_changed: string;
+  old_value: string | null;
+  new_value: string | null;
+  changed_by: string | null;
+  changed_at: string;
+};
+
 export type StrategyItem = {
   id: string;
   workspace_id: string;

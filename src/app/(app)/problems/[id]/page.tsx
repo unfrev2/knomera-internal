@@ -1,17 +1,21 @@
 import { ProblemAssumptionsPanel } from "@/components/problems/ProblemAssumptionsPanel";
 import { ProblemDetailActions } from "@/components/problems/ProblemDetailActions";
+import { HistoryList } from "@/components/history/HistoryList";
 import { LinkedObjectList } from "@/components/links/LinkedObjectList";
+import { RelationshipCounts } from "@/components/links/RelationshipCounts";
 import { PageAlert, PageFrame } from "@/components/layout/Page";
 import { Badge } from "@/components/ui/Badge";
 import { requirePageContext } from "@/lib/auth/context";
 import { listDecisionsForProblem } from "@/lib/db/decisions";
 import { listBetsForProblem } from "@/lib/db/bets";
 import { listIdeasForProblem } from "@/lib/db/ideas";
+import { listEntityHistory } from "@/lib/db/history";
 import {
   getProblem,
   listAssumptionsForProblem,
   listEvidenceForProblem,
 } from "@/lib/db/problems";
+import { getProblemRelationshipCounts } from "@/lib/db/relationship-counts";
 import { hrefForLinkable } from "@/lib/domain/linkable";
 import { displayName } from "@/lib/labels";
 import { formatDate } from "@/lib/format";
@@ -32,17 +36,22 @@ export default async function ProblemDetailPage({
   let decisions;
   let bets;
   let ideas;
+  let counts;
+  let history;
 
   try {
     problem = await getProblem(workspace.id, id);
     if (!problem) notFound();
-    [links, evidence, decisions, bets, ideas] = await Promise.all([
-      listAssumptionsForProblem(workspace.id, id),
-      listEvidenceForProblem(workspace.id, id),
-      listDecisionsForProblem(workspace.id, id),
-      listBetsForProblem(workspace.id, id),
-      listIdeasForProblem(workspace.id, id),
-    ]);
+    [links, evidence, decisions, bets, ideas, counts, history] =
+      await Promise.all([
+        listAssumptionsForProblem(workspace.id, id),
+        listEvidenceForProblem(workspace.id, id),
+        listDecisionsForProblem(workspace.id, id),
+        listBetsForProblem(workspace.id, id),
+        listIdeasForProblem(workspace.id, id),
+        getProblemRelationshipCounts(workspace.id, id),
+        listEntityHistory(workspace.id, "problem", id),
+      ]);
   } catch {
     return (
       <PageFrame width="narrow">
@@ -87,19 +96,19 @@ export default async function ProblemDetailPage({
               {formatDate(problem.created_at)}
             </dd>
           </div>
-          <div>
-            <dt className="text-muted">Linked assumptions</dt>
-            <dd className="font-medium text-navy">
-              {problem.linked_assumption_count ?? links.length}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-muted">Evidence via assumptions</dt>
-            <dd className="font-medium text-navy">
-              {problem.evidence_count ?? evidence.length}
-            </dd>
-          </div>
         </dl>
+
+        <RelationshipCounts
+          items={[
+            { label: "Linked assumptions", value: counts.linked_assumptions },
+            {
+              label: "Organisations described this",
+              value: counts.organisations,
+            },
+            { label: "Evidence via assumptions", value: counts.evidence },
+            { label: "Active bets", value: counts.active_bets },
+          ]}
+        />
       </header>
 
       <section className="space-y-3 rounded border border-line bg-white/60 px-5 py-5">
@@ -198,6 +207,11 @@ export default async function ProblemDetailPage({
           href: hrefForLinkable("idea", idea.id),
         }))}
       />
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-navy">History</h2>
+        <HistoryList items={history} />
+      </section>
     </PageFrame>
   );
 }
