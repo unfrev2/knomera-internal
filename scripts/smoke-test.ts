@@ -117,6 +117,19 @@ async function main() {
   `;
   await assert(evidenceCol[0]?.exists === true, "evidence.discovery_session_id column exists");
 
+  console.log("Stage 4 decisions schema");
+  const decisionsTable = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = 'decisions'
+    ) AS exists
+  `;
+  await assert(decisionsTable[0]?.exists === true, "decisions table exists");
+  await assert(
+    migrations.some((row) => row.version === "20250924210000"),
+    "Stage 4 decisions migration recorded",
+  );
+
   console.log("Workspace object search");
   const searchHits = await searchWorkspaceObjects(workspace.id, {
     query: "experiment",
@@ -246,17 +259,42 @@ async function main() {
     "Evidence records discovery_session_id provenance",
   );
 
+  console.log("Decisions + links");
+  const { createDecision, linkDecisionAssumption, linkDecisionEvidence, getDecision } =
+    await import("../src/lib/db/decisions");
+  const decision = await createDecision(workspace.id, "jon", {
+    title: `Smoke decision ${Date.now()}`,
+    decision: "Use capacity intelligence as the initial wedge.",
+    rationale: "Smoke test rationale",
+    status: "active",
+    decision_date: new Date().toISOString().slice(0, 10),
+    decided_by: "jon",
+    revisit_trigger: "If capacity is not painful enough in discovery",
+  });
+  await linkDecisionAssumption(workspace.id, decision.id, created.id, "jon");
+  await linkDecisionEvidence(workspace.id, decision.id, fromDiscovery.id, "jon");
+  const loadedDecision = await getDecision(workspace.id, decision.id);
+  await assert(
+    (loadedDecision?.linked_assumption_count ?? 0) === 1,
+    "Decision links one assumption",
+  );
+  await assert(
+    (loadedDecision?.linked_evidence_count ?? 0) === 1,
+    "Decision links one evidence record",
+  );
+
   const timeline = await listEvidenceForAssumption(workspace.id, created.id);
   await assert(timeline.length === 3, "Evidence timeline has all three items");
 
   const after = await getAssumption(workspace.id, created.id);
   await assert(after?.confidence === "medium", "Confidence unchanged by evidence add");
 
-  // Cleanup smoke data (session SET NULL on evidence; then delete assumption cascades evidence)
+  // Cleanup smoke data
+  await sql`DELETE FROM decisions WHERE id = ${decision.id}`;
   await sql`DELETE FROM discovery_sessions WHERE id = ${sessionRows[0].id}`;
   await sql`DELETE FROM organisations WHERE id = ${orgRows[0].id}`;
   await sql`DELETE FROM assumptions WHERE id = ${created.id}`;
-  console.log("  ✓ Cleaned up smoke-test discovery + assumption");
+  console.log("  ✓ Cleaned up smoke-test discovery + decision + assumption");
 
   console.log("\nAll smoke checks passed.");
   await sql.end({ timeout: 5 });

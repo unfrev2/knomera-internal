@@ -10,6 +10,7 @@ import { listEvidenceForAssumption, listEvidenceSources } from "@/lib/db/evidenc
 import { listAssumptionHistory } from "@/lib/db/history";
 import { listProblemsForAssumption } from "@/lib/db/problems";
 import { listDiscoverySessionsForAssumption } from "@/lib/db/discovery";
+import { listDecisionsForAssumption } from "@/lib/db/decisions";
 import { hrefForLinkable } from "@/lib/domain/linkable";
 import { suggestConfidence } from "@/lib/domain/suggested-confidence";
 import { formatDate, formatDateShort } from "@/lib/format";
@@ -40,19 +41,28 @@ export default async function AssumptionDetailPage({
   let relatedDiscovery: Awaited<
     ReturnType<typeof listDiscoverySessionsForAssumption>
   > = [];
+  let relatedDecisions: Awaited<ReturnType<typeof listDecisionsForAssumption>> =
+    [];
 
   try {
     assumption = await getAssumption(workspace.id, id);
     if (!assumption) notFound();
 
-    [evidence, history, sourceOptions, relatedProblems, relatedDiscovery] =
-      await Promise.all([
-        listEvidenceForAssumption(workspace.id, id),
-        listAssumptionHistory(workspace.id, id),
-        listEvidenceSources(workspace.id),
-        listProblemsForAssumption(workspace.id, id),
-        listDiscoverySessionsForAssumption(workspace.id, id),
-      ]);
+    [
+      evidence,
+      history,
+      sourceOptions,
+      relatedProblems,
+      relatedDiscovery,
+      relatedDecisions,
+    ] = await Promise.all([
+      listEvidenceForAssumption(workspace.id, id),
+      listAssumptionHistory(workspace.id, id),
+      listEvidenceSources(workspace.id),
+      listProblemsForAssumption(workspace.id, id),
+      listDiscoverySessionsForAssumption(workspace.id, id),
+      listDecisionsForAssumption(workspace.id, id),
+    ]);
   } catch {
     return (
       <div className="mx-auto max-w-3xl">
@@ -176,6 +186,19 @@ export default async function AssumptionDetailPage({
           subtitle: session.organisation_name,
           meta: session.session_date,
           href: hrefForLinkable("discovery_session", session.id),
+        }))}
+      />
+
+      <LinkedObjectList
+        title="Related decisions"
+        emptyMessage="Not linked to a decision yet."
+        items={relatedDecisions.map((decision) => ({
+          type: "decision" as const,
+          id: decision.id,
+          title: decision.title,
+          subtitle: decision.status,
+          meta: decision.decision_date,
+          href: hrefForLinkable("decision", decision.id),
         }))}
       />
 

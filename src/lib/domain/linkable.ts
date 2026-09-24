@@ -25,6 +25,7 @@ export const SEARCHABLE_OBJECT_TYPES = [
   "problem",
   "organisation",
   "discovery_session",
+  "decision",
 ] as const;
 
 export type SearchableObjectType = (typeof SEARCHABLE_OBJECT_TYPES)[number];

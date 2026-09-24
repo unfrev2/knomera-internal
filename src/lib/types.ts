@@ -72,6 +72,12 @@ export const ORGANISATION_TYPES = [
   "other",
 ] as const;
 
+export const DECISION_STATUSES = [
+  "active",
+  "superseded",
+  "revisiting",
+] as const;
+
 export type Importance = (typeof IMPORTANCE_LEVELS)[number];
 export type Confidence = (typeof CONFIDENCE_LEVELS)[number];
 export type AssumptionStatus = (typeof ASSUMPTION_STATUSES)[number];
@@ -85,6 +91,7 @@ export type ProblemAssumptionRelationship =
 /** Problem severity reuses the importance vocabulary. */
 export type ProblemSeverity = Importance;
 export type OrganisationType = (typeof ORGANISATION_TYPES)[number];
+export type DecisionStatus = (typeof DECISION_STATUSES)[number];
 
 export type AppUserId = "jon" | "ahmed";
 
@@ -229,6 +236,26 @@ export type DiscoverySession = {
   contact_name?: string | null;
   contact_role?: string | null;
   evidence_count?: number;
+};
+
+export type Decision = {
+  id: string;
+  workspace_id: string;
+  title: string;
+  decision: string;
+  context: string | null;
+  rationale: string | null;
+  status: DecisionStatus;
+  decision_date: string;
+  decided_by: string | null;
+  revisit_trigger: string | null;
+  revisit_date: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  linked_assumption_count?: number;
+  linked_evidence_count?: number;
+  linked_problem_count?: number;
 };
 
 export type SessionUser = {

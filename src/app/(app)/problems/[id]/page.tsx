@@ -1,13 +1,16 @@
 import { ProblemAssumptionsPanel } from "@/components/problems/ProblemAssumptionsPanel";
 import { ProblemDetailActions } from "@/components/problems/ProblemDetailActions";
+import { LinkedObjectList } from "@/components/links/LinkedObjectList";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { requirePageContext } from "@/lib/auth/context";
+import { listDecisionsForProblem } from "@/lib/db/decisions";
 import {
   getProblem,
   listAssumptionsForProblem,
   listEvidenceForProblem,
 } from "@/lib/db/problems";
+import { hrefForLinkable } from "@/lib/domain/linkable";
 import { displayName } from "@/lib/labels";
 import { formatDate } from "@/lib/format";
 import Link from "next/link";
@@ -24,13 +27,15 @@ export default async function ProblemDetailPage({
   let problem;
   let links;
   let evidence;
+  let decisions;
 
   try {
     problem = await getProblem(workspace.id, id);
     if (!problem) notFound();
-    [links, evidence] = await Promise.all([
+    [links, evidence, decisions] = await Promise.all([
       listAssumptionsForProblem(workspace.id, id),
       listEvidenceForProblem(workspace.id, id),
+      listDecisionsForProblem(workspace.id, id),
     ]);
   } catch {
     return (
@@ -150,6 +155,19 @@ export default async function ProblemDetailPage({
           </ul>
         )}
       </section>
+
+      <LinkedObjectList
+        title="Related decisions"
+        emptyMessage="No decisions linked to this problem yet."
+        items={decisions.map((decision) => ({
+          type: "decision" as const,
+          id: decision.id,
+          title: decision.title,
+          subtitle: decision.status,
+          meta: decision.decision_date,
+          href: hrefForLinkable("decision", decision.id),
+        }))}
+      />
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-navy">

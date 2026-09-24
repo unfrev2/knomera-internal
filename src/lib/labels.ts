@@ -8,6 +8,7 @@ import type {
   OrganisationType,
   ProblemAssumptionRelationship,
   ProblemStatus,
+  DecisionStatus,
   SessionUser,
   StrategyItemStatus,
   StrategyItemType,
@@ -108,6 +109,12 @@ export const ORGANISATION_TYPE_LABELS: Record<OrganisationType, string> = {
   customer: "Customer",
   partner: "Partner",
   other: "Other",
+};
+
+export const DECISION_STATUS_LABELS: Record<DecisionStatus, string> = {
+  active: "Active",
+  superseded: "Superseded",
+  revisiting: "Revisiting",
 };
 
 export const EVIDENCE_STRENGTH = [

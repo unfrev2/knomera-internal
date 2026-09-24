@@ -31,6 +31,7 @@ export async function searchWorkspaceObjects(
         "problem",
         "organisation",
         "discovery_session",
+        "decision",
       ] as SearchableObjectType[]);
   const exclude = options.excludeIds ?? [];
   const pattern = query ? `%${query}%` : "%";
@@ -154,6 +155,36 @@ export async function searchWorkspaceObjects(
         subtitle: row.organisation_name,
         meta: row.session_date,
         href: hrefForLinkable("discovery_session", row.id),
+      });
+    }
+  }
+
+  if (types.includes("decision")) {
+    const rows = await sql<
+      { id: string; title: string; status: string; decision_date: string }[]
+    >`
+      SELECT id, title, status::text, decision_date::text
+      FROM decisions
+      WHERE workspace_id = ${workspaceId}
+        AND (
+          ${query} = ''
+          OR title ILIKE ${pattern}
+          OR decision ILIKE ${pattern}
+          OR COALESCE(rationale, '') ILIKE ${pattern}
+        )
+        ${exclude.length > 0 ? sql`AND id NOT IN ${sql(exclude)}` : sql``}
+      ORDER BY decision_date DESC
+      LIMIT ${limit}
+    `;
+
+    for (const row of rows) {
+      results.push({
+        type: "decision",
+        id: row.id,
+        title: row.title,
+        subtitle: row.status,
+        meta: row.decision_date,
+        href: hrefForLinkable("decision", row.id),
       });
     }
   }

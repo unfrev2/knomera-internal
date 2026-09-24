@@ -1,5 +1,6 @@
 import {
   CONFIDENCE_LABELS,
+  DECISION_STATUS_LABELS,
   DIRECTION_LABELS,
   IMPORTANCE_LABELS,
   PROBLEM_STATUS_LABELS,
@@ -8,6 +9,7 @@ import {
 import type {
   AssumptionStatus,
   Confidence,
+  DecisionStatus,
   EvidenceDirection,
   Importance,
   ProblemStatus,
@@ -19,6 +21,7 @@ type DomainBadgeProps =
   | { variant: "confidence"; value: Confidence }
   | { variant: "status"; value: AssumptionStatus }
   | { variant: "problem-status"; value: ProblemStatus }
+  | { variant: "decision-status"; value: DecisionStatus }
   | { variant: "direction"; value: EvidenceDirection }
   | { variant: "neutral"; label: string };
 
@@ -81,6 +84,17 @@ function problemStatusTone(value: ProblemStatus): string {
   }
 }
 
+function decisionStatusTone(value: DecisionStatus): string {
+  switch (value) {
+    case "active":
+      return "bg-[#315f9e]/12 text-[#0b1f3a] ring-1 ring-[#315f9e]/20";
+    case "revisiting":
+      return "bg-[#f15b4a]/10 text-[#0b1f3a] ring-1 ring-[#f15b4a]/20";
+    case "superseded":
+      return "bg-[#efece6] text-[#0b1f3a]/70 ring-1 ring-[#0b1f3a]/8";
+  }
+}
+
 function directionTone(value: EvidenceDirection): string {
   switch (value) {
     case "supports":
@@ -102,6 +116,8 @@ function labelFor(props: DomainBadgeProps): string {
       return STATUS_LABELS[props.value];
     case "problem-status":
       return PROBLEM_STATUS_LABELS[props.value];
+    case "decision-status":
+      return DECISION_STATUS_LABELS[props.value];
     case "direction":
       return DIRECTION_LABELS[props.value];
     case "neutral":
@@ -119,6 +135,8 @@ function toneFor(props: DomainBadgeProps): string {
       return statusTone(props.value);
     case "problem-status":
       return problemStatusTone(props.value);
+    case "decision-status":
+      return decisionStatusTone(props.value);
     case "direction":
       return directionTone(props.value);
     case "neutral":
