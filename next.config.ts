@@ -6,9 +6,9 @@ export default nextConfig;
 
 // Bindings for `next dev` only. Must not run during CI / `opennextjs-cloudflare build`,
 // or Wrangler will demand a local Hyperdrive connection string.
+// Avoid top-level await — Next loads this config via require().
 if (process.env.NODE_ENV === "development") {
-  const { initOpenNextCloudflareForDev } = await import(
-    "@opennextjs/cloudflare"
-  );
-  initOpenNextCloudflareForDev();
+  void import("@opennextjs/cloudflare").then(({ initOpenNextCloudflareForDev }) => {
+    initOpenNextCloudflareForDev();
+  });
 }
