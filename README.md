@@ -161,17 +161,9 @@ npm run hash-password -- "ahmed-strong-password" ahmed
 
 Copy the printed `JON_PASSWORD_HASH=…` and `AHMED_PASSWORD_HASH=…` values (base64 — safe to paste as-is).
 
-#### Build `DATABASE_URL`
+#### Build `DATABASE_URL` (local / Node scripts)
 
-From the Supabase dashboard → **Project Settings → Database**:
-
-Prefer the **connection pooler** URI for Cloudflare Workers (transaction mode, port `6543`), for example:
-
-```text
-postgresql://postgres.PROJECT_REF:PASSWORD@aws-0-REGION.pooler.supabase.com:6543/postgres
-```
-
-Direct DB URLs also work in many setups:
+From the Supabase dashboard → **Project Settings → Database**, use the **direct** connection string (port `5432`):
 
 ```text
 postgresql://postgres:PASSWORD@db.PROJECT_REF.supabase.co:5432/postgres
@@ -179,18 +171,31 @@ postgresql://postgres:PASSWORD@db.PROJECT_REF.supabase.co:5432/postgres
 
 URL-encode special characters in the password (`?` → `%3F`, etc.).
 
-If TCP from Workers is unreliable, add a Cloudflare **Hyperdrive** config pointing at Supabase and use Hyperdrive’s connection string as `DATABASE_URL`.
+Put this in `.env.local` as `DATABASE_URL`. Local `npm run dev`, `db:*`, and smoke tests use it.
 
-### 2. Set secrets in Cloudflare
+### 2. Create Cloudflare Hyperdrive (required for production)
 
-Use **Secrets** (encrypted), not plain text vars, for all four.
+Cloudflare Workers **cannot** open a reliable TLS TCP connection straight to Supabase. Deployed traffic must go through **Hyperdrive**, which pools and terminates TLS to your database.
+
+Create a Hyperdrive config with the **same direct** Supabase URI (not the pooler):
+
+```bash
+npx wrangler hyperdrive create knomera-internal-db --connection-string="postgresql://postgres:PASSWORD@db.PROJECT_REF.supabase.co:5432/postgres"
+```
+
+Copy the printed config **id**, paste it into `wrangler.jsonc` under `hyperdrive[0].id` (replace `REPLACE_WITH_HYPERDRIVE_ID`), then commit.
+
+The Worker reads `env.HYPERDRIVE.connectionString` at runtime — you do **not** need `DATABASE_URL` as a Worker secret when Hyperdrive is configured.
+
+### 3. Set secrets in Cloudflare
+
+Use **Secrets** (encrypted) for auth. `DATABASE_URL` is optional on the Worker if Hyperdrive is wired up.
 
 #### Option A — CLI (recommended)
 
 From the project root, after `npx wrangler login`:
 
 ```bash
-npx wrangler secret put DATABASE_URL
 npx wrangler secret put SESSION_SECRET
 npx wrangler secret put JON_PASSWORD_HASH
 npx wrangler secret put AHMED_PASSWORD_HASH
@@ -205,7 +210,6 @@ Paste each value when prompted. Secrets are attached to the `knomera-internal` W
 3. Go to **Settings → Variables and Secrets**.
 4. Under **Secrets**, add:
 
-   - `DATABASE_URL`
    - `SESSION_SECRET`
    - `JON_PASSWORD_HASH`
    - `AHMED_PASSWORD_HASH`
@@ -214,7 +218,7 @@ Paste each value when prompted. Secrets are attached to the `knomera-internal` W
 
 Optional for CI builds: if Cloudflare builds the app for you, also add the same names under **Build variables / secrets**. For the default `npm run deploy` flow (build on your machine), runtime secrets are enough.
 
-### 3. Deploy
+### 4. Deploy
 
 ```bash
 npm run deploy
@@ -248,9 +252,9 @@ Preview the Worker runtime locally before deploying:
 npm run preview
 ```
 
-(`preview` still needs local env — use `.dev.vars` with the same four keys if you want a Workers-local preview.)
+(`preview` still needs local env — use `.dev.vars` with the same auth secrets if you want a Workers-local preview. Hyperdrive uses `localConnectionString` / Wrangler’s local Hyperdrive emulation when configured.)
 
-Example `.dev.vars` (gitignored; same shape as production secrets):
+Example `.dev.vars` (gitignored):
 
 ```bash
 DATABASE_URL=postgresql://...
@@ -259,7 +263,7 @@ JON_PASSWORD_HASH=...
 AHMED_PASSWORD_HASH=...
 ```
 
-### 4. Attach a custom subdomain
+### 5. Attach a custom subdomain
 
 Example: `assumptions.knomera.com`
 
@@ -271,7 +275,7 @@ Example: `assumptions.knomera.com`
 
 Do not hard-code the hostname in the app.
 
-### 5. Smoke-check production
+### 6. Smoke-check production
 
 1. Open the Worker URL or custom domain → should redirect to `/login`.
 2. Sign in as Jon and Ahmed with the passwords you hashed.
@@ -283,7 +287,7 @@ Do not hard-code the hostname in the app.
 | Symptom | Likely cause |
 | --- | --- |
 | Login always fails | Wrong / stale password hashes; regenerate and `wrangler secret put` again |
-| “Database unavailable” | Bad `DATABASE_URL`, wrong password encoding, or Workers cannot reach Postgres — try pooler URI or Hyperdrive |
+| “Database unavailable” / TLS `internal_tls_wrap` / 500 on `/` | Worker is dialing Supabase directly — create Hyperdrive, set `wrangler.jsonc` `hyperdrive[0].id`, redeploy |
 | Env works locally but not on CF | Secrets not set on the Worker, or set on the wrong Worker name |
 | Cookie / auth oddities | `SESSION_SECRET` changed after users already had cookies — sign out / clear cookies |
 | Could not find compiled Open Next config | CI Build command is still `npm run build` — change it to `npm run build:worker` |
@@ -293,7 +297,8 @@ Do not hard-code the hostname in the app.
 
 - [ ] No Supabase service-role or DB password in `NEXT_PUBLIC_*`
 - [ ] `.env.local` and `.supabase-connection` stay gitignored
-- [ ] All four values stored as Cloudflare **Secrets**
+- [ ] Auth secrets stored as Cloudflare **Secrets**
+- [ ] Hyperdrive holds the DB connection string (not a public Worker var)
 - [ ] Founder passwords are strong and unique
 
 

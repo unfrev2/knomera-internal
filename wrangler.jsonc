@@ -1,14 +1,25 @@
 {
-  "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "knomera-internal",
-  "main": ".open-next/worker.js",
-  "compatibility_date": "2026-09-19",
-  "compatibility_flags": ["nodejs_compat"],
-  "assets": {
-    "directory": ".open-next/assets",
-    "binding": "ASSETS"
-  },
-  "observability": {
-    "enabled": true
-  }
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "knomera-internal",
+	"main": ".open-next/worker.js",
+	"compatibility_date": "2026-09-19",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	"observability": {
+		"enabled": true
+	},
+	// Workers cannot open a reliable TLS socket to Supabase directly.
+	// Create with the Supabase *direct* URI (port 5432), then paste the config id below:
+	//   npx wrangler hyperdrive create knomera-internal-db --connection-string="postgresql://postgres:PASSWORD@db.PROJECT_REF.supabase.co:5432/postgres"
+	"hyperdrive": [
+		{
+			"binding": "HYPERDRIVE",
+			"id": "2cd971811ce64e15aaa631e45ff2f009"
+		}
+	]
 }

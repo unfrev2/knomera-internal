@@ -1,10 +1,13 @@
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import postgres from "postgres";
+import { cache } from "react";
 
 type Sql = postgres.Sql;
 
-let client: Sql | null = null;
+/** Process-scoped client for Node scripts (`db:seed`, smoke tests). Never reuse across Worker requests. */
+let scriptClient: Sql | null = null;
 
 function databaseUrlFromConnectionFile(): string | null {
   try {
@@ -35,18 +38,62 @@ export function getDatabaseUrl(): string {
   );
 }
 
-export function getDb(): Sql {
-  if (client) return client;
+function resolveConnection(): { url: string; viaHyperdrive: boolean } {
+  try {
+    const { env } = getCloudflareContext();
+    const hyperdrive = env.HYPERDRIVE;
+    if (hyperdrive?.connectionString) {
+      return { url: hyperdrive.connectionString, viaHyperdrive: true };
+    }
+  } catch {
+    // Local `next dev` / Node scripts: no Cloudflare request context.
+  }
 
-  client = postgres(getDatabaseUrl(), {
+  return { url: getDatabaseUrl(), viaHyperdrive: false };
+}
+
+function createSql(url: string, viaHyperdrive: boolean): Sql {
+  return postgres(url, {
+    // Transaction-mode / Hyperdrive-friendly; also matches existing queries.
     prepare: false,
+    // Cap concurrent sockets per request; Hyperdrive pools upstream.
     max: 5,
+    fetch_types: false,
     idle_timeout: 20,
     connect_timeout: 10,
-    ssl: "require",
+    // Hyperdrive local strings use sslmode=disable (Worker↔Hyperdrive is internal).
+    // Direct Supabase URLs need TLS.
+    ...(viaHyperdrive ? {} : { ssl: "require" as const }),
   });
+}
 
-  return client;
+/**
+ * Request-scoped DB client for Next.js (RSC, actions, route handlers).
+ * Workers cannot reuse TCP/TLS sockets across requests — do not use a module singleton there.
+ */
+const getDbForRequest = cache((): Sql => {
+  const { url, viaHyperdrive } = resolveConnection();
+  return createSql(url, viaHyperdrive);
+});
+
+function inCloudflareRequest(): boolean {
+  try {
+    getCloudflareContext();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function getDb(): Sql {
+  if (inCloudflareRequest()) {
+    return getDbForRequest();
+  }
+
+  if (!scriptClient) {
+    scriptClient = createSql(getDatabaseUrl(), false);
+  }
+  return scriptClient;
 }
 
 export async function withChangedBy<T>(
