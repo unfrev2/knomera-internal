@@ -9,6 +9,7 @@ import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Select } from "@/components/ui/Select";
+import { SourceAutocomplete } from "@/components/ui/SourceAutocomplete";
 import { Textarea } from "@/components/ui/Textarea";
 import { todayISO } from "@/lib/format";
 import {
@@ -20,7 +21,7 @@ import { rethrowNavigation } from "@/lib/navigation";
 import type { Evidence } from "@/lib/types";
 import { EVIDENCE_DIRECTIONS, EVIDENCE_TYPES } from "@/lib/types";
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 export type EvidenceFormProps = {
   open: boolean;
@@ -43,7 +44,6 @@ export function EvidenceForm({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [strength, setStrength] = useState(evidence?.strength ?? 3);
-  const sourceListId = useId();
 
   useEffect(() => {
     if (open) {
@@ -101,6 +101,23 @@ export function EvidenceForm({
           />
         </Field>
 
+        <Field
+          label="Source"
+          htmlFor="evidence-source"
+          hint={
+            sourceOptions.length > 0
+              ? "Pick an existing source or type a new one."
+              : "Add a person, document, or link. Future entries can reuse it."
+          }
+        >
+          <SourceAutocomplete
+            id="evidence-source"
+            name="source"
+            options={sourceOptions}
+            defaultValue={evidence?.source ?? ""}
+          />
+        </Field>
+
         <Field label="Type" htmlFor="evidence_type" required>
           <Select
             id="evidence_type"
@@ -150,30 +167,6 @@ export function EvidenceForm({
               </option>
             ))}
           </Select>
-        </Field>
-
-        <Field
-          label="Source"
-          htmlFor="source"
-          hint={
-            sourceOptions.length > 0
-              ? "Choose an existing source or type a new one."
-              : undefined
-          }
-        >
-          <Input
-            id="source"
-            name="source"
-            list={sourceListId}
-            placeholder="Person, document, or link"
-            defaultValue={evidence?.source ?? ""}
-            autoComplete="off"
-          />
-          <datalist id={sourceListId}>
-            {sourceOptions.map((source) => (
-              <option key={source} value={source} />
-            ))}
-          </datalist>
         </Field>
 
         <Field label="Evidence date" htmlFor="evidence_date" required>
