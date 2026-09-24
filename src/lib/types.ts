@@ -28,6 +28,7 @@ export const EVIDENCE_TYPES = [
   "competitor_research",
   "behavioural",
   "commercial",
+  "bet_outcome",
   "other",
 ] as const;
 
@@ -78,6 +79,35 @@ export const DECISION_STATUSES = [
   "revisiting",
 ] as const;
 
+export const IDEA_STATUSES = [
+  "inbox",
+  "exploring",
+  "parked",
+  "promoted",
+  "rejected",
+] as const;
+
+export const BET_STATUSES = [
+  "proposed",
+  "active",
+  "paused",
+  "completed",
+  "abandoned",
+] as const;
+
+export const BET_ASSUMPTION_RELATIONSHIPS = [
+  "depends_on",
+  "tests",
+  "informed_by",
+] as const;
+
+export const BET_OUTCOME_RESULTS = [
+  "successful",
+  "mixed",
+  "unsuccessful",
+  "inconclusive",
+] as const;
+
 export type Importance = (typeof IMPORTANCE_LEVELS)[number];
 export type Confidence = (typeof CONFIDENCE_LEVELS)[number];
 export type AssumptionStatus = (typeof ASSUMPTION_STATUSES)[number];
@@ -92,6 +122,11 @@ export type ProblemAssumptionRelationship =
 export type ProblemSeverity = Importance;
 export type OrganisationType = (typeof ORGANISATION_TYPES)[number];
 export type DecisionStatus = (typeof DECISION_STATUSES)[number];
+export type IdeaStatus = (typeof IDEA_STATUSES)[number];
+export type BetStatus = (typeof BET_STATUSES)[number];
+export type BetAssumptionRelationship =
+  (typeof BET_ASSUMPTION_RELATIONSHIPS)[number];
+export type BetOutcomeResult = (typeof BET_OUTCOME_RESULTS)[number];
 
 export type AppUserId = "jon" | "ahmed";
 
@@ -135,6 +170,7 @@ export type Evidence = {
   created_by: string | null;
   created_at: string;
   discovery_session_id?: string | null;
+  bet_outcome_id?: string | null;
   assumption_statement?: string;
 };
 
@@ -256,6 +292,66 @@ export type Decision = {
   linked_assumption_count?: number;
   linked_evidence_count?: number;
   linked_problem_count?: number;
+};
+
+export type Idea = {
+  id: string;
+  workspace_id: string;
+  seed_key: string | null;
+  title: string;
+  description: string | null;
+  status: IdeaStatus;
+  submitted_by: string | null;
+  created_at: string;
+  updated_at: string;
+  linked_problem_count?: number;
+  linked_assumption_count?: number;
+};
+
+export type Bet = {
+  id: string;
+  workspace_id: string;
+  seed_key: string | null;
+  title: string;
+  description: string | null;
+  hypothesis: string | null;
+  status: BetStatus;
+  owner: string | null;
+  started_at: string | null;
+  target_date: string | null;
+  success_criteria: string | null;
+  expected_outcome: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  linked_problem_count?: number;
+  linked_assumption_count?: number;
+  outcome_count?: number;
+};
+
+export type BetAssumptionLink = {
+  bet_id: string;
+  assumption_id: string;
+  workspace_id: string;
+  relationship_type: BetAssumptionRelationship;
+  created_at: string;
+  created_by: string | null;
+  assumption_statement?: string;
+  assumption_confidence?: Confidence;
+  assumption_importance?: Importance;
+  assumption_status?: AssumptionStatus;
+};
+
+export type BetOutcome = {
+  id: string;
+  workspace_id: string;
+  bet_id: string;
+  summary: string;
+  result: BetOutcomeResult;
+  learning: string | null;
+  outcome_date: string;
+  created_by: string | null;
+  created_at: string;
 };
 
 export type SessionUser = {

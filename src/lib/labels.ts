@@ -9,6 +9,10 @@ import type {
   ProblemAssumptionRelationship,
   ProblemStatus,
   DecisionStatus,
+  IdeaStatus,
+  BetStatus,
+  BetAssumptionRelationship,
+  BetOutcomeResult,
   SessionUser,
   StrategyItemStatus,
   StrategyItemType,
@@ -64,6 +68,7 @@ export const EVIDENCE_TYPE_LABELS: Record<EvidenceType, string> = {
   competitor_research: "Competitor research",
   behavioural: "Behavioural",
   commercial: "Commercial",
+  bet_outcome: "Bet outcome",
   other: "Other",
 };
 
@@ -115,6 +120,36 @@ export const DECISION_STATUS_LABELS: Record<DecisionStatus, string> = {
   active: "Active",
   superseded: "Superseded",
   revisiting: "Revisiting",
+};
+
+export const IDEA_STATUS_LABELS: Record<IdeaStatus, string> = {
+  inbox: "Inbox",
+  exploring: "Exploring",
+  parked: "Parked",
+  promoted: "Promoted",
+  rejected: "Rejected",
+};
+
+export const BET_STATUS_LABELS: Record<BetStatus, string> = {
+  proposed: "Proposed",
+  active: "Active",
+  paused: "Paused",
+  completed: "Completed",
+  abandoned: "Abandoned",
+};
+
+export const BET_RELATIONSHIP_LABELS: Record<BetAssumptionRelationship, string> =
+  {
+    depends_on: "Depends on",
+    tests: "Tests",
+    informed_by: "Informed by",
+  };
+
+export const BET_OUTCOME_RESULT_LABELS: Record<BetOutcomeResult, string> = {
+  successful: "Successful",
+  mixed: "Mixed",
+  unsuccessful: "Unsuccessful",
+  inconclusive: "Inconclusive",
 };
 
 export const EVIDENCE_STRENGTH = [

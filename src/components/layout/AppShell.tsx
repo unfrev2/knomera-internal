@@ -5,11 +5,13 @@ import {
   Compass,
   FileSearch,
   LayoutDashboard,
+  Lightbulb,
   ListChecks,
   LogOut,
   Menu,
   MessagesSquare,
   Scale,
+  Target,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -60,6 +62,18 @@ const NAV_ITEMS: NavItem[] = [
     label: "Decisions",
     icon: Scale,
     match: (path) => path.startsWith("/decisions"),
+  },
+  {
+    href: "/ideas",
+    label: "Ideas",
+    icon: Lightbulb,
+    match: (path) => path.startsWith("/ideas"),
+  },
+  {
+    href: "/bets",
+    label: "Bets",
+    icon: Target,
+    match: (path) => path.startsWith("/bets"),
   },
   {
     href: "/evidence",

@@ -32,6 +32,8 @@ export async function searchWorkspaceObjects(
         "organisation",
         "discovery_session",
         "decision",
+        "idea",
+        "bet",
       ] as SearchableObjectType[]);
   const exclude = options.excludeIds ?? [];
   const pattern = query ? `%${query}%` : "%";
@@ -185,6 +187,63 @@ export async function searchWorkspaceObjects(
         subtitle: row.status,
         meta: row.decision_date,
         href: hrefForLinkable("decision", row.id),
+      });
+    }
+  }
+
+  if (types.includes("idea")) {
+    const rows = await sql<
+      { id: string; title: string; status: string }[]
+    >`
+      SELECT id, title, status::text
+      FROM ideas
+      WHERE workspace_id = ${workspaceId}
+        AND (
+          ${query} = ''
+          OR title ILIKE ${pattern}
+          OR COALESCE(description, '') ILIKE ${pattern}
+        )
+        ${exclude.length > 0 ? sql`AND id NOT IN ${sql(exclude)}` : sql``}
+      ORDER BY created_at DESC
+      LIMIT ${limit}
+    `;
+
+    for (const row of rows) {
+      results.push({
+        type: "idea",
+        id: row.id,
+        title: row.title,
+        subtitle: row.status,
+        href: hrefForLinkable("idea", row.id),
+      });
+    }
+  }
+
+  if (types.includes("bet")) {
+    const rows = await sql<
+      { id: string; title: string; status: string }[]
+    >`
+      SELECT id, title, status::text
+      FROM bets
+      WHERE workspace_id = ${workspaceId}
+        AND (
+          ${query} = ''
+          OR title ILIKE ${pattern}
+          OR COALESCE(hypothesis, '') ILIKE ${pattern}
+          OR COALESCE(description, '') ILIKE ${pattern}
+        )
+        ${exclude.length > 0 ? sql`AND id NOT IN ${sql(exclude)}` : sql``}
+      ORDER BY created_at DESC
+      LIMIT ${limit}
+    `;
+
+    for (const row of rows) {
+      results.push({
+        type: "bet",
+        id: row.id,
+        title: row.title,
+        subtitle: row.status,
+        href: hrefForLinkable("bet", row.id),
       });
     }
   }

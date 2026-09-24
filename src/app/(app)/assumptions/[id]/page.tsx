@@ -11,10 +11,13 @@ import { listAssumptionHistory } from "@/lib/db/history";
 import { listProblemsForAssumption } from "@/lib/db/problems";
 import { listDiscoverySessionsForAssumption } from "@/lib/db/discovery";
 import { listDecisionsForAssumption } from "@/lib/db/decisions";
+import { listBetsForAssumption } from "@/lib/db/bets";
+import { listIdeasForAssumption } from "@/lib/db/ideas";
 import { hrefForLinkable } from "@/lib/domain/linkable";
 import { suggestConfidence } from "@/lib/domain/suggested-confidence";
 import { formatDate, formatDateShort } from "@/lib/format";
 import {
+  BET_RELATIONSHIP_LABELS,
   CONFIDENCE_LABELS,
   displayName,
 } from "@/lib/labels";
@@ -43,6 +46,8 @@ export default async function AssumptionDetailPage({
   > = [];
   let relatedDecisions: Awaited<ReturnType<typeof listDecisionsForAssumption>> =
     [];
+  let relatedBets: Awaited<ReturnType<typeof listBetsForAssumption>> = [];
+  let relatedIdeas: Awaited<ReturnType<typeof listIdeasForAssumption>> = [];
 
   try {
     assumption = await getAssumption(workspace.id, id);
@@ -55,6 +60,8 @@ export default async function AssumptionDetailPage({
       relatedProblems,
       relatedDiscovery,
       relatedDecisions,
+      relatedBets,
+      relatedIdeas,
     ] = await Promise.all([
       listEvidenceForAssumption(workspace.id, id),
       listAssumptionHistory(workspace.id, id),
@@ -62,6 +69,8 @@ export default async function AssumptionDetailPage({
       listProblemsForAssumption(workspace.id, id),
       listDiscoverySessionsForAssumption(workspace.id, id),
       listDecisionsForAssumption(workspace.id, id),
+      listBetsForAssumption(workspace.id, id),
+      listIdeasForAssumption(workspace.id, id),
     ]);
   } catch {
     return (
@@ -199,6 +208,31 @@ export default async function AssumptionDetailPage({
           subtitle: decision.status,
           meta: decision.decision_date,
           href: hrefForLinkable("decision", decision.id),
+        }))}
+      />
+
+      <LinkedObjectList
+        title="Related bets"
+        emptyMessage="Not linked to a bet yet."
+        items={relatedBets.map((bet) => ({
+          type: "bet" as const,
+          id: bet.id,
+          title: bet.title,
+          subtitle: bet.status,
+          meta: BET_RELATIONSHIP_LABELS[bet.relationship_type],
+          href: hrefForLinkable("bet", bet.id),
+        }))}
+      />
+
+      <LinkedObjectList
+        title="Related ideas"
+        emptyMessage="Not linked to an idea yet."
+        items={relatedIdeas.map((idea) => ({
+          type: "idea" as const,
+          id: idea.id,
+          title: idea.title,
+          subtitle: idea.status,
+          href: hrefForLinkable("idea", idea.id),
         }))}
       />
 

@@ -2,9 +2,10 @@ import { ProblemAssumptionsPanel } from "@/components/problems/ProblemAssumption
 import { ProblemDetailActions } from "@/components/problems/ProblemDetailActions";
 import { LinkedObjectList } from "@/components/links/LinkedObjectList";
 import { Badge } from "@/components/ui/Badge";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { requirePageContext } from "@/lib/auth/context";
 import { listDecisionsForProblem } from "@/lib/db/decisions";
+import { listBetsForProblem } from "@/lib/db/bets";
+import { listIdeasForProblem } from "@/lib/db/ideas";
 import {
   getProblem,
   listAssumptionsForProblem,
@@ -28,14 +29,18 @@ export default async function ProblemDetailPage({
   let links;
   let evidence;
   let decisions;
+  let bets;
+  let ideas;
 
   try {
     problem = await getProblem(workspace.id, id);
     if (!problem) notFound();
-    [links, evidence, decisions] = await Promise.all([
+    [links, evidence, decisions, bets, ideas] = await Promise.all([
       listAssumptionsForProblem(workspace.id, id),
       listEvidenceForProblem(workspace.id, id),
       listDecisionsForProblem(workspace.id, id),
+      listBetsForProblem(workspace.id, id),
+      listIdeasForProblem(workspace.id, id),
     ]);
   } catch {
     return (
@@ -169,15 +174,29 @@ export default async function ProblemDetailPage({
         }))}
       />
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-navy">
-          What are we doing about it?
-        </h2>
-        <EmptyState
-          title="Bets and ideas come next"
-          description="Once Ideas and Bets exist, they will show here against this problem."
-        />
-      </section>
+      <LinkedObjectList
+        title="Related bets"
+        emptyMessage="No bets linked to this problem yet."
+        items={bets.map((bet) => ({
+          type: "bet" as const,
+          id: bet.id,
+          title: bet.title,
+          subtitle: bet.status,
+          href: hrefForLinkable("bet", bet.id),
+        }))}
+      />
+
+      <LinkedObjectList
+        title="Related ideas"
+        emptyMessage="No ideas linked to this problem yet."
+        items={ideas.map((idea) => ({
+          type: "idea" as const,
+          id: idea.id,
+          title: idea.title,
+          subtitle: idea.status,
+          href: hrefForLinkable("idea", idea.id),
+        }))}
+      />
     </div>
   );
 }

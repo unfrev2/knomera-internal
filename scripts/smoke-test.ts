@@ -130,6 +130,44 @@ async function main() {
     "Stage 4 decisions migration recorded",
   );
 
+  console.log("Stage 5 ideas & bets schema");
+  const betsTable = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = 'bets'
+    ) AS exists
+  `;
+  await assert(betsTable[0]?.exists === true, "bets table exists");
+  const ideasTable = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = 'ideas'
+    ) AS exists
+  `;
+  await assert(ideasTable[0]?.exists === true, "ideas table exists");
+  const betOutcomeCol = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'evidence' AND column_name = 'bet_outcome_id'
+    ) AS exists
+  `;
+  await assert(
+    betOutcomeCol[0]?.exists === true,
+    "evidence.bet_outcome_id column exists",
+  );
+  await assert(
+    migrations.some((row) => row.version === "20250924220000"),
+    "Stage 5 ideas/bets migration recorded",
+  );
+  const seededBets = await sql<{ count: number }[]>`
+    SELECT COUNT(*)::int AS count FROM bets
+    WHERE workspace_id = ${workspace.id} AND seed_key IS NOT NULL
+  `;
+  await assert(
+    (seededBets[0]?.count ?? 0) >= 3,
+    `Seeded bets present (got ${seededBets[0]?.count})`,
+  );
+
   console.log("Workspace object search");
   const searchHits = await searchWorkspaceObjects(workspace.id, {
     query: "experiment",
@@ -283,18 +321,63 @@ async function main() {
     "Decision links one evidence record",
   );
 
+  console.log("Bets + outcomes + evidence provenance");
+  const {
+    createBet,
+    createBetOutcome,
+    linkBetAssumption,
+    getBet,
+  } = await import("../src/lib/db/bets");
+  const bet = await createBet(workspace.id, "jon", {
+    title: `Smoke bet ${Date.now()}`,
+    hypothesis: "Smoke hypothesis",
+    status: "active",
+    owner: "jon",
+  });
+  await linkBetAssumption(workspace.id, bet.id, created.id, "tests", "jon");
+  const outcome = await createBetOutcome(workspace.id, "jon", bet.id, {
+    summary: "Smoke outcome",
+    result: "mixed",
+    learning: "Outcomes are not evidence until interpreted.",
+    outcome_date: new Date().toISOString().slice(0, 10),
+  });
+  const fromOutcome = await createEvidence(workspace.id, "jon", {
+    assumption_id: created.id,
+    title: "Bet-outcome smoke evidence",
+    evidence_type: "bet_outcome",
+    strength: 3,
+    direction: "supports",
+    evidence_date: new Date().toISOString().slice(0, 10),
+    source: bet.title,
+    bet_outcome_id: outcome.id,
+  });
+  await assert(
+    fromOutcome.bet_outcome_id === outcome.id,
+    "Evidence records bet_outcome_id provenance",
+  );
+  const loadedBet = await getBet(workspace.id, bet.id);
+  await assert(
+    (loadedBet?.linked_assumption_count ?? 0) === 1,
+    "Bet links one assumption",
+  );
+  await assert(
+    (loadedBet?.outcome_count ?? 0) === 1,
+    "Bet has one outcome",
+  );
+
   const timeline = await listEvidenceForAssumption(workspace.id, created.id);
-  await assert(timeline.length === 3, "Evidence timeline has all three items");
+  await assert(timeline.length === 4, "Evidence timeline has all four items");
 
   const after = await getAssumption(workspace.id, created.id);
   await assert(after?.confidence === "medium", "Confidence unchanged by evidence add");
 
   // Cleanup smoke data
+  await sql`DELETE FROM bets WHERE id = ${bet.id}`;
   await sql`DELETE FROM decisions WHERE id = ${decision.id}`;
   await sql`DELETE FROM discovery_sessions WHERE id = ${sessionRows[0].id}`;
   await sql`DELETE FROM organisations WHERE id = ${orgRows[0].id}`;
   await sql`DELETE FROM assumptions WHERE id = ${created.id}`;
-  console.log("  ✓ Cleaned up smoke-test discovery + decision + assumption");
+  console.log("  ✓ Cleaned up smoke-test bet + decision + discovery + assumption");
 
   console.log("\nAll smoke checks passed.");
   await sql.end({ timeout: 5 });

@@ -34,6 +34,7 @@ const evidenceFieldsSchema = z.object({
 const createEvidenceSchema = evidenceFieldsSchema.extend({
   assumption_id: z.string().uuid(),
   discovery_session_id: z.string().uuid().nullable().optional(),
+  bet_outcome_id: z.string().uuid().nullable().optional(),
 });
 
 function parseEvidenceFields(formData: FormData) {
@@ -50,14 +51,21 @@ function parseEvidenceFields(formData: FormData) {
 
 function revalidateEvidencePaths(
   assumptionId: string,
-  discoverySessionId?: string | null,
+  options?: {
+    discoverySessionId?: string | null;
+    betId?: string | null;
+  },
 ) {
   revalidatePath("/evidence");
   revalidatePath(`/assumptions/${assumptionId}`);
   revalidatePath("/");
-  if (discoverySessionId) {
-    revalidatePath(`/discovery/${discoverySessionId}`);
+  if (options?.discoverySessionId) {
+    revalidatePath(`/discovery/${options.discoverySessionId}`);
     revalidatePath("/discovery");
+  }
+  if (options?.betId) {
+    revalidatePath(`/bets/${options.betId}`);
+    revalidatePath("/bets");
   }
 }
 
@@ -67,6 +75,7 @@ export async function createEvidenceAction(formData: FormData) {
   const parsed = createEvidenceSchema.safeParse({
     assumption_id: String(formData.get("assumption_id") ?? ""),
     discovery_session_id: optionalText(formData.get("discovery_session_id")),
+    bet_outcome_id: optionalText(formData.get("bet_outcome_id")),
     ...parseEvidenceFields(formData),
   });
   if (!parsed.success) {
@@ -74,6 +83,7 @@ export async function createEvidenceAction(formData: FormData) {
   }
 
   const data = parsed.data;
+  const betId = optionalText(formData.get("bet_id"));
 
   await createEvidence(workspace.id, user.id, {
     assumption_id: data.assumption_id,
@@ -85,10 +95,17 @@ export async function createEvidenceAction(formData: FormData) {
     source: data.source ?? null,
     evidence_date: data.evidence_date,
     discovery_session_id: data.discovery_session_id ?? null,
+    bet_outcome_id: data.bet_outcome_id ?? null,
   });
 
-  revalidateEvidencePaths(data.assumption_id, data.discovery_session_id);
+  revalidateEvidencePaths(data.assumption_id, {
+    discoverySessionId: data.discovery_session_id,
+    betId,
+  });
 
+  if (betId) {
+    redirect(`/bets/${betId}`);
+  }
   if (data.discovery_session_id) {
     redirect(`/discovery/${data.discovery_session_id}`);
   }

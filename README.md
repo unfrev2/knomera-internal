@@ -143,16 +143,18 @@ Both map server-side to the `knomera` workspace.
 
 Sessions are independent of Supabase Auth so the product can later move to Supabase Auth or Google Workspace SSO without rewriting domain logic.
 
-## Architecture notes (Stage 1–4)
+## Architecture notes (Stage 1–5)
 
 - Workspace-scoped queries via `workspace_id` (single Knomera workspace in use; no switcher).
 - Reusable linking UI: `LinkedObjectList`, `ObjectPicker` (`src/components/links/`).
-- Workspace search: assumptions, evidence, problems, organisations, discovery sessions, decisions.
+- Workspace search: assumptions, evidence, problems, organisations, discovery sessions, decisions, ideas, bets.
 - Migration ledger: `schema_migrations`.
 - Audit snapshot: `docs/stage-1-audit.md`.
 - **Strategy** and **Problems** orient assumptions around customer problems.
 - **Discovery** turns conversations into evidence (via nullable `evidence.discovery_session_id`) and can link problems discussed.
 - **Decisions** preserve why judgements were made, with links to assumptions, evidence and problems at the time.
+- **Ideas** are a lightweight inbox (no scoring/roadmaps). **Bets** are meaningful commitments with hypotheses and outcomes.
+- Bet outcomes are not evidence until someone explicitly interprets them (`evidence.bet_outcome_id` + `bet_outcome` type).
 
 ## Cloudflare deployment
 
@@ -351,7 +353,8 @@ Do not hard-code the hostname in the app.
 | `npm run db:migrate` | Apply pending `supabase/migrations/*` |
 | `npm run db:seed` | Seed assumptions + verify (bootstrap only — do not overwrite production edits) |
 | `npm run db:seed:stage2` | Upsert strategy + problems + assumption links (safe re-run) |
-| `npm run db:setup` | Schema + migrate + assumption seed + Stage 2 seed |
+| `npm run db:seed:stage5` | Upsert initial bets + assumption/problem links (safe re-run) |
+| `npm run db:setup` | Schema + migrate + assumption seed + Stage 2 + Stage 5 seeds |
 | `npm run smoke` | Auth, workspace, CRUD, history, migration checks |
 | `npm run hash-password` | Generate bcrypt hash |
 | `npm run deploy` | Build and deploy to Cloudflare |
@@ -359,8 +362,10 @@ Do not hard-code the hostname in the app.
 
 ## Product notes
 
-Central objects today are **strategy**, **problems**, **assumptions**, **evidence**, **discovery** and **decisions**.
+Central objects today are **strategy**, **problems**, **assumptions**, **evidence**, **discovery**, **decisions**, **ideas** and **bets**.
 
+- Ideas are cheap; bets represent commitment. Do not conflate them.
+- Bet outcomes do not auto-update linked assumptions. Evidence is created only when founders interpret an outcome as such.
 - Decisions are historical records — changing current knowledge should not silently rewrite why a decision was made.
 - Discovery generates evidence against assumptions; deleting a session does not delete evidence (`ON DELETE SET NULL`).
 - Problems surface evidence through linked assumptions (no duplicated evidence records).

@@ -1,16 +1,20 @@
 import {
+  BET_STATUS_LABELS,
   CONFIDENCE_LABELS,
   DECISION_STATUS_LABELS,
   DIRECTION_LABELS,
+  IDEA_STATUS_LABELS,
   IMPORTANCE_LABELS,
   PROBLEM_STATUS_LABELS,
   STATUS_LABELS,
 } from "@/lib/labels";
 import type {
   AssumptionStatus,
+  BetStatus,
   Confidence,
   DecisionStatus,
   EvidenceDirection,
+  IdeaStatus,
   Importance,
   ProblemStatus,
 } from "@/lib/types";
@@ -22,6 +26,8 @@ type DomainBadgeProps =
   | { variant: "status"; value: AssumptionStatus }
   | { variant: "problem-status"; value: ProblemStatus }
   | { variant: "decision-status"; value: DecisionStatus }
+  | { variant: "idea-status"; value: IdeaStatus }
+  | { variant: "bet-status"; value: BetStatus }
   | { variant: "direction"; value: EvidenceDirection }
   | { variant: "neutral"; label: string };
 
@@ -95,6 +101,36 @@ function decisionStatusTone(value: DecisionStatus): string {
   }
 }
 
+function ideaStatusTone(value: IdeaStatus): string {
+  switch (value) {
+    case "promoted":
+      return "bg-[#315f9e]/12 text-[#0b1f3a] ring-1 ring-[#315f9e]/20";
+    case "exploring":
+      return "bg-[#315f9e]/8 text-[#0b1f3a]/90 ring-1 ring-[#315f9e]/15";
+    case "rejected":
+      return "bg-[#f15b4a]/10 text-[#0b1f3a] ring-1 ring-[#f15b4a]/20";
+    case "parked":
+      return "bg-[#efece6] text-[#0b1f3a]/70 ring-1 ring-[#0b1f3a]/8";
+    case "inbox":
+      return "bg-[#0b1f3a]/6 text-[#0b1f3a]/85 ring-1 ring-[#0b1f3a]/10";
+  }
+}
+
+function betStatusTone(value: BetStatus): string {
+  switch (value) {
+    case "active":
+      return "bg-[#315f9e]/12 text-[#0b1f3a] ring-1 ring-[#315f9e]/20";
+    case "completed":
+      return "bg-[#315f9e]/8 text-[#0b1f3a]/90 ring-1 ring-[#315f9e]/15";
+    case "paused":
+      return "bg-[#efece6] text-[#0b1f3a]/70 ring-1 ring-[#0b1f3a]/8";
+    case "abandoned":
+      return "bg-[#f15b4a]/10 text-[#0b1f3a] ring-1 ring-[#f15b4a]/20";
+    case "proposed":
+      return "bg-[#0b1f3a]/6 text-[#0b1f3a]/85 ring-1 ring-[#0b1f3a]/10";
+  }
+}
+
 function directionTone(value: EvidenceDirection): string {
   switch (value) {
     case "supports":
@@ -118,6 +154,10 @@ function labelFor(props: DomainBadgeProps): string {
       return PROBLEM_STATUS_LABELS[props.value];
     case "decision-status":
       return DECISION_STATUS_LABELS[props.value];
+    case "idea-status":
+      return IDEA_STATUS_LABELS[props.value];
+    case "bet-status":
+      return BET_STATUS_LABELS[props.value];
     case "direction":
       return DIRECTION_LABELS[props.value];
     case "neutral":
@@ -137,6 +177,10 @@ function toneFor(props: DomainBadgeProps): string {
       return problemStatusTone(props.value);
     case "decision-status":
       return decisionStatusTone(props.value);
+    case "idea-status":
+      return ideaStatusTone(props.value);
+    case "bet-status":
+      return betStatusTone(props.value);
     case "direction":
       return directionTone(props.value);
     case "neutral":
