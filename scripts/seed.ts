@@ -65,7 +65,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;`);
     lines.push("");
   }
@@ -104,7 +103,7 @@ async function verify(sql: postgres.Sql, workspaceId: string) {
   const result = checks[0];
   const errors: string[] = [];
 
-  if (result.total !== 112) errors.push(`Expected 112 assumptions, found ${result.total}`);
+  if (result.total !== 122) errors.push(`Expected 122 assumptions, found ${result.total}`);
   if (result.categories !== CATEGORIES.length) {
     errors.push(`Expected ${CATEGORIES.length} categories, found ${result.categories}`);
   }
@@ -175,9 +174,7 @@ async function main() {
           statement = EXCLUDED.statement,
           category = EXCLUDED.category,
           importance = EXCLUDED.importance,
-          confidence = EXCLUDED.confidence,
           next_action = EXCLUDED.next_action,
-          status = COALESCE(assumptions.status, EXCLUDED.status),
           created_by = COALESCE(assumptions.created_by, EXCLUDED.created_by)
       `;
     }

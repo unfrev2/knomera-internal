@@ -178,6 +178,62 @@ export async function createAssumption(
   return { ...created, evidence_count: 0 };
 }
 
+/** Insert seeded assumptions without overwriting founder edits on conflict. */
+export async function insertAssumptionBySeedKey(
+  workspaceId: string,
+  createdBy: string,
+  input: AssumptionInput & { seed_key: string },
+): Promise<Assumption | null> {
+  const sql = getDb();
+  const rows = await sql<Assumption[]>`
+    INSERT INTO assumptions (
+      workspace_id,
+      seed_key,
+      statement,
+      description,
+      category,
+      importance,
+      confidence,
+      status,
+      owner,
+      next_action,
+      target_date,
+      created_by
+    ) VALUES (
+      ${workspaceId},
+      ${input.seed_key},
+      ${input.statement},
+      ${input.description ?? null},
+      ${input.category},
+      ${input.importance},
+      ${input.confidence},
+      ${input.status ?? "untested"},
+      ${input.owner ?? null},
+      ${input.next_action ?? null},
+      ${input.target_date ?? null},
+      ${createdBy}
+    )
+    ON CONFLICT (workspace_id, seed_key) DO NOTHING
+    RETURNING
+      id,
+      workspace_id,
+      seed_key,
+      statement,
+      description,
+      category,
+      importance,
+      confidence,
+      status,
+      owner,
+      next_action,
+      target_date::text,
+      created_by,
+      created_at::text,
+      updated_at::text
+  `;
+  return rows[0] ? { ...rows[0], evidence_count: 0 } : null;
+}
+
 export async function updateAssumption(
   workspaceId: string,
   id: string,

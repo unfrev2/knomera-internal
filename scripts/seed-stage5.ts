@@ -67,9 +67,9 @@ async function main() {
     const assumptionCount = await sql<{ count: number }[]>`
       SELECT COUNT(*)::int AS count FROM assumptions WHERE workspace_id = ${workspaceId}
     `;
-    if (assumptionCount[0].count !== 112) {
+    if (assumptionCount[0].count < 112) {
       throw new Error(
-        `Expected 112 assumptions before Stage 5 seed, found ${assumptionCount[0].count}.`,
+        `Expected at least 112 assumptions before Stage 5 seed, found ${assumptionCount[0].count}.`,
       );
     }
 
@@ -81,11 +81,16 @@ async function main() {
       problemRows.map((row) => [row.seed_key, row.id]),
     );
 
+    // Stage 5 seeds the original three bets; b004 comes from proactive seed.
+    const stage5Bets = SEED_BETS.filter((bet) =>
+      ["b001", "b002", "b003"].includes(bet.seedKey),
+    );
+
     console.log("Seeding bets and links…");
     let assumptionLinkCount = 0;
     let problemLinkCount = 0;
 
-    for (const bet of SEED_BETS) {
+    for (const bet of stage5Bets) {
       const created = await upsertBetBySeedKey(workspaceId, "jon", {
         seed_key: bet.seedKey,
         title: bet.title,
@@ -134,14 +139,14 @@ async function main() {
     const after = await sql<{ count: number }[]>`
       SELECT COUNT(*)::int AS count FROM assumptions WHERE workspace_id = ${workspaceId}
     `;
-    if (after[0].count !== 112) {
+    if (after[0].count !== assumptionCount[0].count) {
       throw new Error(
         `Assumption count changed during Stage 5 seed (${after[0].count}).`,
       );
     }
 
     console.log(
-      `\nDone. ${SEED_BETS.length} bets, ${problemLinkCount} problem links, ${assumptionLinkCount} assumption links. Assumptions still 112.`,
+      `\nDone. ${stage5Bets.length} bets, ${problemLinkCount} problem links, ${assumptionLinkCount} assumption links. Assumptions still ${after[0].count}.`,
     );
   } finally {
     await sql.end({ timeout: 5 });

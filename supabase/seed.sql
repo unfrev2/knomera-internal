@@ -1,5 +1,6 @@
 -- Generated from src/lib/seed/assumptions.ts
 -- Idempotent: upserts workspace and assumptions by seed_key.
+-- Does not overwrite confidence/status on conflict (preserves founder edits).
 
 INSERT INTO workspaces (name, slug)
 VALUES ('Knomera', 'knomera')
@@ -25,7 +26,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -48,7 +48,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -71,7 +70,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -94,7 +92,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -117,7 +114,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -140,7 +136,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -163,7 +158,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -186,7 +180,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -209,7 +202,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -232,7 +224,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -255,7 +246,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -278,7 +268,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -301,7 +290,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -324,7 +312,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -347,7 +334,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -370,7 +356,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -393,7 +378,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -416,7 +400,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -439,7 +422,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -462,7 +444,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -485,7 +466,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -508,7 +488,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -531,7 +510,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -554,7 +532,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -577,7 +554,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -600,7 +576,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -623,7 +598,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -646,7 +620,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -669,7 +642,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -692,7 +664,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -715,7 +686,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -738,7 +708,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -761,7 +730,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -784,7 +752,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -807,7 +774,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -830,7 +796,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -853,7 +818,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -876,7 +840,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -899,7 +862,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -922,7 +884,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -945,7 +906,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -968,7 +928,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -991,7 +950,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1014,7 +972,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1037,7 +994,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1060,7 +1016,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1083,7 +1038,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1106,7 +1060,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1129,7 +1082,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1152,7 +1104,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1175,7 +1126,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1198,7 +1148,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1221,7 +1170,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1244,7 +1192,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1267,7 +1214,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1290,7 +1236,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1313,7 +1258,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1336,7 +1280,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1359,7 +1302,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1382,7 +1324,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1405,7 +1346,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1428,7 +1368,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1451,7 +1390,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1474,7 +1412,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1497,7 +1434,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1520,7 +1456,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1543,7 +1478,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1566,7 +1500,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1589,7 +1522,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1612,7 +1544,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1635,7 +1566,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1658,7 +1588,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1681,7 +1610,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1704,7 +1632,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1727,7 +1654,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1750,7 +1676,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1773,7 +1698,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1796,7 +1720,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1819,7 +1742,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1842,7 +1764,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1865,7 +1786,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1888,7 +1808,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1911,7 +1830,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1934,7 +1852,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1957,7 +1874,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -1980,7 +1896,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2003,7 +1918,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2026,7 +1940,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2049,7 +1962,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2072,7 +1984,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2095,7 +2006,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2118,7 +2028,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2141,7 +2050,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2164,7 +2072,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2187,7 +2094,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2210,7 +2116,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2233,7 +2138,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2256,7 +2160,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2279,7 +2182,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2302,7 +2204,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2325,7 +2226,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2348,7 +2248,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2371,7 +2270,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2394,7 +2292,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2417,7 +2314,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2440,7 +2336,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2463,7 +2358,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2486,7 +2380,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2509,7 +2402,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2532,7 +2424,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2555,7 +2446,6 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
   next_action = EXCLUDED.next_action;
 
 INSERT INTO assumptions (
@@ -2578,5 +2468,224 @@ ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
   statement = EXCLUDED.statement,
   category = EXCLUDED.category,
   importance = EXCLUDED.importance,
-  confidence = EXCLUDED.confidence,
+  next_action = EXCLUDED.next_action;
+
+INSERT INTO assumptions (
+  workspace_id, seed_key, statement, category, importance, confidence, status,
+  owner, next_action, target_date, created_by
+) VALUES (
+  (SELECT id FROM workspaces WHERE slug = 'knomera'),
+  'a113',
+  'Experimentation teams struggle to consistently identify the highest-value question to investigate next.',
+  'Problem & Market',
+  'critical'::importance_level,
+  'medium'::confidence_level,
+  'untested',
+  NULL,
+  'In discovery, ask teams to walk through how they chose their most recent five experiments, what alternatives existed and how they decided which question was most valuable to investigate.',
+  NULL,
+  'jon'
+)
+ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
+  statement = EXCLUDED.statement,
+  category = EXCLUDED.category,
+  importance = EXCLUDED.importance,
+  next_action = EXCLUDED.next_action;
+
+INSERT INTO assumptions (
+  workspace_id, seed_key, statement, category, importance, confidence, status,
+  owner, next_action, target_date, created_by
+) VALUES (
+  (SELECT id FROM workspaces WHERE slug = 'knomera'),
+  'a114',
+  'Experiment ideation is often disconnected from accumulated experimentation learning.',
+  'Problem & Market',
+  'critical'::importance_level,
+  'medium'::confidence_level,
+  'untested',
+  NULL,
+  'Trace the origin of recent experiments across several mature programmes and measure how often each hypothesis was explicitly derived from previous evidence or learning.',
+  NULL,
+  'jon'
+)
+ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
+  statement = EXCLUDED.statement,
+  category = EXCLUDED.category,
+  importance = EXCLUDED.importance,
+  next_action = EXCLUDED.next_action;
+
+INSERT INTO assumptions (
+  workspace_id, seed_key, statement, category, importance, confidence, status,
+  owner, next_action, target_date, created_by
+) VALUES (
+  (SELECT id FROM workspaces WHERE slug = 'knomera'),
+  'a115',
+  'Experiment programmes often behave as a sequence of isolated tests rather than a compounding learning loop.',
+  'Problem & Market',
+  'critical'::importance_level,
+  'medium'::confidence_level,
+  'untested',
+  NULL,
+  'Map historical experiment sequences and measure how often one experiment explicitly creates the hypothesis or question investigated by a subsequent experiment.',
+  NULL,
+  'jon'
+)
+ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
+  statement = EXCLUDED.statement,
+  category = EXCLUDED.category,
+  importance = EXCLUDED.importance,
+  next_action = EXCLUDED.next_action;
+
+INSERT INTO assumptions (
+  workspace_id, seed_key, statement, category, importance, confidence, status,
+  owner, next_action, target_date, created_by
+) VALUES (
+  (SELECT id FROM workspaces WHERE slug = 'knomera'),
+  'a116',
+  'Teams cannot easily see which important experimentation questions are weakly evidenced, contradictory or unanswered.',
+  'Problem & Market',
+  'high'::importance_level,
+  'medium'::confidence_level,
+  'untested',
+  NULL,
+  'Ask practitioners to identify knowledge gaps from their existing experiment repository, then measure the time, confidence and consistency of those judgements.',
+  NULL,
+  'jon'
+)
+ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
+  statement = EXCLUDED.statement,
+  category = EXCLUDED.category,
+  importance = EXCLUDED.importance,
+  next_action = EXCLUDED.next_action;
+
+INSERT INTO assumptions (
+  workspace_id, seed_key, statement, category, importance, confidence, status,
+  owner, next_action, target_date, created_by
+) VALUES (
+  (SELECT id FROM workspaces WHERE slug = 'knomera'),
+  'a117',
+  'Knomera can identify meaningful gaps and contradictions in an organisation''s experimentation knowledge from structured assumptions, evidence and learnings.',
+  'Knowledge',
+  'critical'::importance_level,
+  'low'::confidence_level,
+  'untested',
+  NULL,
+  'Manually label knowledge gaps and contradictory findings in a historical experimentation corpus, then compare those expert labels with system-generated suggestions.',
+  NULL,
+  'jon'
+)
+ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
+  statement = EXCLUDED.statement,
+  category = EXCLUDED.category,
+  importance = EXCLUDED.importance,
+  next_action = EXCLUDED.next_action;
+
+INSERT INTO assumptions (
+  workspace_id, seed_key, statement, category, importance, confidence, status,
+  owner, next_action, target_date, created_by
+) VALUES (
+  (SELECT id FROM workspaces WHERE slug = 'knomera'),
+  'a118',
+  'Knomera can identify when sufficient evidence already exists and recommend not running a redundant experiment.',
+  'Knowledge',
+  'high'::importance_level,
+  'medium'::confidence_level,
+  'untested',
+  NULL,
+  'Compare proposed experiments with historical evidence and ask experienced practitioners whether each proposed test would add meaningful new information.',
+  NULL,
+  'jon'
+)
+ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
+  statement = EXCLUDED.statement,
+  category = EXCLUDED.category,
+  importance = EXCLUDED.importance,
+  next_action = EXCLUDED.next_action;
+
+INSERT INTO assumptions (
+  workspace_id, seed_key, statement, category, importance, confidence, status,
+  owner, next_action, target_date, created_by
+) VALUES (
+  (SELECT id FROM workspaces WHERE slug = 'knomera'),
+  'a119',
+  'Accumulated experiment learnings can be used to generate useful new hypotheses.',
+  'AI',
+  'critical'::importance_level,
+  'medium'::confidence_level,
+  'untested',
+  NULL,
+  'Give the same historical evidence to experienced practitioners and to an evidence-grounded AI workflow, then blind-evaluate the resulting hypotheses for relevance, novelty and usefulness.',
+  NULL,
+  'jon'
+)
+ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
+  statement = EXCLUDED.statement,
+  category = EXCLUDED.category,
+  importance = EXCLUDED.importance,
+  next_action = EXCLUDED.next_action;
+
+INSERT INTO assumptions (
+  workspace_id, seed_key, statement, category, importance, confidence, status,
+  owner, next_action, target_date, created_by
+) VALUES (
+  (SELECT id FROM workspaces WHERE slug = 'knomera'),
+  'a120',
+  'Recommendations grounded in company-specific evidence are materially more useful than generic AI-generated test ideas.',
+  'AI',
+  'critical'::importance_level,
+  'medium'::confidence_level,
+  'untested',
+  NULL,
+  'Run a paired blind evaluation where practitioners compare generic AI test ideas with recommendations generated using the organisation''s own experimentation history and business context.',
+  NULL,
+  'jon'
+)
+ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
+  statement = EXCLUDED.statement,
+  category = EXCLUDED.category,
+  importance = EXCLUDED.importance,
+  next_action = EXCLUDED.next_action;
+
+INSERT INTO assumptions (
+  workspace_id, seed_key, statement, category, importance, confidence, status,
+  owner, next_action, target_date, created_by
+) VALUES (
+  (SELECT id FROM workspaces WHERE slug = 'knomera'),
+  'a121',
+  'Customers value proactive recommendations about what to learn or test next more than passive knowledge retrieval alone.',
+  'Customer',
+  'critical'::importance_level,
+  'low'::confidence_level,
+  'untested',
+  NULL,
+  'Compare a prototype centred on proactive recommendations with one centred on searching and browsing historical knowledge, and observe which one practitioners choose to use for planning.',
+  NULL,
+  'jon'
+)
+ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
+  statement = EXCLUDED.statement,
+  category = EXCLUDED.category,
+  importance = EXCLUDED.importance,
+  next_action = EXCLUDED.next_action;
+
+INSERT INTO assumptions (
+  workspace_id, seed_key, statement, category, importance, confidence, status,
+  owner, next_action, target_date, created_by
+) VALUES (
+  (SELECT id FROM workspaces WHERE slug = 'knomera'),
+  'a122',
+  'Practitioners will trust AI-generated hypotheses when the reasoning and source evidence are transparent.',
+  'Customer',
+  'critical'::importance_level,
+  'low'::confidence_level,
+  'untested',
+  NULL,
+  'Show practitioners identical recommendations with and without evidence provenance and reasoning, then compare trust, acceptance, rejection and willingness to act.',
+  NULL,
+  'jon'
+)
+ON CONFLICT (workspace_id, seed_key) DO UPDATE SET
+  statement = EXCLUDED.statement,
+  category = EXCLUDED.category,
+  importance = EXCLUDED.importance,
   next_action = EXCLUDED.next_action;

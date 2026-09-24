@@ -7,12 +7,13 @@ import {
   upsertProblemBySeedKey,
 } from "../src/lib/db/problems";
 import { upsertStrategyItemBySeedKey } from "../src/lib/db/strategy";
-import { SEED_PROBLEMS } from "../src/lib/seed/problems";
+import { SEED_PROBLEMS, supportsSeedKeys } from "../src/lib/seed/problems";
 import { SEED_STRATEGY_ITEMS } from "../src/lib/seed/strategy";
 
 /**
- * Stage 2 seed — strategy items + problems + links to existing assumptions.
+ * Stage 2 seed — strategy items + problems + supports_problem links.
  * Does not modify assumption rows. Safe to re-run (upsert by seed_key).
+ * Related links and proactive problems are finalized by db:seed:proactive.
  */
 
 function loadConnectionFromLocalFile() {
@@ -67,14 +68,26 @@ async function main() {
     const assumptionCount = await sql<{ count: number }[]>`
       SELECT COUNT(*)::int AS count FROM assumptions WHERE workspace_id = ${workspaceId}
     `;
-    if (assumptionCount[0].count !== 112) {
+    if (assumptionCount[0].count < 112) {
       throw new Error(
-        `Expected 112 assumptions before Stage 2 seed, found ${assumptionCount[0].count}.`,
+        `Expected at least 112 assumptions before Stage 2 seed, found ${assumptionCount[0].count}.`,
       );
     }
 
+    // Stage 2 historically seeded the original 3 strategy + 7 problems.
+    // Proactive content expands these; keep stage2 limited to original keys when possible.
+    const stage2Strategy = SEED_STRATEGY_ITEMS.filter((item) =>
+      ["s_positioning", "s_vision", "s_wedge", "s_north_star"].includes(
+        item.seedKey,
+      ),
+    );
+    const stage2Problems = SEED_PROBLEMS.filter((problem) => {
+      const n = Number(problem.seedKey.slice(1));
+      return n >= 1 && n <= 7;
+    });
+
     console.log("Seeding strategy items…");
-    for (const item of SEED_STRATEGY_ITEMS) {
+    for (const item of stage2Strategy) {
       await upsertStrategyItemBySeedKey(workspaceId, "jon", {
         seed_key: item.seedKey,
         type: item.type,
@@ -88,7 +101,7 @@ async function main() {
 
     console.log("Seeding problems and linking assumptions…");
     let linkCount = 0;
-    for (const problem of SEED_PROBLEMS) {
+    for (const problem of stage2Problems) {
       const created = await upsertProblemBySeedKey(workspaceId, "jon", {
         seed_key: problem.seedKey,
         title: problem.title,
@@ -100,12 +113,13 @@ async function main() {
         owner: null,
       });
 
+      const supportKeys = supportsSeedKeys(problem);
       const idBySeed = await getAssumptionIdsBySeedKeys(
         workspaceId,
-        problem.assumptionSeedKeys,
+        supportKeys,
       );
 
-      for (const seedKey of problem.assumptionSeedKeys) {
+      for (const seedKey of supportKeys) {
         const assumptionId = idBySeed.get(seedKey);
         if (!assumptionId) {
           throw new Error(
@@ -123,7 +137,7 @@ async function main() {
       }
 
       console.log(
-        `  ✓ ${problem.title} (${problem.assumptionSeedKeys.length} assumptions)`,
+        `  ✓ ${problem.title} (${supportKeys.length} assumptions)`,
       );
     }
 
@@ -146,13 +160,13 @@ async function main() {
     console.log(`  problem_assumptions: ${links[0].count} (this run linked ${linkCount})`);
     console.log(`  assumptions unchanged: ${stillAssumptions[0].count}`);
 
-    if (strategyCount[0].count < SEED_STRATEGY_ITEMS.length) {
+    if (strategyCount[0].count < stage2Strategy.length) {
       throw new Error("Strategy seed incomplete");
     }
-    if (problemCount[0].count < SEED_PROBLEMS.length) {
+    if (problemCount[0].count < stage2Problems.length) {
       throw new Error("Problem seed incomplete");
     }
-    if (stillAssumptions[0].count !== 112) {
+    if (stillAssumptions[0].count !== assumptionCount[0].count) {
       throw new Error("Assumption count changed unexpectedly");
     }
 

@@ -358,7 +358,8 @@ Do not hard-code the hostname in the app.
 | `npm run db:seed` | Seed assumptions + verify (bootstrap only — do not overwrite production edits) |
 | `npm run db:seed:stage2` | Upsert strategy + problems + assumption links (safe re-run) |
 | `npm run db:seed:stage5` | Upsert initial bets + assumption/problem links (safe re-run) |
-| `npm run db:setup` | Schema + migrate + assumption seed + Stage 2 + Stage 5 seeds |
+| `npm run db:seed:proactive` | Proactive coworker content revision (strategy/problems/assumptions/ideas/bets/decisions/focus) |
+| `npm run db:setup` | Schema + migrate + assumption seed + Stage 2 + Stage 5 + proactive seeds |
 | `npm run db:export` | Dump live public schema data + inventory for offline review (`exports/`, gitignored) |
 | `npm run smoke` | Auth, workspace, CRUD, history, migration checks |
 | `npm run hash-password` | Generate bcrypt hash |
@@ -372,6 +373,8 @@ Central objects today are **strategy**, **problems**, **assumptions**, **evidenc
 **Home** answers four questions from live data: what needs attention, what we’re learning, what we’re doing, and whether we’re getting closer to a business. Recent activity is secondary. Global search (shell) is plain text, grouped by type — not semantic.
 
 **Organisation** detail (`/organisations/[id]`) is compact customer history (contacts, discovery, problems discussed, evidence provenance, opportunities) — not a CRM.
+
+Knomera’s product narrative (encoded in seeded content): capacity intelligence is the **initial wedge**; a **proactive experimentation coworker** (evidence-grounded recommendations about what to learn or test next) is the broader destination. Learnings and Recommendations are ideas/assumptions/bets for now — not first-class tables yet.
 
 - Ideas are cheap; bets represent commitment. Do not conflate them.
 - Bet outcomes do not auto-update linked assumptions. Evidence is created only when founders interpret an outcome as such.

@@ -918,4 +918,104 @@ export const SEED_ASSUMPTIONS: SeedAssumption[] = [
     confidence: "high",
     nextAction: "Validate every foundational problem across multiple unrelated organisations, industries and experimentation setups.",
   },
+  {
+    seedKey: "a113",
+    statement:
+      "Experimentation teams struggle to consistently identify the highest-value question to investigate next.",
+    category: "Problem & Market",
+    importance: "critical",
+    confidence: "medium",
+    nextAction:
+      "In discovery, ask teams to walk through how they chose their most recent five experiments, what alternatives existed and how they decided which question was most valuable to investigate.",
+  },
+  {
+    seedKey: "a114",
+    statement:
+      "Experiment ideation is often disconnected from accumulated experimentation learning.",
+    category: "Problem & Market",
+    importance: "critical",
+    confidence: "medium",
+    nextAction:
+      "Trace the origin of recent experiments across several mature programmes and measure how often each hypothesis was explicitly derived from previous evidence or learning.",
+  },
+  {
+    seedKey: "a115",
+    statement:
+      "Experiment programmes often behave as a sequence of isolated tests rather than a compounding learning loop.",
+    category: "Problem & Market",
+    importance: "critical",
+    confidence: "medium",
+    nextAction:
+      "Map historical experiment sequences and measure how often one experiment explicitly creates the hypothesis or question investigated by a subsequent experiment.",
+  },
+  {
+    seedKey: "a116",
+    statement:
+      "Teams cannot easily see which important experimentation questions are weakly evidenced, contradictory or unanswered.",
+    category: "Problem & Market",
+    importance: "high",
+    confidence: "medium",
+    nextAction:
+      "Ask practitioners to identify knowledge gaps from their existing experiment repository, then measure the time, confidence and consistency of those judgements.",
+  },
+  {
+    seedKey: "a117",
+    statement:
+      "Knomera can identify meaningful gaps and contradictions in an organisation's experimentation knowledge from structured assumptions, evidence and learnings.",
+    category: "Knowledge",
+    importance: "critical",
+    confidence: "low",
+    nextAction:
+      "Manually label knowledge gaps and contradictory findings in a historical experimentation corpus, then compare those expert labels with system-generated suggestions.",
+  },
+  {
+    seedKey: "a118",
+    statement:
+      "Knomera can identify when sufficient evidence already exists and recommend not running a redundant experiment.",
+    category: "Knowledge",
+    importance: "high",
+    confidence: "medium",
+    nextAction:
+      "Compare proposed experiments with historical evidence and ask experienced practitioners whether each proposed test would add meaningful new information.",
+  },
+  {
+    seedKey: "a119",
+    statement:
+      "Accumulated experiment learnings can be used to generate useful new hypotheses.",
+    category: "AI",
+    importance: "critical",
+    confidence: "medium",
+    nextAction:
+      "Give the same historical evidence to experienced practitioners and to an evidence-grounded AI workflow, then blind-evaluate the resulting hypotheses for relevance, novelty and usefulness.",
+  },
+  {
+    seedKey: "a120",
+    statement:
+      "Recommendations grounded in company-specific evidence are materially more useful than generic AI-generated test ideas.",
+    category: "AI",
+    importance: "critical",
+    confidence: "medium",
+    nextAction:
+      "Run a paired blind evaluation where practitioners compare generic AI test ideas with recommendations generated using the organisation's own experimentation history and business context.",
+  },
+  {
+    seedKey: "a121",
+    statement:
+      "Customers value proactive recommendations about what to learn or test next more than passive knowledge retrieval alone.",
+    category: "Customer",
+    importance: "critical",
+    confidence: "low",
+    nextAction:
+      "Compare a prototype centred on proactive recommendations with one centred on searching and browsing historical knowledge, and observe which one practitioners choose to use for planning.",
+  },
+  {
+    seedKey: "a122",
+    statement:
+      "Practitioners will trust AI-generated hypotheses when the reasoning and source evidence are transparent.",
+    category: "Customer",
+    importance: "critical",
+    confidence: "low",
+    nextAction:
+      "Show practitioners identical recommendations with and without evidence provenance and reasoning, then compare trust, acceptance, rejection and willingness to act.",
+  },
 ];

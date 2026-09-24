@@ -46,7 +46,7 @@ async function main() {
   const workspace = await getWorkspaceBySlug("knomera");
   await assert(workspace.slug === "knomera", "Knomera workspace exists");
   const assumptions = await listAssumptions(workspace.id);
-  await assert(assumptions.length === 112, `112 assumptions present (got ${assumptions.length})`);
+  await assert(assumptions.length === 122, `122 assumptions present (got ${assumptions.length})`);
   const categories = new Set(assumptions.map((a) => a.category));
   await assert(categories.size === 11, "11 categories present");
 
@@ -80,7 +80,7 @@ async function main() {
       (SELECT COUNT(*)::int FROM assumptions WHERE workspace_id = ${workspace.id}) AS assumptions,
       (SELECT COUNT(*)::int FROM evidence WHERE workspace_id = ${workspace.id}) AS evidence
   `;
-  await assert(preserved[0]?.assumptions === 112, "Assumptions count preserved after migrate");
+  await assert(preserved[0]?.assumptions === 122, "Assumptions count preserved after migrate");
   await assert(
     typeof preserved[0]?.evidence === "number",
     `Evidence rows preserved (count=${preserved[0]?.evidence})`,
@@ -247,6 +247,33 @@ async function main() {
     "Entity history migration recorded",
   );
 
+  console.log("Proactive content migration");
+  await assert(
+    migrations.some((row) => row.version === "20250924260000"),
+    "Proactive content migration recorded",
+  );
+  const proactiveCounts = await sql<
+    {
+      problems: number;
+      strategy: number;
+      ideas: number;
+      bets: number;
+      decisions: number;
+    }[]
+  >`
+    SELECT
+      (SELECT COUNT(*)::int FROM problems WHERE workspace_id = ${workspace.id}) AS problems,
+      (SELECT COUNT(*)::int FROM strategy_items WHERE workspace_id = ${workspace.id}) AS strategy,
+      (SELECT COUNT(*)::int FROM ideas WHERE workspace_id = ${workspace.id}) AS ideas,
+      (SELECT COUNT(*)::int FROM bets WHERE workspace_id = ${workspace.id}) AS bets,
+      (SELECT COUNT(*)::int FROM decisions WHERE workspace_id = ${workspace.id}) AS decisions
+  `;
+  await assert(proactiveCounts[0].problems === 11, "11 problems present");
+  await assert(proactiveCounts[0].strategy === 7, "7 strategy items present");
+  await assert(proactiveCounts[0].ideas === 5, "5 ideas present");
+  await assert(proactiveCounts[0].bets === 4, "4 bets present");
+  await assert(proactiveCounts[0].decisions === 2, "2 decisions present");
+
   console.log("Workspace object search");
   const searchHits = await searchWorkspaceObjects(workspace.id, {
     query: "experiment",
@@ -282,7 +309,7 @@ async function main() {
       evidence: byAssumption.get(assumption.id) ?? [],
     })),
   );
-  await assert(ranked.length === 112, "Priority ranking covers all assumptions");
+  await assert(ranked.length === 122, "Priority ranking covers all assumptions");
   const topStatements = ranked.slice(0, 10).map((r) => r.statement);
   console.log("  Top priorities:");
   for (const s of topStatements.slice(0, 5)) {

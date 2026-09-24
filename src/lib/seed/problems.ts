@@ -1,4 +1,14 @@
-import type { Confidence, ProblemSeverity, ProblemStatus } from "@/lib/types";
+import type {
+  Confidence,
+  ProblemAssumptionRelationship,
+  ProblemSeverity,
+  ProblemStatus,
+} from "@/lib/types";
+
+export type SeedProblemLink = {
+  seedKey: string;
+  relationship: ProblemAssumptionRelationship;
+};
 
 export type SeedProblem = {
   seedKey: string;
@@ -8,9 +18,26 @@ export type SeedProblem = {
   severity: ProblemSeverity;
   confidence: Confidence;
   targetCustomer: string;
-  /** Existing assumption seed_keys to link (supports_problem). */
-  assumptionSeedKeys: string[];
+  /** @deprecated Prefer assumptionLinks. Kept for stage2 supports_problem lists. */
+  assumptionSeedKeys?: string[];
+  assumptionLinks: SeedProblemLink[];
 };
+
+function links(
+  supports: string[],
+  related: string[] = [],
+): SeedProblemLink[] {
+  return [
+    ...supports.map((seedKey) => ({
+      seedKey,
+      relationship: "supports_problem" as const,
+    })),
+    ...related.map((seedKey) => ({
+      seedKey,
+      relationship: "related" as const,
+    })),
+  ];
+}
 
 export const SEED_PROBLEMS: SeedProblem[] = [
   {
@@ -23,7 +50,7 @@ export const SEED_PROBLEMS: SeedProblem[] = [
     confidence: "medium",
     targetCustomer:
       "Experimentation and growth teams at mid-market to enterprise companies running multi-surface programmes.",
-    assumptionSeedKeys: [
+    assumptionLinks: links([
       "a001",
       "a002",
       "a009",
@@ -34,7 +61,7 @@ export const SEED_PROBLEMS: SeedProblem[] = [
       "a036",
       "a037",
       "a038",
-    ],
+    ]),
   },
   {
     seedKey: "p002",
@@ -46,7 +73,7 @@ export const SEED_PROBLEMS: SeedProblem[] = [
     confidence: "medium",
     targetCustomer:
       "Experimentation leads and product managers responsible for quarterly roadmaps.",
-    assumptionSeedKeys: [
+    assumptionLinks: links([
       "a003",
       "a004",
       "a049",
@@ -57,7 +84,7 @@ export const SEED_PROBLEMS: SeedProblem[] = [
       "a054",
       "a055",
       "a056",
-    ],
+    ]),
   },
   {
     seedKey: "p003",
@@ -69,7 +96,7 @@ export const SEED_PROBLEMS: SeedProblem[] = [
     confidence: "medium",
     targetCustomer:
       "Teams running concurrent tests across overlapping journeys or audiences.",
-    assumptionSeedKeys: [
+    assumptionLinks: links([
       "a006",
       "a007",
       "a008",
@@ -80,7 +107,7 @@ export const SEED_PROBLEMS: SeedProblem[] = [
       "a046",
       "a047",
       "a048",
-    ],
+    ]),
   },
   {
     seedKey: "p004",
@@ -92,16 +119,10 @@ export const SEED_PROBLEMS: SeedProblem[] = [
     confidence: "medium",
     targetCustomer:
       "Organisations with multi-year experimentation history and rotating team membership.",
-    assumptionSeedKeys: [
-      "a011",
-      "a012",
-      "a057",
-      "a058",
-      "a059",
-      "a060",
-      "a061",
-      "a065",
-    ],
+    assumptionLinks: links(
+      ["a011", "a012", "a057", "a058", "a059", "a060", "a061", "a065"],
+      ["a063", "a069", "a066"],
+    ),
   },
   {
     seedKey: "p005",
@@ -113,7 +134,10 @@ export const SEED_PROBLEMS: SeedProblem[] = [
     confidence: "medium",
     targetCustomer:
       "Companies whose experimentation stack spans vendors without a shared operating layer.",
-    assumptionSeedKeys: ["a014", "a015", "a071", "a101", "a105"],
+    assumptionLinks: links(
+      ["a014", "a015", "a071", "a101", "a105"],
+      ["a070", "a073", "a075", "a103"],
+    ),
   },
   {
     seedKey: "p006",
@@ -125,7 +149,7 @@ export const SEED_PROBLEMS: SeedProblem[] = [
     confidence: "low",
     targetCustomer:
       "Leadership and product teams who need auditability of why bets were made.",
-    assumptionSeedKeys: ["a013", "a062", "a060"],
+    assumptionLinks: links(["a013", "a062", "a060"], ["a073"]),
   },
   {
     seedKey: "p007",
@@ -137,6 +161,85 @@ export const SEED_PROBLEMS: SeedProblem[] = [
     confidence: "medium",
     targetCustomer:
       "Companies running experimentation across multiple platforms and channels.",
-    assumptionSeedKeys: ["a010", "a019", "a021", "a076", "a077", "a102"],
+    assumptionLinks: links(["a010", "a019", "a021", "a076", "a077", "a102"]),
+  },
+  {
+    seedKey: "p008",
+    title: "Teams struggle to decide what to learn next",
+    description:
+      "Experimentation teams can generate large backlogs of potential tests, but often lack a systematic way to identify which unanswered question would create the most valuable new information.",
+    status: "validating",
+    severity: "critical",
+    confidence: "medium",
+    targetCustomer:
+      "Mature experimentation teams with substantial experiment backlogs, competing priorities and enough traffic to have genuine choices about what to investigate.",
+    assumptionLinks: links(
+      ["a005", "a113"],
+      ["a024", "a056", "a062", "a071", "a073", "a074", "a121", "a122"],
+    ),
+  },
+  {
+    seedKey: "p009",
+    title: "Experiment ideation is disconnected from accumulated learning",
+    description:
+      "New experiments are often generated from stakeholder requests, heuristics, competitor copying or generic ideation rather than being deliberately derived from what previous experiments and customer evidence have already taught the organisation.",
+    status: "validating",
+    severity: "critical",
+    confidence: "medium",
+    targetCustomer:
+      "Established experimentation programmes with meaningful experiment history and regular demand for new test ideas.",
+    assumptionLinks: links(
+      ["a012", "a058", "a114"],
+      [
+        "a059",
+        "a060",
+        "a062",
+        "a063",
+        "a069",
+        "a070",
+        "a071",
+        "a073",
+        "a119",
+        "a120",
+      ],
+    ),
+  },
+  {
+    seedKey: "p010",
+    title: "Experiment programmes fail to compound learning",
+    description:
+      "Experiment results frequently remain isolated outcomes. One result does not systematically create the next question, hypothesis or investigation, so experimentation knowledge grows as a collection of tests rather than as a self-improving learning loop.",
+    status: "validating",
+    severity: "critical",
+    confidence: "medium",
+    targetCustomer:
+      "Mature experimentation programmes with multi-year test history and recurring experimentation activity.",
+    assumptionLinks: links(
+      ["a011", "a012", "a057", "a058", "a115"],
+      ["a060", "a061", "a062", "a065", "a105", "a119", "a120"],
+    ),
+  },
+  {
+    seedKey: "p011",
+    title: "Experiment knowledge gaps are hard to see",
+    description:
+      "Experiment repositories can show what has been tested, but teams struggle to identify which important questions remain unanswered, weakly evidenced or contradicted by different pieces of evidence.",
+    status: "validating",
+    severity: "high",
+    confidence: "medium",
+    targetCustomer:
+      "Experimentation and product teams with enough accumulated research and experiment history that understanding what is still unknown becomes difficult.",
+    assumptionLinks: links(
+      ["a057", "a058", "a116"],
+      ["a061", "a062", "a069", "a117", "a118"],
+    ),
   },
 ];
+
+/** Supports-only seed keys for stage2 backwards compatibility. */
+export function supportsSeedKeys(problem: SeedProblem): string[] {
+  if (problem.assumptionSeedKeys) return problem.assumptionSeedKeys;
+  return problem.assumptionLinks
+    .filter((link) => link.relationship === "supports_problem")
+    .map((link) => link.seedKey);
+}
