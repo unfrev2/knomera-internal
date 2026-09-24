@@ -44,7 +44,7 @@ export function Button({
       type={type}
       disabled={isDisabled}
       className={[
-        "inline-flex items-center justify-center rounded font-medium transition-colors",
+        "inline-flex items-center justify-center rounded font-medium transition-colors whitespace-nowrap",
         "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#315f9e]",
         "disabled:pointer-events-none disabled:opacity-50",
         variantClasses[variant],
@@ -58,7 +58,16 @@ export function Button({
       {loading ? (
         <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
       ) : null}
-      <span className={loading ? "opacity-90" : undefined}>{children}</span>
+      <span
+        className={[
+          "inline-flex items-center justify-center gap-1.5",
+          loading ? "opacity-90" : undefined,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        {children}
+      </span>
     </button>
   );
 }

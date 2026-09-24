@@ -43,15 +43,16 @@ export function EvidenceItemActions({
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-1">
+      <div className="flex shrink-0 flex-nowrap items-center gap-1">
         <Button
           type="button"
           variant="ghost"
           size="sm"
           onClick={() => setEditOpen(true)}
           aria-label="Edit evidence"
+          className="shrink-0"
         >
-          <Pencil className="size-3.5" aria-hidden />
+          <Pencil className="size-3.5 shrink-0" aria-hidden />
           Edit
         </Button>
         <Button
@@ -61,9 +62,9 @@ export function EvidenceItemActions({
           loading={pending}
           onClick={handleDelete}
           aria-label="Delete evidence"
-          className="text-coral hover:bg-coral/10"
+          className="shrink-0 text-coral hover:bg-coral/10"
         >
-          <Trash2 className="size-3.5" aria-hidden />
+          <Trash2 className="size-3.5 shrink-0" aria-hidden />
           Delete
         </Button>
       </div>
