@@ -38,7 +38,9 @@ export default async function EvidencePage({
 
   const pick = (key: string) => {
     const raw = params[key];
-    return typeof raw === "string" ? raw.trim() : undefined;
+    if (typeof raw !== "string") return undefined;
+    const trimmed = raw.trim();
+    return trimmed === "" ? undefined : trimmed;
   };
 
   const filters = {
@@ -62,7 +64,8 @@ export default async function EvidencePage({
       listAssumptions(workspace.id),
       listEvidenceSources(workspace.id),
     ]);
-  } catch {
+  } catch (error) {
+    console.error("Evidence page load failed:", error);
     dbError =
       "We could not load evidence. Check your database connection and try again.";
     items = [];

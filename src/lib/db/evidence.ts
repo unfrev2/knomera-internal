@@ -66,10 +66,10 @@ export async function listEvidence(
   const type = filters.evidence_type ?? null;
   const strength = filters.strength ?? null;
   const direction = filters.direction ?? null;
-  const assumptionId = filters.assumption_id ?? null;
-  const source = filters.source?.trim() ?? "";
-  const dateFrom = filters.date_from ?? null;
-  const dateTo = filters.date_to ?? null;
+  const assumptionId = filters.assumption_id?.trim() || null;
+  const source = filters.source?.trim() || null;
+  const dateFrom = filters.date_from?.trim() || null;
+  const dateTo = filters.date_to?.trim() || null;
 
   return sql<Evidence[]>`
     SELECT
@@ -94,7 +94,7 @@ export async function listEvidence(
       AND (${strength}::int IS NULL OR e.strength = ${strength})
       AND (${direction}::text IS NULL OR e.direction::text = ${direction})
       AND (${assumptionId}::uuid IS NULL OR e.assumption_id = ${assumptionId}::uuid)
-      AND (${source} = '' OR e.source = ${source})
+      AND (${source}::text IS NULL OR e.source = ${source})
       AND (${dateFrom}::date IS NULL OR e.evidence_date >= ${dateFrom}::date)
       AND (${dateTo}::date IS NULL OR e.evidence_date <= ${dateTo}::date)
     ORDER BY e.evidence_date DESC, e.created_at DESC
