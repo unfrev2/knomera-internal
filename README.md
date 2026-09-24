@@ -65,9 +65,11 @@ The app and `db:*` scripts can also read `.supabase-connection` automatically wh
 npm run hash-password -- "choose-a-strong-password"
 ```
 
-Paste the **escaped** line printed by the script into `.env.local`.
+Paste the printed `JON_PASSWORD_HASH=…` / `AHMED_PASSWORD_HASH=…` lines into `.env.local`.
 
-Next.js expands `$VAR` inside `.env` files, which would otherwise corrupt bcrypt hashes (they contain `$`). The script prints values with each `$` escaped as `\$`. The application normalizes both escaped and unescaped forms when verifying passwords.
+Hashes are stored base64-encoded so Next.js env expansion cannot corrupt the `$` characters inside bcrypt strings.
+
+Restart the dev server after changing `.env.local` — environment variables are not hot-reloaded.
 
 ### 4. Initialise the database
 
