@@ -25,7 +25,7 @@ export function PriorityList({
 
   if (visible.length === 0) {
     return (
-      <p className="text-sm text-[#0b1f3a]/55">
+      <p className="text-sm text-muted">
         No assumptions need attention right now.
       </p>
     );
@@ -36,15 +36,15 @@ export function PriorityList({
       <header className="mb-4">
         <h2
           id="priority-list-heading"
-          className="text-lg font-semibold text-[#0b1f3a]"
+          className="text-lg font-semibold text-navy"
         >
           What should we test next?
         </h2>
-        <p className="mt-1 text-sm text-[#0b1f3a]/60">
+        <p className="mt-1 text-sm text-muted">
           Ranked by validation priority — focus on critical gaps first.
         </p>
       </header>
-      <ol className="divide-y divide-[#0b1f3a]/10 rounded border border-[#0b1f3a]/10 bg-white/60">
+      <ol className="divide-y divide-line rounded border border-line bg-white/60">
         {visible.map((item, index) => {
           const why =
             item.reasons.length > 0
@@ -55,16 +55,16 @@ export function PriorityList({
             <li key={item.assumptionId}>
               <Link
                 href={`/assumptions/${item.assumptionId}`}
-                className="flex flex-col gap-2 px-4 py-4 transition-colors hover:bg-[#efece6]/50 sm:flex-row sm:items-start sm:justify-between sm:gap-6"
+                className="flex flex-col gap-2 px-4 py-4 transition-colors hover:bg-cream-tint/50 sm:flex-row sm:items-start sm:justify-between sm:gap-6"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium tabular-nums text-[#0b1f3a]/40">
+                  <p className="text-xs font-medium tabular-nums text-muted-light">
                     {index + 1}
                   </p>
-                  <p className="mt-0.5 text-sm font-medium leading-snug text-[#0b1f3a]">
+                  <p className="mt-0.5 text-sm font-medium leading-snug text-navy">
                     {item.statement}
                   </p>
-                  <p className="mt-1.5 text-sm leading-relaxed text-[#0b1f3a]/60">
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted">
                     {why}
                   </p>
                 </div>

@@ -1,4 +1,5 @@
 import { AddAssumptionButton } from "@/components/assumptions/AddAssumptionButton";
+import { PageHeader } from "@/components/layout/Page";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/Input";
@@ -134,19 +135,19 @@ export function AssumptionsTable({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-navy">Assumptions</h1>
-          <p className="mt-1 text-sm text-muted">
+      <PageHeader
+        title="Assumptions"
+        description={
+          <>
             {sorted.length} assumption{sorted.length === 1 ? "" : "s"}
             {filters.search || filters.category || filters.importance
               ? " matching filters"
               : ""}
             . Sorted by validation priority.
-          </p>
-        </div>
-        <AddAssumptionButton />
-      </div>
+          </>
+        }
+        actions={<AddAssumptionButton />}
+      />
 
       <form
         method="get"

@@ -1,5 +1,6 @@
 import { DiscoveryDetailActions } from "@/components/discovery/DiscoveryDetailActions";
 import { DiscoveryProblemsPanel } from "@/components/discovery/DiscoveryProblemsPanel";
+import { PageAlert, PageFrame } from "@/components/layout/Page";
 import { Badge } from "@/components/ui/Badge";
 import { requirePageContext } from "@/lib/auth/context";
 import { listContactsForOrganisation } from "@/lib/db/contacts";
@@ -45,23 +46,23 @@ export default async function DiscoveryDetailPage({
     contacts = contactLists.flat();
   } catch {
     return (
-      <div className="mx-auto max-w-3xl">
-        <p className="rounded border border-coral/30 bg-coral/8 px-4 py-3 text-sm text-navy">
+      <PageFrame width="narrow">
+        <PageAlert>
           We could not load this conversation. Check your connection and try again.
-        </p>
-      </div>
+        </PageAlert>
+      </PageFrame>
     );
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-10">
+    <PageFrame width="narrow">
       <header className="space-y-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 flex-1 space-y-3">
             <p className="text-xs font-medium tracking-wide text-muted uppercase">
               Discovery
             </p>
-            <h1 className="text-2xl font-semibold leading-snug text-navy md:text-3xl">
+            <h1 className="text-2xl font-semibold leading-snug tracking-tight text-navy md:text-3xl">
               {session.title}
             </h1>
           </div>
@@ -169,6 +170,6 @@ export default async function DiscoveryDetailPage({
       </section>
 
       <DiscoveryProblemsPanel sessionId={session.id} problems={problems} />
-    </div>
+    </PageFrame>
   );
 }

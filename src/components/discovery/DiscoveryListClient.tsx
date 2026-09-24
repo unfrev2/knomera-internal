@@ -1,6 +1,7 @@
 "use client";
 
 import { DiscoverySessionForm } from "@/components/discovery/DiscoverySessionForm";
+import { PageHeader } from "@/components/layout/Page";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { displayName } from "@/lib/labels";
@@ -22,19 +23,15 @@ export function DiscoveryListClient({
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-semibold text-navy md:text-3xl">
-            Discovery
-          </h1>
-          <p className="max-w-xl text-sm leading-relaxed text-muted">
-            Turn customer conversations into structured evidence.
-          </p>
-        </div>
-        <Button type="button" onClick={() => setCreateOpen(true)}>
-          Log conversation
-        </Button>
-      </header>
+      <PageHeader
+        title="Discovery"
+        description="Turn customer conversations into structured evidence."
+        actions={
+          <Button type="button" onClick={() => setCreateOpen(true)}>
+            Log conversation
+          </Button>
+        }
+      />
 
       {sessions.length === 0 ? (
         <EmptyState

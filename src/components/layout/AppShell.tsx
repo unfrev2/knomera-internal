@@ -101,7 +101,7 @@ function NavLinks({
   onNavigate?: () => void;
 }) {
   return (
-    <nav className="flex flex-1 flex-col gap-0.5 px-3" aria-label="Main">
+    <nav className="flex flex-col gap-0.5 px-3" aria-label="Main">
       {NAV_ITEMS.map((item) => {
         const active = item.match(pathname);
         const Icon = item.icon;
@@ -113,8 +113,8 @@ function NavLinks({
             className={[
               "flex items-center gap-3 rounded px-3 py-2.5 text-sm font-medium transition-colors",
               active
-                ? "bg-[#efece6] text-[#0b1f3a]"
-                : "text-[#0b1f3a]/65 hover:bg-[#efece6]/70 hover:text-[#0b1f3a]",
+                ? "bg-cream-tint text-navy"
+                : "text-navy/65 hover:bg-cream-tint/70 hover:text-navy",
             ].join(" ")}
             aria-current={active ? "page" : undefined}
           >
@@ -130,15 +130,19 @@ function NavLinks({
 function SignOutControl({
   signOutAction,
   onSignOut,
-}: Pick<AppShellProps, "signOutAction" | "onSignOut">) {
+  compact = false,
+}: Pick<AppShellProps, "signOutAction" | "onSignOut"> & {
+  compact?: boolean;
+}) {
+  const className = compact
+    ? "inline-flex items-center gap-1.5 rounded px-2 py-1.5 text-xs font-medium text-navy/65 transition-colors hover:bg-cream-tint hover:text-navy"
+    : "flex w-full items-center gap-2 rounded px-2 py-2 text-sm text-navy/65 transition-colors hover:bg-cream-tint hover:text-navy";
+
   if (signOutAction) {
     return (
       <form action={signOutAction}>
-        <button
-          type="submit"
-          className="flex w-full items-center gap-2 rounded px-2 py-2 text-sm text-[#0b1f3a]/65 transition-colors hover:bg-[#efece6] hover:text-[#0b1f3a]"
-        >
-          <LogOut className="size-4 shrink-0" aria-hidden />
+        <button type="submit" className={className}>
+          <LogOut className="size-3.5 shrink-0" aria-hidden />
           Sign out
         </button>
       </form>
@@ -149,12 +153,27 @@ function SignOutControl({
     <button
       type="button"
       onClick={onSignOut}
-      className="flex w-full items-center gap-2 rounded px-2 py-2 text-sm text-[#0b1f3a]/65 transition-colors hover:bg-[#efece6] hover:text-[#0b1f3a] disabled:opacity-50"
+      className={`${className} disabled:opacity-50`}
       disabled={!onSignOut}
     >
-      <LogOut className="size-4 shrink-0" aria-hidden />
+      <LogOut className="size-3.5 shrink-0" aria-hidden />
       Sign out
     </button>
+  );
+}
+
+function SidebarFooter({
+  userDisplayName,
+  signOutAction,
+  onSignOut,
+}: Pick<AppShellProps, "userDisplayName" | "signOutAction" | "onSignOut">) {
+  return (
+    <div className="shrink-0 border-t border-line px-4 py-4">
+      <p className="truncate px-2 text-sm font-medium text-navy">
+        {userDisplayName}
+      </p>
+      <SignOutControl signOutAction={signOutAction} onSignOut={onSignOut} />
+    </div>
   );
 }
 
@@ -184,57 +203,63 @@ export function AppShell({
     };
   }, [mobileOpen, closeMobile]);
 
-  const sidebarFooter = (
-    <div className="border-t border-[#0b1f3a]/10 px-4 py-4">
-      <p className="truncate px-2 text-sm font-medium text-[#0b1f3a]">
-        {userDisplayName}
-      </p>
-      <SignOutControl signOutAction={signOutAction} onSignOut={onSignOut} />
-    </div>
-  );
+  // Close drawer on route change so sign-out / nav always feel available again.
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   return (
-    <div className="min-h-screen bg-[#f7f5f1] font-[family-name:var(--font-outfit,'Outfit',system-ui,sans-serif)] text-[#0b1f3a]">
-      <div className="mx-auto flex min-h-screen max-w-[1400px]">
-        <aside className="hidden w-60 shrink-0 flex-col border-r border-[#0b1f3a]/10 bg-[#f7f5f1] md:flex">
-          <div className="px-5 py-6">
+    <div className="min-h-svh bg-cream font-sans text-navy">
+      <div className="mx-auto flex min-h-svh max-w-[1400px]">
+        {/* Desktop sidebar: sticky full viewport, footer always pinned */}
+        <aside className="sticky top-0 hidden h-svh w-60 shrink-0 flex-col border-r border-line bg-cream md:flex">
+          <div className="shrink-0 px-5 py-6">
             <Link href="/" className="inline-block">
-              <img
-                src="/logo.png"
-                alt="Knomera"
-                className="h-14 w-auto"
-              />
+              <img src="/logo.png" alt="Knomera" className="h-14 w-auto" />
             </Link>
           </div>
-          <NavLinks pathname={pathname} />
-          {sidebarFooter}
+          <div className="min-h-0 flex-1 overflow-y-auto pb-2">
+            <NavLinks pathname={pathname} />
+          </div>
+          <SidebarFooter
+            userDisplayName={userDisplayName}
+            signOutAction={signOutAction}
+            onSignOut={onSignOut}
+          />
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="flex items-center justify-between border-b border-[#0b1f3a]/10 bg-[#f7f5f1] px-4 py-3 md:hidden">
-            <Link href="/" className="inline-block">
-              <img
-                src="/logo.png"
-                alt="Knomera"
-                className="h-12 w-auto"
-              />
+          {/* Mobile top bar: identity + menu always visible */}
+          <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-line bg-cream/95 px-4 py-3 backdrop-blur-sm md:hidden">
+            <Link href="/" className="inline-block shrink-0">
+              <img src="/logo.png" alt="Knomera" className="h-10 w-auto" />
             </Link>
-            <button
-              type="button"
-              className="rounded p-2 text-[#0b1f3a]/70 hover:bg-[#efece6]"
-              aria-label={mobileOpen ? "Close menu" : "Open menu"}
-              aria-expanded={mobileOpen}
-              onClick={() => setMobileOpen((open) => !open)}
-            >
-              {mobileOpen ? (
-                <X className="size-5" aria-hidden />
-              ) : (
-                <Menu className="size-5" aria-hidden />
-              )}
-            </button>
+            <div className="flex min-w-0 items-center gap-1">
+              <span className="truncate text-sm font-medium text-navy">
+                {userDisplayName}
+              </span>
+              <SignOutControl
+                signOutAction={signOutAction}
+                onSignOut={onSignOut}
+                compact
+              />
+              <button
+                type="button"
+                className="rounded p-2 text-navy/70 hover:bg-cream-tint"
+                aria-label={mobileOpen ? "Close menu" : "Open menu"}
+                aria-expanded={mobileOpen}
+                onClick={() => setMobileOpen((open) => !open)}
+              >
+                {mobileOpen ? (
+                  <X className="size-5" aria-hidden />
+                ) : (
+                  <Menu className="size-5" aria-hidden />
+                )}
+              </button>
+            </div>
           </header>
 
-          <main className="flex-1 px-4 py-6 md:px-8 md:py-10">{children}</main>
+          <main className="flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
         </div>
       </div>
 
@@ -243,27 +268,29 @@ export function AppShell({
           <button
             type="button"
             aria-label="Close menu"
-            className="absolute inset-0 bg-[#0b1f3a]/35"
+            className="absolute inset-0 bg-navy/35"
             onClick={closeMobile}
           />
-          <aside className="relative flex h-full w-[min(100%,17rem)] flex-col bg-[#f7f5f1] shadow-xl">
-            <div className="flex items-center justify-between px-4 py-4">
-              <img
-                src="/logo.png"
-                alt="Knomera"
-                className="h-12 w-auto"
-              />
+          <aside className="relative flex h-full w-[min(100%,17rem)] flex-col bg-cream shadow-xl">
+            <div className="flex shrink-0 items-center justify-between px-4 py-4">
+              <img src="/logo.png" alt="Knomera" className="h-10 w-auto" />
               <button
                 type="button"
-                className="rounded p-2 text-[#0b1f3a]/70 hover:bg-[#efece6]"
+                className="rounded p-2 text-navy/70 hover:bg-cream-tint"
                 aria-label="Close menu"
                 onClick={closeMobile}
               >
                 <X className="size-5" aria-hidden />
               </button>
             </div>
-            <NavLinks pathname={pathname} onNavigate={closeMobile} />
-            {sidebarFooter}
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <NavLinks pathname={pathname} onNavigate={closeMobile} />
+            </div>
+            <SidebarFooter
+              userDisplayName={userDisplayName}
+              signOutAction={signOutAction}
+              onSignOut={onSignOut}
+            />
           </aside>
         </div>
       ) : null}

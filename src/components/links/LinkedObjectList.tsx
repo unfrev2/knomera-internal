@@ -36,7 +36,7 @@ export function LinkedObjectList({
   return (
     <section className={["space-y-3", className].filter(Boolean).join(" ")}>
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-navy">{title}</h2>
+        <h2 className="text-lg font-semibold text-navy">{title}</h2>
         {action}
       </div>
 

@@ -1,4 +1,5 @@
 import { EvidenceFeed } from "@/components/evidence/EvidenceFeed";
+import { PageAlert, PageFrame, PageHeader } from "@/components/layout/Page";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { requirePageContext } from "@/lib/auth/context";
@@ -84,19 +85,13 @@ export default async function EvidencePage({
   );
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold text-navy">Evidence</h1>
-        <p className="mt-1 text-sm text-muted">
-          All workspace evidence, newest first.
-        </p>
-      </header>
+    <PageFrame width="wide">
+      <PageHeader
+        title="Evidence"
+        description="All workspace evidence, newest first."
+      />
 
-      {dbError ? (
-        <p className="rounded border border-coral/30 bg-coral/8 px-4 py-3 text-sm text-navy">
-          {dbError}
-        </p>
-      ) : null}
+      {dbError ? <PageAlert>{dbError}</PageAlert> : null}
 
       <form
         method="get"
@@ -217,6 +212,6 @@ export default async function EvidencePage({
       </form>
 
       <EvidenceFeed items={items} sourceOptions={sources} />
-    </div>
+    </PageFrame>
   );
 }

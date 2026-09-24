@@ -3,6 +3,7 @@ import { ConfidencePrompt } from "@/components/assumptions/ConfidencePrompt";
 import { EvidenceTimeline } from "@/components/assumptions/EvidenceTimeline";
 import { HistoryList } from "@/components/assumptions/HistoryList";
 import { LinkedObjectList } from "@/components/links/LinkedObjectList";
+import { PageAlert, PageFrame } from "@/components/layout/Page";
 import { Badge } from "@/components/ui/Badge";
 import { requirePageContext } from "@/lib/auth/context";
 import { getAssumption } from "@/lib/db/assumptions";
@@ -74,25 +75,25 @@ export default async function AssumptionDetailPage({
     ]);
   } catch {
     return (
-      <div className="mx-auto max-w-3xl">
-        <p className="rounded border border-coral/30 bg-coral/8 px-4 py-3 text-sm text-navy">
+      <PageFrame width="narrow">
+        <PageAlert>
           We could not load this assumption. Check your connection and try again.
-        </p>
-      </div>
+        </PageAlert>
+      </PageFrame>
     );
   }
 
   const suggestion = suggestConfidence(evidence);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-10">
+    <PageFrame width="narrow">
       <header className="space-y-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 flex-1 space-y-3">
             <p className="text-xs font-medium tracking-wide text-muted uppercase">
               {assumption.category}
             </p>
-            <h1 className="text-2xl font-semibold leading-snug text-navy md:text-3xl">
+            <h1 className="text-2xl font-semibold leading-snug tracking-tight text-navy md:text-3xl">
               {assumption.statement}
             </h1>
           </div>
@@ -265,6 +266,6 @@ export default async function AssumptionDetailPage({
         <h2 className="text-lg font-semibold text-navy">History</h2>
         <HistoryList items={history} />
       </section>
-    </div>
+    </PageFrame>
   );
 }

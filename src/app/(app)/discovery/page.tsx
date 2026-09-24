@@ -1,4 +1,5 @@
 import { DiscoveryListClient } from "@/components/discovery/DiscoveryListClient";
+import { PageAlert, PageFrame } from "@/components/layout/Page";
 import { requirePageContext } from "@/lib/auth/context";
 import { listContactsForOrganisation } from "@/lib/db/contacts";
 import { listDiscoverySessions } from "@/lib/db/discovery";
@@ -31,17 +32,13 @@ export default async function DiscoveryPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1400px]">
-      {dbError ? (
-        <p className="mb-6 rounded border border-coral/30 bg-coral/8 px-4 py-3 text-sm text-navy">
-          {dbError}
-        </p>
-      ) : null}
+    <PageFrame width="wide">
+      {dbError ? <PageAlert>{dbError}</PageAlert> : null}
       <DiscoveryListClient
         sessions={sessions}
         organisations={organisations}
         contacts={contacts}
       />
-    </div>
+    </PageFrame>
   );
 }

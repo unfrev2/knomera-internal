@@ -1,6 +1,7 @@
 "use client";
 
 import { BetForm } from "@/components/bets/BetForm";
+import { PageHeader } from "@/components/layout/Page";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -42,17 +43,15 @@ export function BetsTable({
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-semibold text-navy md:text-3xl">Bets</h1>
-          <p className="max-w-xl text-sm leading-relaxed text-muted">
-            Meaningful commitments with a hypothesis. Separate from cheap ideas.
-          </p>
-        </div>
-        <Button type="button" onClick={() => setCreateOpen(true)}>
-          Create bet
-        </Button>
-      </header>
+      <PageHeader
+        title="Bets"
+        description="Meaningful commitments with a hypothesis. Separate from cheap ideas."
+        actions={
+          <Button type="button" onClick={() => setCreateOpen(true)}>
+            Create bet
+          </Button>
+        }
+      />
 
       <form action={applyFilters} className="grid gap-3 md:grid-cols-4">
         <Field label="Search" htmlFor="bets-search" className="md:col-span-2">

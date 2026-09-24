@@ -1,6 +1,7 @@
 "use client";
 
 import { DecisionForm } from "@/components/decisions/DecisionForm";
+import { PageHeader } from "@/components/layout/Page";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -43,19 +44,15 @@ export function DecisionsTable({
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-semibold text-navy md:text-3xl">
-            Decisions
-          </h1>
-          <p className="max-w-xl text-sm leading-relaxed text-muted">
-            Why did we decide this — and what would make us reconsider?
-          </p>
-        </div>
-        <Button type="button" onClick={() => setCreateOpen(true)}>
-          Record decision
-        </Button>
-      </header>
+      <PageHeader
+        title="Decisions"
+        description="Why did we decide this — and what would make us reconsider?"
+        actions={
+          <Button type="button" onClick={() => setCreateOpen(true)}>
+            Record decision
+          </Button>
+        }
+      />
 
       <form action={applyFilters} className="grid gap-3 md:grid-cols-4">
         <Field label="Search" htmlFor="decisions-search" className="md:col-span-2">

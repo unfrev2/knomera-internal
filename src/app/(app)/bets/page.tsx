@@ -1,5 +1,6 @@
 import { BetsTable } from "@/components/bets/BetsTable";
 import type { BetsTableFilters } from "@/components/bets/BetsTable";
+import { PageAlert, PageFrame } from "@/components/layout/Page";
 import { requirePageContext } from "@/lib/auth/context";
 import { listBets } from "@/lib/db/bets";
 import { BET_STATUSES, type Bet } from "@/lib/types";
@@ -51,13 +52,9 @@ export default async function BetsPage({
   }
 
   return (
-    <div className="mx-auto max-w-[1400px]">
-      {dbError ? (
-        <p className="mb-6 rounded border border-coral/30 bg-coral/8 px-4 py-3 text-sm text-navy">
-          {dbError}
-        </p>
-      ) : null}
+    <PageFrame width="wide">
+      {dbError ? <PageAlert>{dbError}</PageAlert> : null}
       <BetsTable bets={bets} filters={filters} />
-    </div>
+    </PageFrame>
   );
 }

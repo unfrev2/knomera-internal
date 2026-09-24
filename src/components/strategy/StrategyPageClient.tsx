@@ -1,6 +1,7 @@
 "use client";
 
 import { StrategyItemForm } from "@/components/strategy/StrategyItemForm";
+import { PageHeader } from "@/components/layout/Page";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import {
@@ -15,20 +16,16 @@ export function StrategyPageClient({ items }: { items: StrategyItem[] }) {
   const [editing, setEditing] = useState<StrategyItem | null>(null);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-semibold text-navy md:text-3xl">
-            Strategy
-          </h1>
-          <p className="max-w-xl text-sm leading-relaxed text-muted">
-            What are we trying to build, for whom, and why?
-          </p>
-        </div>
-        <Button type="button" onClick={() => setCreateOpen(true)}>
-          Add statement
-        </Button>
-      </header>
+    <div className="space-y-8">
+      <PageHeader
+        title="Strategy"
+        description="What are we trying to build, for whom, and why?"
+        actions={
+          <Button type="button" onClick={() => setCreateOpen(true)}>
+            Add statement
+          </Button>
+        }
+      />
 
       {items.length === 0 ? (
         <p className="rounded border border-dashed border-line bg-cream-tint/40 px-5 py-8 text-sm text-muted">

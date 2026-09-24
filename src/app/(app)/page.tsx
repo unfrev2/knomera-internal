@@ -1,6 +1,7 @@
 import { ConfidenceMatrix } from "@/components/overview/ConfidenceMatrix";
 import { PriorityList } from "@/components/overview/PriorityList";
 import { StatsStrip } from "@/components/overview/StatsStrip";
+import { PageAlert, PageFrame, PageHeader } from "@/components/layout/Page";
 import { requirePageContext } from "@/lib/auth/context";
 import { countAssumptions, listAssumptions } from "@/lib/db/assumptions";
 import { listEvidenceByAssumptionIds } from "@/lib/db/evidence";
@@ -77,46 +78,40 @@ export default async function OverviewPage() {
   ).length;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-10">
-      <header className="space-y-3">
-        <h1 className="text-2xl font-semibold tracking-tight text-navy md:text-3xl">
-          Overview
-        </h1>
-        {dbError ? (
-          <p className="rounded border border-coral/30 bg-coral/8 px-4 py-3 text-sm text-navy">
-            {dbError}
-          </p>
-        ) : (
-          <p className="max-w-3xl text-sm leading-relaxed text-muted md:text-base">
-            {assumptions.length === 0 ? (
-              "No assumptions logged yet. Add your first assumption to start tracking what you believe and what to validate."
-            ) : topPriority ? (
-              <>
-                We are tracking{" "}
-                <span className="font-medium text-navy">
-                  {assumptions.length} assumptions
-                </span>
-                , with{" "}
-                <span className="font-medium text-navy">
-                  {provenOrSupported} well supported or proven
-                </span>
-                . The highest priority to test next is{" "}
-                <Link
-                  href={`/assumptions/${topPriority.assumptionId}`}
-                  className="font-medium text-blue underline-offset-2 hover:underline"
-                >
-                  {topPriority.statement}
-                </Link>
-                {explainPriority(topPriority)
-                  ? ` — ${explainPriority(topPriority)}.`
-                  : "."}
-              </>
-            ) : (
-              "Assumptions are loaded. Review the matrix and priority list below."
-            )}
-          </p>
-        )}
-      </header>
+    <PageFrame width="wide">
+      <PageHeader
+        title="Overview"
+        description={
+          dbError ? undefined : assumptions.length === 0 ? (
+            "No assumptions logged yet. Add your first assumption to start tracking what you believe and what to validate."
+          ) : topPriority ? (
+            <>
+              We are tracking{" "}
+              <span className="font-medium text-navy">
+                {assumptions.length} assumptions
+              </span>
+              , with{" "}
+              <span className="font-medium text-navy">
+                {provenOrSupported} well supported or proven
+              </span>
+              . The highest priority to test next is{" "}
+              <Link
+                href={`/assumptions/${topPriority.assumptionId}`}
+                className="font-medium text-blue underline-offset-2 hover:underline"
+              >
+                {topPriority.statement}
+              </Link>
+              {explainPriority(topPriority)
+                ? ` — ${explainPriority(topPriority)}.`
+                : "."}
+            </>
+          ) : (
+            "Assumptions are loaded. Review the matrix and priority list below."
+          )
+        }
+      >
+        {dbError ? <PageAlert>{dbError}</PageAlert> : null}
+      </PageHeader>
 
       <StatsStrip
         total={stats.total}
@@ -149,6 +144,6 @@ export default async function OverviewPage() {
           confidence: item.confidence,
         }))}
       />
-    </div>
+    </PageFrame>
   );
 }

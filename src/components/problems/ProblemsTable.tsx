@@ -1,6 +1,7 @@
 "use client";
 
 import { ProblemForm } from "@/components/problems/ProblemForm";
+import { PageHeader } from "@/components/layout/Page";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -53,19 +54,15 @@ export function ProblemsTable({
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-semibold text-navy md:text-3xl">
-            Problems
-          </h1>
-          <p className="max-w-xl text-sm leading-relaxed text-muted">
-            Which customer problems do we believe matter?
-          </p>
-        </div>
-        <Button type="button" onClick={() => setCreateOpen(true)}>
-          Add problem
-        </Button>
-      </header>
+      <PageHeader
+        title="Problems"
+        description="Which customer problems do we believe matter?"
+        actions={
+          <Button type="button" onClick={() => setCreateOpen(true)}>
+            Add problem
+          </Button>
+        }
+      />
 
       <form action={applyFilters} className="grid gap-3 md:grid-cols-6">
         <Field label="Search" htmlFor="problems-search" className="md:col-span-2">

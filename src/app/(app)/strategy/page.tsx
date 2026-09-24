@@ -1,4 +1,5 @@
 import { StrategyPageClient } from "@/components/strategy/StrategyPageClient";
+import { PageAlert, PageFrame } from "@/components/layout/Page";
 import { requirePageContext } from "@/lib/auth/context";
 import { listStrategyItems } from "@/lib/db/strategy";
 import type { StrategyItem } from "@/lib/types";
@@ -16,13 +17,9 @@ export default async function StrategyPage() {
   }
 
   return (
-    <div>
-      {dbError ? (
-        <p className="mb-6 rounded border border-coral/30 bg-coral/8 px-4 py-3 text-sm text-navy">
-          {dbError}
-        </p>
-      ) : null}
+    <PageFrame width="narrow">
+      {dbError ? <PageAlert>{dbError}</PageAlert> : null}
       <StrategyPageClient items={items} />
-    </div>
+    </PageFrame>
   );
 }

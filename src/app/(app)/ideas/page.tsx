@@ -1,5 +1,6 @@
 import { IdeasTable } from "@/components/ideas/IdeasTable";
 import type { IdeasTableFilters } from "@/components/ideas/IdeasTable";
+import { PageAlert, PageFrame } from "@/components/layout/Page";
 import { requirePageContext } from "@/lib/auth/context";
 import { listIdeas } from "@/lib/db/ideas";
 import { IDEA_STATUSES, type Idea } from "@/lib/types";
@@ -51,13 +52,9 @@ export default async function IdeasPage({
   }
 
   return (
-    <div className="mx-auto max-w-[1400px]">
-      {dbError ? (
-        <p className="mb-6 rounded border border-coral/30 bg-coral/8 px-4 py-3 text-sm text-navy">
-          {dbError}
-        </p>
-      ) : null}
+    <PageFrame width="wide">
+      {dbError ? <PageAlert>{dbError}</PageAlert> : null}
       <IdeasTable ideas={ideas} filters={filters} />
-    </div>
+    </PageFrame>
   );
 }

@@ -1,5 +1,6 @@
 import { AssumptionsTable } from "@/components/assumptions/AssumptionsTable";
 import type { AssumptionsTableFilters } from "@/components/assumptions/AssumptionsTable";
+import { PageAlert, PageFrame } from "@/components/layout/Page";
 import { requirePageContext } from "@/lib/auth/context";
 import { listAssumptions } from "@/lib/db/assumptions";
 import { listEvidenceByAssumptionIds } from "@/lib/db/evidence";
@@ -93,17 +94,13 @@ export default async function AssumptionsPage({
   const rankOrder = ranked.map((item) => item.assumptionId);
 
   return (
-    <div className="mx-auto max-w-[1400px]">
-      {dbError ? (
-        <p className="mb-6 rounded border border-coral/30 bg-coral/8 px-4 py-3 text-sm text-navy">
-          {dbError}
-        </p>
-      ) : null}
+    <PageFrame width="wide">
+      {dbError ? <PageAlert>{dbError}</PageAlert> : null}
       <AssumptionsTable
         assumptions={assumptions}
         filters={filters}
         rankOrder={rankOrder}
       />
-    </div>
+    </PageFrame>
   );
 }
