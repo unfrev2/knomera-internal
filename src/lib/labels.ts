@@ -14,6 +14,8 @@ import type {
   BetAssumptionRelationship,
   BetOutcomeResult,
   OpportunityStage,
+  EvidenceSourceKindFilter,
+  EvidenceSourceType,
   FocusItemStatus,
   SessionUser,
   StrategyItemStatus,
@@ -116,6 +118,23 @@ export const ORGANISATION_TYPE_LABELS: Record<OrganisationType, string> = {
   customer: "Customer",
   partner: "Partner",
   other: "Other",
+};
+
+export const EVIDENCE_SOURCE_TYPE_LABELS: Record<EvidenceSourceType, string> = {
+  link: "Link",
+  free_text: "Other / free text",
+};
+
+export const EVIDENCE_SOURCE_KIND_LABELS: Record<
+  EvidenceSourceKindFilter,
+  string
+> = {
+  organisation: "Organisation",
+  contact: "Contact",
+  discovery: "Discovery",
+  link: "Link",
+  other: "Other",
+  none: "No source",
 };
 
 export const DECISION_STATUS_LABELS: Record<DecisionStatus, string> = {

@@ -1,7 +1,7 @@
 import { DiscoveryListClient } from "@/components/discovery/DiscoveryListClient";
 import { PageAlert, PageFrame } from "@/components/layout/Page";
 import { requirePageContext } from "@/lib/auth/context";
-import { listContactsForOrganisation } from "@/lib/db/contacts";
+import { listContacts } from "@/lib/db/contacts";
 import { listDiscoverySessions } from "@/lib/db/discovery";
 import { listOrganisations } from "@/lib/db/organisations";
 import type { Contact, DiscoverySession, Organisation } from "@/lib/types";
@@ -15,16 +15,11 @@ export default async function DiscoveryPage() {
   let dbError: string | null = null;
 
   try {
-    [sessions, organisations] = await Promise.all([
+    [sessions, organisations, contacts] = await Promise.all([
       listDiscoverySessions(workspace.id),
       listOrganisations(workspace.id),
+      listContacts(workspace.id),
     ]);
-    const contactLists = await Promise.all(
-      organisations.map((org) =>
-        listContactsForOrganisation(workspace.id, org.id),
-      ),
-    );
-    contacts = contactLists.flat();
   } catch (error) {
     console.error("Discovery list load failed:", error);
     dbError =

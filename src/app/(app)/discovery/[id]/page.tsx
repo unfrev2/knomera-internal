@@ -100,11 +100,17 @@ export default async function DiscoveryDetailPage({
           <div>
             <dt className="text-muted">Contact</dt>
             <dd className="font-medium text-navy">
-              {session.contact_name
-                ? `${session.contact_name}${
-                    session.contact_role ? ` · ${session.contact_role}` : ""
-                  }`
-                : "—"}
+              {session.contact_id && session.contact_name ? (
+                <Link
+                  href={`/contacts/${session.contact_id}`}
+                  className="hover:underline"
+                >
+                  {session.contact_name}
+                  {session.contact_role ? ` · ${session.contact_role}` : ""}
+                </Link>
+              ) : (
+                "—"
+              )}
             </dd>
           </div>
           <div>

@@ -48,6 +48,11 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 DO $$ BEGIN
+  CREATE TYPE evidence_source_type AS ENUM ('link', 'free_text');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
   CREATE TYPE strategy_item_type AS ENUM (
     'north_star',
     'positioning',
@@ -224,10 +229,26 @@ CREATE TABLE IF NOT EXISTS evidence (
   discovery_session_id UUID,
   bet_outcome_id UUID,
   opportunity_id UUID,
+  organisation_id UUID,
+  contact_id UUID,
+  evidence_source_id UUID,
   CONSTRAINT evidence_workspace_assumption_fk
     FOREIGN KEY (assumption_id, workspace_id)
     REFERENCES assumptions (id, workspace_id),
   CONSTRAINT evidence_id_workspace_unique UNIQUE (id, workspace_id)
+);
+
+CREATE TABLE IF NOT EXISTS evidence_sources (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id UUID NOT NULL REFERENCES workspaces (id) ON DELETE CASCADE,
+  type evidence_source_type NOT NULL,
+  title TEXT NOT NULL,
+  url TEXT,
+  description TEXT,
+  created_by TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT evidence_sources_id_workspace_unique UNIQUE (id, workspace_id)
 );
 
 CREATE TABLE IF NOT EXISTS assumption_history (
@@ -665,6 +686,39 @@ EXCEPTION
 END $$;
 
 DO $$ BEGIN
+  ALTER TABLE evidence
+    ADD CONSTRAINT evidence_organisation_fk
+    FOREIGN KEY (organisation_id, workspace_id)
+    REFERENCES organisations (id, workspace_id)
+    ON DELETE SET NULL;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+  WHEN undefined_column THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE evidence
+    ADD CONSTRAINT evidence_contact_fk
+    FOREIGN KEY (contact_id, workspace_id)
+    REFERENCES contacts (id, workspace_id)
+    ON DELETE SET NULL;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+  WHEN undefined_column THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE evidence
+    ADD CONSTRAINT evidence_source_fk
+    FOREIGN KEY (evidence_source_id, workspace_id)
+    REFERENCES evidence_sources (id, workspace_id)
+    ON DELETE SET NULL;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+  WHEN undefined_column THEN NULL;
+END $$;
+
+DO $$ BEGIN
   ALTER TABLE focus_items
     ADD CONSTRAINT focus_items_assumption_fk
     FOREIGN KEY (linked_assumption_id)
@@ -764,6 +818,20 @@ CREATE INDEX IF NOT EXISTS opportunities_next_action_date_idx
 CREATE INDEX IF NOT EXISTS evidence_opportunity_id_idx
   ON evidence (opportunity_id)
   WHERE opportunity_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS evidence_sources_workspace_id_idx
+  ON evidence_sources (workspace_id);
+CREATE INDEX IF NOT EXISTS evidence_organisation_id_idx
+  ON evidence (workspace_id, organisation_id)
+  WHERE organisation_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS evidence_contact_id_idx
+  ON evidence (workspace_id, contact_id)
+  WHERE contact_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS evidence_workspace_discovery_session_id_idx
+  ON evidence (workspace_id, discovery_session_id)
+  WHERE discovery_session_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS evidence_source_id_idx
+  ON evidence (workspace_id, evidence_source_id)
+  WHERE evidence_source_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS focus_items_workspace_week_idx
   ON focus_items (workspace_id, week_start DESC, owner);
 CREATE INDEX IF NOT EXISTS focus_items_status_idx
@@ -796,6 +864,12 @@ CREATE TRIGGER strategy_items_set_updated_at
 DROP TRIGGER IF EXISTS problems_set_updated_at ON problems;
 CREATE TRIGGER problems_set_updated_at
   BEFORE UPDATE ON problems
+  FOR EACH ROW
+  EXECUTE FUNCTION set_updated_at();
+
+DROP TRIGGER IF EXISTS evidence_sources_set_updated_at ON evidence_sources;
+CREATE TRIGGER evidence_sources_set_updated_at
+  BEFORE UPDATE ON evidence_sources
   FOR EACH ROW
   EXECUTE FUNCTION set_updated_at();
 
@@ -963,6 +1037,7 @@ CREATE TRIGGER opportunities_record_history
 REVOKE ALL ON TABLE workspaces FROM anon, authenticated;
 REVOKE ALL ON TABLE assumptions FROM anon, authenticated;
 REVOKE ALL ON TABLE evidence FROM anon, authenticated;
+REVOKE ALL ON TABLE evidence_sources FROM anon, authenticated;
 REVOKE ALL ON TABLE assumption_history FROM anon, authenticated;
 REVOKE ALL ON TABLE entity_history FROM anon, authenticated;
 REVOKE ALL ON TABLE schema_migrations FROM anon, authenticated;
@@ -994,6 +1069,7 @@ GRANT USAGE ON SCHEMA public TO postgres, service_role;
 ALTER TABLE workspaces ENABLE ROW LEVEL SECURITY;
 ALTER TABLE assumptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE evidence ENABLE ROW LEVEL SECURITY;
+ALTER TABLE evidence_sources ENABLE ROW LEVEL SECURITY;
 ALTER TABLE assumption_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE entity_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE schema_migrations ENABLE ROW LEVEL SECURITY;
@@ -1027,6 +1103,9 @@ CREATE POLICY deny_all_assumptions ON assumptions FOR ALL TO anon, authenticated
 
 DROP POLICY IF EXISTS deny_all_evidence ON evidence;
 CREATE POLICY deny_all_evidence ON evidence FOR ALL TO anon, authenticated USING (false);
+
+DROP POLICY IF EXISTS deny_all_evidence_sources ON evidence_sources;
+CREATE POLICY deny_all_evidence_sources ON evidence_sources FOR ALL TO anon, authenticated USING (false);
 
 DROP POLICY IF EXISTS deny_all_assumption_history ON assumption_history;
 CREATE POLICY deny_all_assumption_history ON assumption_history FOR ALL TO anon, authenticated USING (false);

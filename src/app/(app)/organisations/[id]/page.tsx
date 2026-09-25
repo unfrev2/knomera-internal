@@ -1,8 +1,10 @@
+import { EvidenceProvenance } from "@/components/evidence/EvidenceProvenance";
+import { OrganisationDetailActions } from "@/components/organisations/OrganisationDetailActions";
 import { LinkedObjectList } from "@/components/links/LinkedObjectList";
 import { PageAlert, PageFrame } from "@/components/layout/Page";
 import { Badge } from "@/components/ui/Badge";
 import { requirePageContext } from "@/lib/auth/context";
-import { getOrganisationDetail } from "@/lib/db/organisations";
+import { getOrganisationDetail, listOrganisations } from "@/lib/db/organisations";
 import { hrefForLinkable } from "@/lib/domain/linkable";
 import { formatDateShort } from "@/lib/format";
 import { ORGANISATION_TYPE_LABELS } from "@/lib/labels";
@@ -18,9 +20,13 @@ export default async function OrganisationDetailPage({
   const { id } = await params;
 
   let detail;
+  let organisations;
 
   try {
-    detail = await getOrganisationDetail(workspace.id, id);
+    [detail, organisations] = await Promise.all([
+      getOrganisationDetail(workspace.id, id),
+      listOrganisations(workspace.id),
+    ]);
     if (!detail) notFound();
   } catch {
     return (
@@ -64,10 +70,16 @@ export default async function OrganisationDetailPage({
           ) : null}
         </div>
 
-        <Badge
-          variant="neutral"
-          label={ORGANISATION_TYPE_LABELS[organisation.organisation_type]}
-        />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Badge
+            variant="neutral"
+            label={ORGANISATION_TYPE_LABELS[organisation.organisation_type]}
+          />
+          <OrganisationDetailActions
+            organisation={organisation}
+            organisations={organisations}
+          />
+        </div>
 
         <dl className="grid gap-3 text-sm sm:grid-cols-3">
           <div>
@@ -102,7 +114,12 @@ export default async function OrganisationDetailPage({
           <ul className="divide-y divide-line border-y border-line">
             {contacts.map((contact) => (
               <li key={contact.id} className="py-2.5">
-                <p className="text-sm font-medium text-navy">{contact.name}</p>
+                <Link
+                  href={`/contacts/${contact.id}`}
+                  className="text-sm font-medium text-navy hover:underline"
+                >
+                  {contact.name}
+                </Link>
                 <p className="text-xs text-muted">
                   {[contact.role, contact.email].filter(Boolean).join(" · ") ||
                     "—"}
@@ -144,8 +161,7 @@ export default async function OrganisationDetailPage({
             Evidence from this organisation
           </h2>
           <p className="mt-1 text-sm text-muted">
-            Via discovery sessions or commercial opportunities — not duplicated
-            records.
+            Direct, contact, discovery, and commercial evidence — each record once.
           </p>
         </div>
         {evidence.length === 0 ? (
@@ -162,9 +178,15 @@ export default async function OrganisationDetailPage({
                 </Link>
                 {item.assumption_statement ? (
                   <p className="text-xs text-muted">
-                    On assumption: {item.assumption_statement}
+                    <Link
+                      href={`/assumptions/${item.assumption_id}`}
+                      className="hover:underline"
+                    >
+                      {item.assumption_statement}
+                    </Link>
                   </p>
                 ) : null}
+                <EvidenceProvenance evidence={item} />
                 <div className="flex flex-wrap gap-2 pt-1">
                   <Badge
                     variant="direction"

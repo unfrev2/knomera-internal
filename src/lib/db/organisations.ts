@@ -1,5 +1,6 @@
 import { getDb } from "@/lib/db/client";
 import { listContactsForOrganisation } from "@/lib/db/contacts";
+import { listEvidenceForOrganisation } from "@/lib/db/evidence";
 import { listOpportunitiesForOrganisation } from "@/lib/db/opportunities";
 import type {
   Contact,
@@ -35,23 +36,51 @@ export async function listOrganisations(
   const query = search?.trim() ?? "";
   return sql<Organisation[]>`
     SELECT
-      id,
-      workspace_id,
-      name,
-      website,
-      organisation_type,
-      notes,
-      created_by,
-      created_at::text,
-      updated_at::text
-    FROM organisations
-    WHERE workspace_id = ${workspaceId}
+      o.id,
+      o.workspace_id,
+      o.name,
+      o.website,
+      o.organisation_type,
+      o.notes,
+      o.created_by,
+      o.created_at::text,
+      o.updated_at::text,
+      (
+        SELECT COUNT(*)::int FROM contacts c
+        WHERE c.organisation_id = o.id AND c.workspace_id = o.workspace_id
+      ) AS contact_count,
+      (
+        SELECT COUNT(*)::int FROM discovery_sessions s
+        WHERE s.organisation_id = o.id AND s.workspace_id = o.workspace_id
+      ) AS discovery_count,
+      (
+        SELECT COUNT(DISTINCT e.id)::int
+        FROM evidence e
+        LEFT JOIN contacts c ON c.id = e.contact_id
+        LEFT JOIN discovery_sessions s ON s.id = e.discovery_session_id
+        LEFT JOIN opportunities opp ON opp.id = e.opportunity_id
+        WHERE e.workspace_id = o.workspace_id
+          AND (
+            e.organisation_id = o.id
+            OR c.organisation_id = o.id
+            OR s.organisation_id = o.id
+            OR opp.organisation_id = o.id
+          )
+      ) AS evidence_count,
+      (
+        SELECT COUNT(*)::int FROM opportunities opp
+        WHERE opp.organisation_id = o.id
+          AND opp.workspace_id = o.workspace_id
+          AND opp.stage NOT IN ('won', 'lost')
+      ) AS opportunity_count
+    FROM organisations o
+    WHERE o.workspace_id = ${workspaceId}
       AND (
         ${query} = ''
-        OR name ILIKE ${"%" + query + "%"}
-        OR COALESCE(website, '') ILIKE ${"%" + query + "%"}
+        OR o.name ILIKE ${"%" + query + "%"}
+        OR COALESCE(o.website, '') ILIKE ${"%" + query + "%"}
       )
-    ORDER BY name ASC
+    ORDER BY o.name ASC
   `;
 }
 
@@ -214,44 +243,7 @@ export async function listEvidenceFromOrganisation(
   workspaceId: string,
   organisationId: string,
 ): Promise<Evidence[]> {
-  const sql = getDb();
-  return sql<Evidence[]>`
-    SELECT
-      e.id,
-      e.workspace_id,
-      e.assumption_id,
-      e.title,
-      e.description,
-      e.evidence_type,
-      e.direction,
-      e.strength,
-      e.source,
-      e.evidence_date::text,
-      e.created_by,
-      e.created_at::text,
-      e.discovery_session_id,
-      e.bet_outcome_id,
-      e.opportunity_id,
-      a.statement AS assumption_statement
-    FROM evidence e
-    INNER JOIN assumptions a ON a.id = e.assumption_id
-    WHERE e.workspace_id = ${workspaceId}
-      AND (
-        EXISTS (
-          SELECT 1
-          FROM discovery_sessions s
-          WHERE s.id = e.discovery_session_id
-            AND s.organisation_id = ${organisationId}
-        )
-        OR EXISTS (
-          SELECT 1
-          FROM opportunities o
-          WHERE o.id = e.opportunity_id
-            AND o.organisation_id = ${organisationId}
-        )
-      )
-    ORDER BY e.evidence_date DESC, e.created_at DESC
-  `;
+  return listEvidenceForOrganisation(workspaceId, organisationId);
 }
 
 /** Compact customer history — not a CRM record. */

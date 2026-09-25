@@ -166,7 +166,7 @@ export async function searchWorkspaceObjects(
         title: row.name,
         subtitle: row.organisation_name,
         meta: row.role,
-        href: `${hrefForLinkable("organisation", row.organisation_id)}#contacts`,
+        href: hrefForLinkable("contact", row.id),
       });
     }
   }
@@ -349,6 +349,10 @@ export async function searchWorkspaceObjects(
         e.direction::text
       FROM evidence e
       INNER JOIN assumptions a ON a.id = e.assumption_id
+      LEFT JOIN organisations org ON org.id = e.organisation_id
+      LEFT JOIN contacts ct ON ct.id = e.contact_id
+      LEFT JOIN discovery_sessions ds ON ds.id = e.discovery_session_id
+      LEFT JOIN evidence_sources es ON es.id = e.evidence_source_id
       WHERE e.workspace_id = ${workspaceId}
         AND (
           ${query} = ''
@@ -356,6 +360,10 @@ export async function searchWorkspaceObjects(
           OR COALESCE(e.description, '') ILIKE ${pattern}
           OR COALESCE(e.source, '') ILIKE ${pattern}
           OR a.statement ILIKE ${pattern}
+          OR COALESCE(org.name, '') ILIKE ${pattern}
+          OR COALESCE(ct.name, '') ILIKE ${pattern}
+          OR COALESCE(ds.title, '') ILIKE ${pattern}
+          OR COALESCE(es.title, '') ILIKE ${pattern}
         )
         ${exclude.length > 0 ? sql`AND e.id NOT IN ${sql(exclude)}` : sql``}
       ORDER BY e.evidence_date DESC, e.created_at DESC

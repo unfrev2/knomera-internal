@@ -1,4 +1,5 @@
 import { EvidenceItemActions } from "@/components/assumptions/EvidenceItemActions";
+import { EvidenceProvenance } from "@/components/evidence/EvidenceProvenance";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatDate } from "@/lib/format";
@@ -33,7 +34,7 @@ export function EvidenceFeed({
       {items.map((item) => {
         const strength = strengthMeta(item.strength);
         return (
-          <li key={item.id} className="px-4 py-4">
+          <li id={item.id} key={item.id} className="px-4 py-4">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0 flex-1">
                 <h3 className="text-sm font-semibold text-navy">{item.title}</h3>
@@ -67,10 +68,12 @@ export function EvidenceFeed({
               />
             </div>
             <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-              <p className="text-xs text-muted">
-                {item.source ? `${item.source} · ` : ""}
-                {displayName(item.created_by)}
-              </p>
+              <div className="space-y-1">
+                <EvidenceProvenance evidence={item} />
+                <p className="text-xs text-muted">
+                  {displayName(item.created_by)}
+                </p>
+              </div>
               <EvidenceItemActions
                 evidence={item}
                 sourceOptions={sourceOptions}

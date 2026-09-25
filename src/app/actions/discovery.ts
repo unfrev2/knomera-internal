@@ -43,6 +43,8 @@ export async function createOrganisationAction(formData: FormData) {
   });
 
   revalidatePath("/discovery");
+  revalidatePath("/organisations");
+  revalidatePath("/contacts");
   return org;
 }
 
@@ -70,6 +72,8 @@ export async function updateOrganisationAction(formData: FormData) {
   if (!updated) throw new Error("Organisation not found.");
 
   revalidatePath("/discovery");
+  revalidatePath("/organisations");
+  revalidatePath(`/organisations/${id}`);
   return updated;
 }
 
@@ -90,6 +94,9 @@ export async function createContactAction(formData: FormData) {
   });
 
   revalidatePath("/discovery");
+  revalidatePath("/organisations");
+  revalidatePath("/contacts");
+  revalidatePath(`/organisations/${organisation_id}`);
   return contact;
 }
 
@@ -110,6 +117,8 @@ export async function updateContactAction(formData: FormData) {
   if (!updated) throw new Error("Contact not found.");
 
   revalidatePath("/discovery");
+  revalidatePath("/contacts");
+  revalidatePath(`/contacts/${id}`);
   return updated;
 }
 

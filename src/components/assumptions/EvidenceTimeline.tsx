@@ -1,4 +1,5 @@
 import { EvidenceItemActions } from "@/components/assumptions/EvidenceItemActions";
+import { EvidenceProvenance } from "@/components/evidence/EvidenceProvenance";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatDate } from "@/lib/format";
@@ -63,7 +64,7 @@ export function EvidenceTimeline({
               <p className="mt-2 text-xs text-muted">{strength.explanation}</p>
               <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
-                  {item.source ? <span>Source: {item.source}</span> : null}
+                  <EvidenceProvenance evidence={item} />
                   <span>Added by {displayName(item.created_by)}</span>
                 </div>
                 <EvidenceItemActions

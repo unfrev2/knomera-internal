@@ -2,6 +2,7 @@
 
 import {
   Briefcase,
+  Building2,
   CircleHelp,
   Compass,
   Crosshair,
@@ -14,6 +15,7 @@ import {
   MessagesSquare,
   Scale,
   Target,
+  Users,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -65,6 +67,18 @@ const NAV_ITEMS: NavItem[] = [
     label: "Discovery",
     icon: MessagesSquare,
     match: (path) => path.startsWith("/discovery"),
+  },
+  {
+    href: "/organisations",
+    label: "Organisations",
+    icon: Building2,
+    match: (path) => path.startsWith("/organisations"),
+  },
+  {
+    href: "/contacts",
+    label: "Contacts",
+    icon: Users,
+    match: (path) => path.startsWith("/contacts"),
   },
   {
     href: "/decisions",

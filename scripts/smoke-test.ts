@@ -191,6 +191,33 @@ async function main() {
     "Stage 6 commercial migration recorded",
   );
 
+  console.log("Evidence sources schema");
+  const evidenceSourcesTable = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = 'evidence_sources'
+    ) AS exists
+  `;
+  await assert(evidenceSourcesTable[0]?.exists === true, "evidence_sources table exists");
+  const orgCol = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'evidence' AND column_name = 'organisation_id'
+    ) AS exists
+  `;
+  await assert(orgCol[0]?.exists === true, "evidence.organisation_id column exists");
+  const contactCol = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'evidence' AND column_name = 'contact_id'
+    ) AS exists
+  `;
+  await assert(contactCol[0]?.exists === true, "evidence.contact_id column exists");
+  await assert(
+    migrations.some((row) => row.version === "20250925120000"),
+    "Evidence sources migration recorded",
+  );
+
   console.log("Stage 7 focus schema");
   const focusTable = await sql<{ exists: boolean }[]>`
     SELECT EXISTS (

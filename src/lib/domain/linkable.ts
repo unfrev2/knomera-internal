@@ -76,8 +76,7 @@ export function hrefForLinkable(
     case "organisation":
       return `/organisations/${id}`;
     case "contact":
-      // Prefer search/caller to use organisation href + #contacts.
-      return `/discovery`;
+      return `/contacts/${id}`;
     case "discovery_session":
       return `/discovery/${id}`;
     case "opportunity":

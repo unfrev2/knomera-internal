@@ -2,15 +2,19 @@
 
 import {
   createEvidenceAction,
+  getEvidenceAttributionOptionsAction,
   updateEvidenceAction,
 } from "@/app/actions/evidence";
+import { EvidenceSourceFields, type EvidenceSourcePrefill } from "@/components/evidence/EvidenceSourceFields";
+import { ObjectPicker } from "@/components/links/ObjectPicker";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Select } from "@/components/ui/Select";
-import { SourceAutocomplete } from "@/components/ui/SourceAutocomplete";
 import { Textarea } from "@/components/ui/Textarea";
+import type { EvidenceAttributionOption } from "@/lib/db/evidence";
+import type { LinkableObject } from "@/lib/domain/linkable";
 import { todayISO } from "@/lib/format";
 import {
   DIRECTION_LABELS,
@@ -23,13 +27,22 @@ import { EVIDENCE_DIRECTIONS, EVIDENCE_TYPES } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
+const EMPTY_OPTIONS: EvidenceAttributionOption = {
+  organisations: [],
+  contacts: [],
+  sessions: [],
+  sources: [],
+};
+
 export type EvidenceFormProps = {
   open: boolean;
   onClose: () => void;
-  assumptionId: string;
+  assumptionId?: string;
   mode?: "create" | "edit";
   evidence?: Evidence;
   sourceOptions?: string[];
+  prefill?: EvidenceSourcePrefill;
+  returnTo?: string;
 };
 
 export function EvidenceForm({
@@ -38,28 +51,55 @@ export function EvidenceForm({
   assumptionId,
   mode = "create",
   evidence,
-  sourceOptions = [],
+  prefill,
+  returnTo,
 }: EvidenceFormProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [strength, setStrength] = useState(evidence?.strength ?? 3);
+  const [selectedAssumptionId, setSelectedAssumptionId] = useState(
+    assumptionId ?? evidence?.assumption_id ?? "",
+  );
+  const [assumptionLabel, setAssumptionLabel] = useState("");
+  const [options, setOptions] = useState<EvidenceAttributionOption>(EMPTY_OPTIONS);
 
   useEffect(() => {
-    if (open) {
-      setStrength(evidence?.strength ?? 3);
-      setError(null);
-    }
-  }, [open, evidence]);
+    if (!open) return;
+    let cancelled = false;
+    startTransition(async () => {
+      try {
+        const next = await getEvidenceAttributionOptionsAction();
+        if (!cancelled) setOptions(next);
+      } catch {
+        if (!cancelled) setOptions(EMPTY_OPTIONS);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
 
   const strengthInfo =
     EVIDENCE_STRENGTH.find((item) => item.value === strength) ??
     EVIDENCE_STRENGTH[0];
 
   const title = mode === "edit" ? "Edit evidence" : "Add evidence";
+  const needsAssumptionPicker = !assumptionId && mode === "create";
+
+  function handleSelectAssumption(item: LinkableObject) {
+    if (item.type !== "assumption") return;
+    setSelectedAssumptionId(item.id);
+    setAssumptionLabel(item.title);
+  }
 
   async function handleSubmit(formData: FormData) {
     setError(null);
+    if (!selectedAssumptionId) {
+      setError("Select an assumption.");
+      return;
+    }
+    formData.set("assumption_id", selectedAssumptionId);
     startTransition(async () => {
       try {
         if (mode === "edit" && evidence) {
@@ -80,8 +120,30 @@ export function EvidenceForm({
 
   return (
     <Modal open={open} onClose={onClose} title={title}>
-      <form action={handleSubmit} className="space-y-5" key={evidence?.id ?? "new"}>
-        <input type="hidden" name="assumption_id" value={assumptionId} />
+      <form
+        action={handleSubmit}
+        className="space-y-5"
+        key={`${open}:${evidence?.id ?? "new"}:${assumptionId ?? ""}`}
+      >
+        {returnTo ? <input type="hidden" name="return_to" value={returnTo} /> : null}
+
+        {needsAssumptionPicker ? (
+          <div className="space-y-2">
+            <ObjectPicker
+              label="Assumption"
+              types={["assumption"]}
+              onSelect={handleSelectAssumption}
+              disabled={pending}
+            />
+            {assumptionLabel ? (
+              <p className="rounded border border-line bg-cream-tint/50 px-3 py-2 text-sm text-navy">
+                {assumptionLabel}
+              </p>
+            ) : null}
+          </div>
+        ) : (
+          <input type="hidden" name="assumption_id" value={selectedAssumptionId} />
+        )}
 
         <Field label="Title" htmlFor="evidence-title" required>
           <Input
@@ -101,22 +163,13 @@ export function EvidenceForm({
           />
         </Field>
 
-        <Field
-          label="Source"
-          htmlFor="evidence-source"
-          hint={
-            sourceOptions.length > 0
-              ? "Pick an existing source or type a new one."
-              : "Add a person, document, or link. Future entries can reuse it."
-          }
-        >
-          <SourceAutocomplete
-            id="evidence-source"
-            name="source"
-            options={sourceOptions}
-            defaultValue={evidence?.source ?? ""}
-          />
-        </Field>
+        <EvidenceSourceFields
+          key={`${evidence?.id ?? "new"}:${prefill?.organisationId ?? ""}:${prefill?.contactId ?? ""}:${prefill?.discoverySessionId ?? ""}`}
+          options={options}
+          evidence={evidence}
+          prefill={prefill}
+          onOptionsChange={setOptions}
+        />
 
         <Field label="Type" htmlFor="evidence_type" required>
           <Select
@@ -186,7 +239,7 @@ export function EvidenceForm({
         ) : null}
 
         <div className="flex flex-wrap gap-3 border-t border-line pt-5">
-          <Button type="submit" loading={pending}>
+          <Button type="submit" loading={pending} disabled={needsAssumptionPicker && !selectedAssumptionId}>
             {mode === "edit" ? "Save changes" : "Add evidence"}
           </Button>
           <Button type="button" variant="secondary" onClick={onClose}>

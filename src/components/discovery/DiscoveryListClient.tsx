@@ -79,7 +79,16 @@ export function DiscoveryListClient({
                     </p>
                   </td>
                   <td className="px-4 py-3 text-navy/80">
-                    {session.contact_name ?? "—"}
+                    {session.contact_id && session.contact_name ? (
+                      <Link
+                        href={`/contacts/${session.contact_id}`}
+                        className="hover:underline"
+                      >
+                        {session.contact_name}
+                      </Link>
+                    ) : (
+                      "—"
+                    )}
                   </td>
                   <td className="px-4 py-3 text-navy/80">
                     {session.contact_role ?? "—"}

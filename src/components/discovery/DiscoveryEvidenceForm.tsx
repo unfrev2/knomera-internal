@@ -25,12 +25,16 @@ export function DiscoveryEvidenceForm({
   sessionId,
   sessionDate,
   sessionTitle,
+  organisationId,
+  contactId,
 }: {
   open: boolean;
   onClose: () => void;
   sessionId: string;
   sessionDate: string;
   sessionTitle: string;
+  organisationId?: string | null;
+  contactId?: string | null;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -57,6 +61,8 @@ export function DiscoveryEvidenceForm({
     }
     formData.set("assumption_id", assumptionId);
     formData.set("discovery_session_id", sessionId);
+    if (organisationId) formData.set("organisation_id", organisationId);
+    if (contactId) formData.set("contact_id", contactId);
     formData.set("evidence_type", "customer_interview");
     formData.set("source", sessionTitle);
     formData.set("evidence_date", sessionDate);

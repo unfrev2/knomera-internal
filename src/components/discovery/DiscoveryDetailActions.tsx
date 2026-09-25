@@ -42,6 +42,8 @@ export function DiscoveryDetailActions({
         sessionId={session.id}
         sessionDate={session.session_date}
         sessionTitle={session.title}
+        organisationId={session.organisation_id}
+        contactId={session.contact_id}
       />
     </>
   );

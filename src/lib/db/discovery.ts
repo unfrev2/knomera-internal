@@ -168,6 +168,41 @@ export async function updateDiscoverySession(
     : null;
 }
 
+export async function listDiscoverySessionsForContact(
+  workspaceId: string,
+  contactId: string,
+): Promise<DiscoverySession[]> {
+  const sql = getDb();
+  return sql<DiscoverySession[]>`
+    SELECT
+      s.id,
+      s.workspace_id,
+      s.organisation_id,
+      s.contact_id,
+      s.title,
+      s.session_date::text,
+      s.conducted_by,
+      s.summary,
+      s.raw_notes,
+      s.created_by,
+      s.created_at::text,
+      s.updated_at::text,
+      o.name AS organisation_name,
+      c.name AS contact_name,
+      c.role AS contact_role,
+      COUNT(e.id)::int AS evidence_count
+    FROM discovery_sessions s
+    INNER JOIN organisations o ON o.id = s.organisation_id
+    LEFT JOIN contacts c ON c.id = s.contact_id
+    LEFT JOIN evidence e
+      ON e.discovery_session_id = s.id AND e.workspace_id = s.workspace_id
+    WHERE s.workspace_id = ${workspaceId}
+      AND s.contact_id = ${contactId}
+    GROUP BY s.id, o.name, c.name, c.role
+    ORDER BY s.session_date DESC, s.created_at DESC
+  `;
+}
+
 export async function listEvidenceForDiscoverySession(
   workspaceId: string,
   sessionId: string,
@@ -188,9 +223,20 @@ export async function listEvidenceForDiscoverySession(
       e.created_by,
       e.created_at::text,
       e.discovery_session_id,
-      a.statement AS assumption_statement
+      e.organisation_id,
+      e.contact_id,
+      e.evidence_source_id,
+      a.statement AS assumption_statement,
+      org.name AS organisation_name,
+      ct.name AS contact_name,
+      ct.role AS contact_role,
+      s.title AS discovery_title,
+      s.session_date::text AS discovery_session_date
     FROM evidence e
     INNER JOIN assumptions a ON a.id = e.assumption_id
+    LEFT JOIN organisations org ON org.id = e.organisation_id
+    LEFT JOIN contacts ct ON ct.id = e.contact_id
+    LEFT JOIN discovery_sessions s ON s.id = e.discovery_session_id
     WHERE e.workspace_id = ${workspaceId}
       AND e.discovery_session_id = ${sessionId}
     ORDER BY e.evidence_date ASC, e.created_at ASC
