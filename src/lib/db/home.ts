@@ -353,9 +353,8 @@ export async function getHomeDashboard(
   const seen = new Set<string>();
 
   function pushAttention(item: HomeAttentionItem) {
-    const key = `${item.kind}:${item.id}`;
-    if (seen.has(key)) return;
-    seen.add(key);
+    if (seen.has(item.href)) return;
+    seen.add(item.href);
     attention.push(item);
   }
 

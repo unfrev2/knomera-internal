@@ -31,7 +31,7 @@ function ItemList({
   items,
   empty,
 }: {
-  items: { href: string; title: string; meta?: string | null }[];
+  items: { kind: string; id: string; href: string; title: string; meta?: string | null }[];
   empty: string;
 }) {
   if (items.length === 0) {
@@ -40,7 +40,7 @@ function ItemList({
   return (
     <ul className="divide-y divide-line border-y border-line">
       {items.map((item) => (
-        <li key={`${item.href}:${item.title}`} className="py-3">
+        <li key={`${item.kind}:${item.id}`} className="py-3">
           <Link
             href={item.href}
             className="block text-sm font-medium text-navy hover:underline"
