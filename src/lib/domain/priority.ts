@@ -21,11 +21,11 @@ const CONFIDENCE_UNCERTAINTY: Record<Confidence, number> = {
   proven: 0,
 };
 
+/** Direct external observation — excludes secondary research. */
 const EXTERNAL_EVIDENCE_TYPES: EvidenceType[] = [
   "customer_interview",
   "data_analysis",
   "prototype",
-  "competitor_research",
   "behavioural",
   "commercial",
 ];

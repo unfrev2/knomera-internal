@@ -2,6 +2,7 @@ import type {
   AppUserId,
   AssumptionStatus,
   Confidence,
+  EvidenceClass,
   EvidenceDirection,
   EvidenceType,
   Importance,
@@ -17,10 +18,14 @@ import type {
   EvidenceSourceKindFilter,
   EvidenceSourceType,
   FocusItemStatus,
+  ResearchFindingStatus,
+  ResearchRunStatus,
+  ResearchType,
   SessionUser,
   StrategyItemStatus,
   StrategyItemType,
 } from "@/lib/types";
+import { AI_ACTOR_ID } from "@/lib/domain/actors";
 
 export const APP_USERS: Record<AppUserId, SessionUser> = {
   jon: {
@@ -39,6 +44,7 @@ export function displayName(userId: string | null | undefined): string {
   if (!userId) return "Unassigned";
   if (userId === "jon") return "Jon";
   if (userId === "ahmed") return "Ahmed";
+  if (userId === AI_ACTOR_ID) return "Knomera AI";
   return userId.charAt(0).toUpperCase() + userId.slice(1);
 }
 
@@ -70,16 +76,47 @@ export const EVIDENCE_TYPE_LABELS: Record<EvidenceType, string> = {
   data_analysis: "Data analysis",
   prototype: "Prototype",
   competitor_research: "Competitor research",
+  market_research: "Market research",
   behavioural: "Behavioural",
   commercial: "Commercial",
   bet_outcome: "Bet outcome",
   other: "Other",
 };
 
+export const EVIDENCE_CLASS_LABELS: Record<EvidenceClass, string> = {
+  direct: "Direct evidence",
+  secondary: "Secondary research",
+  internal: "Internal reasoning",
+};
+
 export const DIRECTION_LABELS: Record<EvidenceDirection, string> = {
   supports: "Supports",
   challenges: "Challenges",
   neutral: "Neutral",
+};
+
+export const RESEARCH_TYPE_LABELS: Record<ResearchType, string> = {
+  competitor: "Competitor research",
+  market: "Market research",
+  assumption: "Assumption research",
+};
+
+export const RESEARCH_RUN_STATUS_LABELS: Record<ResearchRunStatus, string> = {
+  queued: "Queued",
+  running: "Running",
+  completed: "Completed",
+  partial: "Partial",
+  failed: "Failed",
+};
+
+export const RESEARCH_FINDING_STATUS_LABELS: Record<
+  ResearchFindingStatus,
+  string
+> = {
+  pending: "Pending review",
+  accepted: "Accepted",
+  rejected: "Rejected",
+  duplicate: "Duplicate",
 };
 
 export const STRATEGY_TYPE_LABELS: Record<StrategyItemType, string> = {

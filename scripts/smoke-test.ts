@@ -597,14 +597,14 @@ async function main() {
   const after = await getAssumption(workspace.id, created.id);
   await assert(after?.confidence === "medium", "Confidence unchanged by evidence add");
 
-  // Cleanup smoke data
+  // Cleanup smoke data (assumption/evidence before organisations — composite FKs)
   await sql`DELETE FROM entity_history WHERE entity_id IN (${decision.id}, ${bet.id}, ${opportunity.id})`;
   await sql`DELETE FROM opportunities WHERE id = ${opportunity.id}`;
   await sql`DELETE FROM bets WHERE id = ${bet.id}`;
   await sql`DELETE FROM decisions WHERE id = ${decision.id}`;
+  await sql`DELETE FROM assumptions WHERE id = ${created.id}`;
   await sql`DELETE FROM discovery_sessions WHERE id = ${sessionRows[0].id}`;
   await sql`DELETE FROM organisations WHERE id = ${orgRows[0].id}`;
-  await sql`DELETE FROM assumptions WHERE id = ${created.id}`;
   console.log("  ✓ Cleaned up smoke-test focus + commercial + bet + decision + discovery + assumption");
 
   console.log("Home dashboard");
@@ -613,6 +613,215 @@ async function main() {
   await assert(Array.isArray(home.attention), "Home attention section loads");
   await assert(Array.isArray(home.learning), "Home learning section loads");
   await assert(typeof home.closer.discovery_sessions === "number", "Home closer metrics load");
+
+  console.log("Stage 1 research foundation");
+  const {
+    createResearchRun,
+    markResearchRunRunning,
+    completeResearchRun,
+    getResearchRun,
+    listResearchFindings,
+  } = await import("../src/lib/db/research");
+  const { displayName } = await import("../src/lib/labels");
+  const { AI_ACTOR_ID, isLoginCapableUserId } = await import(
+    "../src/lib/domain/actors"
+  );
+  const { defaultEvidenceClass } = await import(
+    "../src/lib/domain/evidence-class"
+  );
+  const { suggestConfidence } = await import(
+    "../src/lib/domain/suggested-confidence"
+  );
+  const { canonicaliseUrl } = await import(
+    "../src/lib/research/url-canonical"
+  );
+  const { RESEARCH_LIMITS } = await import("../src/lib/research/limits");
+  const { getAiAnalysisProvider } = await import(
+    "../src/lib/research/providers/index"
+  );
+  const { ProviderUnavailableError: PUE } = await import(
+    "../src/lib/research/providers/types"
+  );
+
+  await assert(
+    migrations.some((row) => row.version === "20250926130000"),
+    "Research foundation migration recorded",
+  );
+
+  const enumRows = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1 FROM pg_enum e
+      JOIN pg_type t ON t.oid = e.enumtypid
+      WHERE t.typname = 'evidence_type' AND e.enumlabel = 'market_research'
+    ) AS exists
+  `;
+  await assert(enumRows[0]?.exists === true, "market_research evidence type exists");
+
+  const classCol = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'evidence'
+        AND column_name = 'evidence_class'
+    ) AS exists
+  `;
+  await assert(classCol[0]?.exists === true, "evidence.evidence_class column exists");
+
+  for (const table of [
+    "research_runs",
+    "research_findings",
+    "research_finding_assumptions",
+    "research_finding_sources",
+  ]) {
+    const t = await sql<{ exists: boolean }[]>`
+      SELECT EXISTS (
+        SELECT 1 FROM information_schema.tables
+        WHERE table_schema = 'public' AND table_name = ${table}
+      ) AS exists
+    `;
+    await assert(t[0]?.exists === true, `${table} table exists`);
+  }
+
+  await assert(displayName(AI_ACTOR_ID) === "Knomera AI", "AI displays as Knomera AI");
+  await assert(!isLoginCapableUserId(AI_ACTOR_ID), "AI cannot log in");
+  await assert(
+    defaultEvidenceClass("market_research") === "secondary",
+    "market_research defaults to secondary class",
+  );
+  await assert(
+    defaultEvidenceClass("customer_interview") === "direct",
+    "customer_interview defaults to direct class",
+  );
+
+  const secondaryOnly = suggestConfidence([
+    {
+      evidence_type: "market_research",
+      evidence_class: "secondary",
+      strength: 3,
+      direction: "supports",
+    },
+    {
+      evidence_type: "market_research",
+      evidence_class: "secondary",
+      strength: 3,
+      direction: "supports",
+    },
+    {
+      evidence_type: "competitor_research",
+      evidence_class: "secondary",
+      strength: 3,
+      direction: "supports",
+    },
+    {
+      evidence_type: "competitor_research",
+      evidence_class: "secondary",
+      strength: 3,
+      direction: "supports",
+    },
+    {
+      evidence_type: "market_research",
+      evidence_class: "secondary",
+      strength: 3,
+      direction: "supports",
+    },
+  ]);
+  await assert(
+    secondaryOnly.level !== "high" && secondaryOnly.level !== "proven",
+    "Secondary-only evidence does not suggest High/Proven",
+  );
+  await assert(
+    secondaryOnly.explanation.toLowerCase().includes("no direct"),
+    "Secondary-only explanation mentions missing direct evidence",
+  );
+
+  const canon = canonicaliseUrl(
+    "https://Example.com/path/?utm_source=x&utm_medium=y&id=1",
+  );
+  await assert(
+    canon === "https://example.com/path?id=1",
+    "URL canonicalisation strips tracking params",
+  );
+  await assert(
+    RESEARCH_LIMITS.maxCandidateAssumptions === 12,
+    "Research limits centralised",
+  );
+
+  let providerBlocked = false;
+  try {
+    await getAiAnalysisProvider().matchEvidence({
+      rawText: "test",
+      candidates: [],
+    });
+  } catch (error) {
+    providerBlocked = error instanceof PUE;
+  }
+  await assert(providerBlocked, "Stub AI provider is unavailable (expected)");
+
+  const researchAssumption = await createAssumption(workspace.id, "jon", {
+    statement: `Research foundation smoke ${Date.now()}`,
+    description: "Temporary assumption for research foundation checks",
+    category: "Market",
+    importance: "medium",
+    confidence: "medium",
+    status: "untested",
+    owner: "jon",
+    next_action: null,
+    target_date: null,
+  });
+
+  const run = await createResearchRun(workspace.id, {
+    research_type: "competitor",
+    trigger_type: "manual",
+    triggered_by: "jon",
+    notes: "smoke-test run",
+  });
+  await assert(run.status === "queued", "Research run created as queued");
+  await markResearchRunRunning(workspace.id, run.id);
+  await completeResearchRun(workspace.id, run.id, "completed", {
+    assumptions_considered: 0,
+    sources_examined: 0,
+    findings_created: 0,
+    notes: "No useful external evidence found.",
+  });
+  const finished = await getResearchRun(workspace.id, run.id);
+  await assert(finished?.status === "completed", "Research run completes");
+  await assert(
+    finished?.notes?.includes("No useful external evidence found") === true,
+    "Nothing-found is recorded on the run, not as Evidence",
+  );
+
+  const pending = await listResearchFindings(workspace.id, "pending");
+  await assert(Array.isArray(pending), "Research findings list loads");
+
+  const marketEv = await createEvidence(workspace.id, AI_ACTOR_ID, {
+    assumption_id: researchAssumption.id,
+    title: "Smoke market research claim",
+    description: "Secondary source smoke",
+    evidence_type: "market_research",
+    strength: 2,
+    direction: "supports",
+    evidence_date: "2026-09-24",
+  });
+  await assert(
+    marketEv.evidence_type === "market_research",
+    "market_research evidence saves",
+  );
+  await assert(
+    marketEv.evidence_class === "secondary",
+    "market_research gets secondary class",
+  );
+  await assert(marketEv.created_by === AI_ACTOR_ID, "AI authorship preserved");
+
+  const afterResearch = await getAssumption(workspace.id, researchAssumption.id);
+  await assert(
+    afterResearch?.confidence === "medium",
+    "Confidence unchanged after AI secondary evidence",
+  );
+
+  await sql`DELETE FROM evidence WHERE id = ${marketEv.id}`;
+  await sql`DELETE FROM research_runs WHERE id = ${run.id}`;
+  await sql`DELETE FROM assumptions WHERE id = ${researchAssumption.id}`;
+  console.log("  ✓ Cleaned up research foundation smoke data");
 
   console.log("\nAll smoke checks passed.");
   await sql.end({ timeout: 5 });

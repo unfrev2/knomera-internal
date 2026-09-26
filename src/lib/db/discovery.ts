@@ -216,6 +216,7 @@ export async function listEvidenceForDiscoverySession(
       e.title,
       e.description,
       e.evidence_type,
+      e.evidence_class,
       e.strength,
       e.direction,
       e.source,

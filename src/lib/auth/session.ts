@@ -15,6 +15,7 @@ function getSecret() {
 }
 
 export async function createSessionToken(userId: AppUserId): Promise<string> {
+  // AppUserId is founders only — `ai` cannot obtain a session.
   return new SignJWT({ sub: userId })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -28,6 +29,7 @@ export async function readSessionToken(
   try {
     const { payload } = await jwtVerify(token, getSecret());
     const userId = payload.sub as AppUserId | undefined;
+    // Reject unknown subjects (including system actor `ai`).
     if (!userId || !(userId in APP_USERS)) return null;
     return APP_USERS[userId];
   } catch {

@@ -26,16 +26,47 @@ export const EVIDENCE_TYPES = [
   "data_analysis",
   "prototype",
   "competitor_research",
+  "market_research",
   "behavioural",
   "commercial",
   "bet_outcome",
   "other",
 ] as const;
 
+/** Provenance class — orthogonal to evidence strength. */
+export const EVIDENCE_CLASSES = [
+  "direct",
+  "secondary",
+  "internal",
+] as const;
+
 export const EVIDENCE_DIRECTIONS = [
   "supports",
   "challenges",
   "neutral",
+] as const;
+
+export const RESEARCH_TYPES = [
+  "competitor",
+  "market",
+  "assumption",
+] as const;
+
+export const RESEARCH_TRIGGER_TYPES = ["manual", "scheduled"] as const;
+
+export const RESEARCH_RUN_STATUSES = [
+  "queued",
+  "running",
+  "completed",
+  "partial",
+  "failed",
+] as const;
+
+export const RESEARCH_FINDING_STATUSES = [
+  "pending",
+  "accepted",
+  "rejected",
+  "duplicate",
 ] as const;
 
 export const STRATEGY_ITEM_TYPES = [
@@ -140,6 +171,7 @@ export type Importance = (typeof IMPORTANCE_LEVELS)[number];
 export type Confidence = (typeof CONFIDENCE_LEVELS)[number];
 export type AssumptionStatus = (typeof ASSUMPTION_STATUSES)[number];
 export type EvidenceType = (typeof EVIDENCE_TYPES)[number];
+export type EvidenceClass = (typeof EVIDENCE_CLASSES)[number];
 export type EvidenceDirection = (typeof EVIDENCE_DIRECTIONS)[number];
 export type StrategyItemType = (typeof STRATEGY_ITEM_TYPES)[number];
 export type StrategyItemStatus = (typeof STRATEGY_ITEM_STATUSES)[number];
@@ -160,8 +192,15 @@ export type FocusItemStatus = (typeof FOCUS_ITEM_STATUSES)[number];
 export type EvidenceSourceType = (typeof EVIDENCE_SOURCE_TYPES)[number];
 export type EvidenceSourceKindFilter =
   (typeof EVIDENCE_SOURCE_KIND_FILTERS)[number];
+export type ResearchType = (typeof RESEARCH_TYPES)[number];
+export type ResearchTriggerType = (typeof RESEARCH_TRIGGER_TYPES)[number];
+export type ResearchRunStatus = (typeof RESEARCH_RUN_STATUSES)[number];
+export type ResearchFindingStatus = (typeof RESEARCH_FINDING_STATUSES)[number];
 
+/** Login-capable founders only. System actor `ai` cannot authenticate. */
 export type AppUserId = "jon" | "ahmed";
+/** Attribution identity including non-login system actors. */
+export type ActorId = AppUserId | "ai";
 
 export type Workspace = {
   id: string;
@@ -196,6 +235,7 @@ export type Evidence = {
   title: string;
   description: string | null;
   evidence_type: EvidenceType;
+  evidence_class: EvidenceClass;
   strength: number;
   direction: EvidenceDirection;
   source: string | null;
@@ -227,9 +267,62 @@ export type EvidenceSource = {
   title: string;
   url: string | null;
   description: string | null;
+  canonical_url?: string | null;
+  published_at?: string | null;
+  retrieved_at?: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type ResearchRun = {
+  id: string;
+  workspace_id: string;
+  research_type: ResearchType;
+  trigger_type: ResearchTriggerType;
+  status: ResearchRunStatus;
+  started_at: string | null;
+  completed_at: string | null;
+  triggered_by: string | null;
+  assumptions_considered: number;
+  sources_examined: number;
+  findings_created: number;
+  search_queries_used: number;
+  ai_calls: number;
+  search_calls: number;
+  input_tokens: number;
+  output_tokens: number;
+  estimated_cost: number | null;
+  error: string | null;
+  notes: string | null;
+  created_at: string;
+};
+
+export type ResearchFinding = {
+  id: string;
+  workspace_id: string;
+  research_run_id: string;
+  research_type: ResearchType;
+  organisation_id: string | null;
+  claim: string;
+  summary: string | null;
+  status: ResearchFindingStatus;
+  ai_confidence: number | null;
+  suggested_strength: number | null;
+  created_at: string;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  rejection_reason: string | null;
+};
+
+export type ResearchFindingAssumption = {
+  research_finding_id: string;
+  assumption_id: string;
+  workspace_id: string;
+  direction: EvidenceDirection;
+  relevance: string | null;
+  reason: string | null;
+  created_at: string;
 };
 
 export type AssumptionHistory = {

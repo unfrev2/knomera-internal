@@ -5,8 +5,10 @@ import {
   type EvidenceAttributionInput,
   type NewEvidenceSourceInput,
 } from "@/lib/domain/evidence-attribution";
+import { defaultEvidenceClass } from "@/lib/domain/evidence-class";
 import type {
   Evidence,
+  EvidenceClass,
   EvidenceDirection,
   EvidenceSourceKindFilter,
   EvidenceType,
@@ -17,6 +19,7 @@ export type EvidenceInput = {
   title: string;
   description?: string | null;
   evidence_type: EvidenceType;
+  evidence_class?: EvidenceClass;
   strength: number;
   direction: EvidenceDirection;
   source?: string | null;
@@ -49,6 +52,7 @@ export type EvidenceUpdateInput = {
   title: string;
   description?: string | null;
   evidence_type: EvidenceType;
+  evidence_class?: EvidenceClass;
   strength: number;
   direction: EvidenceDirection;
   source?: string | null;
@@ -216,6 +220,7 @@ export async function listEvidenceForAssumption(
       e.title,
       e.description,
       e.evidence_type,
+      e.evidence_class,
       e.strength,
       e.direction,
       e.source,
@@ -278,6 +283,7 @@ export async function listEvidence(
       e.title,
       e.description,
       e.evidence_type,
+      e.evidence_class,
       e.strength,
       e.direction,
       e.source,
@@ -362,6 +368,7 @@ export async function getEvidence(
       e.title,
       e.description,
       e.evidence_type,
+      e.evidence_class,
       e.strength,
       e.direction,
       e.source,
@@ -435,6 +442,8 @@ export async function createEvidence(
       createdBy,
       input,
     );
+    const evidenceClass =
+      input.evidence_class ?? defaultEvidenceClass(input.evidence_type);
     const rows = await tx<{ id: string }[]>`
     INSERT INTO evidence (
       workspace_id,
@@ -442,6 +451,7 @@ export async function createEvidence(
       title,
       description,
       evidence_type,
+      evidence_class,
       strength,
       direction,
       source,
@@ -459,6 +469,7 @@ export async function createEvidence(
       ${input.title},
       ${input.description ?? null},
       ${input.evidence_type},
+      ${evidenceClass},
       ${input.strength},
       ${input.direction},
       ${input.source ?? null},
@@ -504,11 +515,14 @@ export async function updateEvidence(
       },
     );
 
+    const evidenceClass =
+      input.evidence_class ?? defaultEvidenceClass(input.evidence_type);
     await tx`
       UPDATE evidence SET
         title = ${input.title},
         description = ${input.description ?? null},
         evidence_type = ${input.evidence_type},
+        evidence_class = ${evidenceClass},
         strength = ${input.strength},
         direction = ${input.direction},
         source = ${input.source ?? existing.source},
@@ -552,6 +566,7 @@ export async function listEvidenceByAssumptionIds(
       e.title,
       e.description,
       e.evidence_type,
+      e.evidence_class,
       e.strength,
       e.direction,
       e.source,
@@ -581,6 +596,7 @@ export async function listEvidenceForOrganisation(
       e.title,
       e.description,
       e.evidence_type,
+      e.evidence_class,
       e.direction,
       e.strength,
       e.source,
@@ -634,6 +650,7 @@ export async function listEvidenceForContact(
       e.title,
       e.description,
       e.evidence_type,
+      e.evidence_class,
       e.direction,
       e.strength,
       e.source,
