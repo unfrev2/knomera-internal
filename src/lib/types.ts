@@ -242,6 +242,8 @@ export type Evidence = {
   evidence_date: string;
   created_by: string | null;
   created_at: string;
+  ai_assisted?: boolean;
+  evidence_capture_id?: string | null;
   discovery_session_id?: string | null;
   bet_outcome_id?: string | null;
   opportunity_id?: string | null;
@@ -258,6 +260,19 @@ export type Evidence = {
   source_type?: EvidenceSourceType | null;
   source_url?: string | null;
   source_description?: string | null;
+};
+
+export type EvidenceCapture = {
+  id: string;
+  workspace_id: string;
+  raw_text: string;
+  captured_by: string;
+  organisation_id: string | null;
+  contact_id: string | null;
+  discovery_session_id: string | null;
+  evidence_source_id: string | null;
+  ai_assisted: boolean;
+  created_at: string;
 };
 
 export type EvidenceSource = {

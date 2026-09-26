@@ -71,7 +71,8 @@ export function EvidenceFeed({
               <div className="space-y-1">
                 <EvidenceProvenance evidence={item} />
                 <p className="text-xs text-muted">
-                  {displayName(item.created_by)}
+                  Added by {displayName(item.created_by)}
+                  {item.ai_assisted ? " · AI-assisted" : ""}
                 </p>
               </div>
               <EvidenceItemActions

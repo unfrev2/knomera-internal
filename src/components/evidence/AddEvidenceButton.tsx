@@ -1,6 +1,6 @@
 "use client";
 
-import { EvidenceForm } from "@/components/assumptions/EvidenceForm";
+import { EvidenceCaptureForm } from "@/components/evidence/EvidenceCaptureForm";
 import type { EvidenceSourcePrefill } from "@/components/evidence/EvidenceSourceFields";
 import { Button } from "@/components/ui/Button";
 import { useState } from "react";
@@ -21,7 +21,7 @@ export function AddEvidenceButton({
       <Button type="button" onClick={() => setOpen(true)}>
         {label}
       </Button>
-      <EvidenceForm
+      <EvidenceCaptureForm
         open={open}
         onClose={() => setOpen(false)}
         prefill={prefill}

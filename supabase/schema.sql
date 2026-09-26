@@ -1340,3 +1340,55 @@ CREATE POLICY deny_all_research_finding_assumptions ON research_finding_assumpti
 DROP POLICY IF EXISTS deny_all_research_finding_sources ON research_finding_sources;
 CREATE POLICY deny_all_research_finding_sources ON research_finding_sources
   FOR ALL TO anon, authenticated USING (false);
+
+-- ---------------------------------------------------------------------------
+-- Evidence captures (Stage 2 intelligent matching)
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS evidence_captures (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id UUID NOT NULL REFERENCES workspaces (id) ON DELETE CASCADE,
+  raw_text TEXT NOT NULL,
+  captured_by TEXT NOT NULL,
+  organisation_id UUID,
+  contact_id UUID,
+  discovery_session_id UUID,
+  evidence_source_id UUID,
+  ai_assisted BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT evidence_captures_id_workspace_unique UNIQUE (id, workspace_id)
+);
+
+ALTER TABLE evidence
+  ADD COLUMN IF NOT EXISTS evidence_capture_id UUID;
+ALTER TABLE evidence
+  ADD COLUMN IF NOT EXISTS ai_assisted BOOLEAN NOT NULL DEFAULT false;
+
+CREATE TABLE IF NOT EXISTS ai_usage_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id UUID NOT NULL REFERENCES workspaces (id) ON DELETE CASCADE,
+  feature TEXT NOT NULL,
+  provider TEXT NOT NULL,
+  model_role TEXT NOT NULL,
+  model_name TEXT,
+  input_tokens INTEGER NOT NULL DEFAULT 0,
+  output_tokens INTEGER NOT NULL DEFAULT 0,
+  latency_ms INTEGER,
+  success BOOLEAN NOT NULL DEFAULT true,
+  fallback_used BOOLEAN NOT NULL DEFAULT false,
+  error TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+REVOKE ALL ON TABLE evidence_captures FROM anon, authenticated;
+REVOKE ALL ON TABLE ai_usage_events FROM anon, authenticated;
+ALTER TABLE evidence_captures ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ai_usage_events ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS deny_all_evidence_captures ON evidence_captures;
+CREATE POLICY deny_all_evidence_captures ON evidence_captures
+  FOR ALL TO anon, authenticated USING (false);
+
+DROP POLICY IF EXISTS deny_all_ai_usage_events ON ai_usage_events;
+CREATE POLICY deny_all_ai_usage_events ON ai_usage_events
+  FOR ALL TO anon, authenticated USING (false);

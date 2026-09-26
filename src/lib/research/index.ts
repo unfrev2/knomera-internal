@@ -26,3 +26,13 @@ export {
   addUsage,
   usageToRunFields,
 } from "@/lib/research/usage";
+
+export {
+  MATCHING_LIMITS,
+  MAX_ASSUMPTION_CANDIDATES,
+  HIGH_MATCH_CONFIDENCE,
+  REASONING_FALLBACK_THRESHOLD,
+  MAX_INPUT_LENGTH,
+  isOpenAiConfigured,
+} from "@/lib/ai/config";
+export { matchEvidenceToAssumptions } from "@/lib/domain/evidence-matching";

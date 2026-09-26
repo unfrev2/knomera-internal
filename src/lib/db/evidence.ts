@@ -31,6 +31,8 @@ export type EvidenceInput = {
   contact_id?: string | null;
   evidence_source_id?: string | null;
   new_source?: NewEvidenceSourceInput | null;
+  evidence_capture_id?: string | null;
+  ai_assisted?: boolean;
 };
 
 export type EvidenceFilters = {
@@ -227,6 +229,8 @@ export async function listEvidenceForAssumption(
       e.evidence_date::text,
       e.created_by,
       e.created_at::text,
+      e.ai_assisted,
+      e.evidence_capture_id,
       e.discovery_session_id,
       e.bet_outcome_id,
       e.opportunity_id,
@@ -290,6 +294,8 @@ export async function listEvidence(
       e.evidence_date::text,
       e.created_by,
       e.created_at::text,
+      e.ai_assisted,
+      e.evidence_capture_id,
       e.discovery_session_id,
       e.bet_outcome_id,
       e.opportunity_id,
@@ -375,6 +381,8 @@ export async function getEvidence(
       e.evidence_date::text,
       e.created_by,
       e.created_at::text,
+      e.ai_assisted,
+      e.evidence_capture_id,
       e.discovery_session_id,
       e.bet_outcome_id,
       e.opportunity_id,
@@ -462,7 +470,9 @@ export async function createEvidence(
       opportunity_id,
       organisation_id,
       contact_id,
-      evidence_source_id
+      evidence_source_id,
+      evidence_capture_id,
+      ai_assisted
     ) VALUES (
       ${workspaceId},
       ${input.assumption_id},
@@ -480,7 +490,9 @@ export async function createEvidence(
       ${input.opportunity_id ?? null},
       ${attribution.organisation_id},
       ${attribution.contact_id},
-      ${attribution.evidence_source_id}
+      ${attribution.evidence_source_id},
+      ${input.evidence_capture_id ?? null},
+      ${input.ai_assisted ?? false}
     )
     RETURNING id
   `;
@@ -573,6 +585,8 @@ export async function listEvidenceByAssumptionIds(
       e.evidence_date::text,
       e.created_by,
       e.created_at::text,
+      e.ai_assisted,
+      e.evidence_capture_id,
       e.discovery_session_id,
       e.organisation_id,
       e.contact_id,

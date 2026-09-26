@@ -43,6 +43,8 @@ export type EvidenceFormProps = {
   sourceOptions?: string[];
   prefill?: EvidenceSourcePrefill;
   returnTo?: string;
+  /** Prefill description when switching from capture-first flow. */
+  initialDescription?: string;
 };
 
 export function EvidenceForm({
@@ -53,6 +55,7 @@ export function EvidenceForm({
   evidence,
   prefill,
   returnTo,
+  initialDescription,
 }: EvidenceFormProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -159,7 +162,7 @@ export function EvidenceForm({
             id="evidence-description"
             name="description"
             rows={3}
-            defaultValue={evidence?.description ?? ""}
+            defaultValue={evidence?.description ?? initialDescription ?? ""}
           />
         </Field>
 

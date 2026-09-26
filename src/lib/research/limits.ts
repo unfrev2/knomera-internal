@@ -2,12 +2,14 @@
  * Centralised cost/safety limits for AI research and evidence matching.
  * Guardrails — not product truths. Adjust here only.
  *
- * Stage 1: constants + docs only. Consumers arrive in later stages.
+ * Matching thresholds also live in `@/lib/ai/config` (MATCHING_LIMITS).
  */
+
+import { MATCHING_LIMITS } from "@/lib/ai/config";
 
 export const RESEARCH_LIMITS = {
   /** Max assumptions sent to an evidence-matching AI call. */
-  maxCandidateAssumptions: 12,
+  maxCandidateAssumptions: MATCHING_LIMITS.maxAssumptionCandidates,
 
   /** Max assumptions researched in one scheduled market sweep. */
   maxAssumptionsPerMarketSweep: 25,
@@ -26,6 +28,9 @@ export const RESEARCH_LIMITS = {
 
   /** Approximate max excerpt chars sent to the model per source. */
   maxSourceExcerptChars: 4000,
+
+  /** Max characters for AI-assisted evidence capture. */
+  maxEvidenceCaptureLength: MATCHING_LIMITS.maxInputLength,
 } as const;
 
 export type ResearchLimits = typeof RESEARCH_LIMITS;

@@ -40,4 +40,15 @@ printf '%s' "$SESSION_SECRET" | npx wrangler secret put SESSION_SECRET
 printf '%s' "$JON_PASSWORD_HASH" | npx wrangler secret put JON_PASSWORD_HASH
 printf '%s' "$AHMED_PASSWORD_HASH" | npx wrangler secret put AHMED_PASSWORD_HASH
 
+# Optional OpenAI secrets for Stage 2 evidence matching
+if [[ -n "${OPENAI_API_KEY:-}" ]]; then
+  printf '%s' "$OPENAI_API_KEY" | npx wrangler secret put OPENAI_API_KEY
+fi
+if [[ -n "${OPENAI_FAST_MODEL:-}" ]]; then
+  printf '%s' "$OPENAI_FAST_MODEL" | npx wrangler secret put OPENAI_FAST_MODEL
+fi
+if [[ -n "${OPENAI_REASONING_MODEL:-}" ]]; then
+  printf '%s' "$OPENAI_REASONING_MODEL" | npx wrangler secret put OPENAI_REASONING_MODEL
+fi
+
 echo "Done. Deploy with: npm run deploy"

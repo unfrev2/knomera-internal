@@ -65,7 +65,10 @@ export function EvidenceTimeline({
               <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
                   <EvidenceProvenance evidence={item} />
-                  <span>Added by {displayName(item.created_by)}</span>
+                  <span>
+                    Added by {displayName(item.created_by)}
+                    {item.ai_assisted ? " · AI-assisted" : ""}
+                  </span>
                 </div>
                 <EvidenceItemActions
                   evidence={item}

@@ -823,6 +823,171 @@ async function main() {
   await sql`DELETE FROM assumptions WHERE id = ${researchAssumption.id}`;
   console.log("  ✓ Cleaned up research foundation smoke data");
 
+  console.log("Stage 2 intelligent evidence matching");
+  await assert(
+    migrations.some((row) => row.version === "20250926140000"),
+    "Evidence captures migration recorded",
+  );
+  const captureTable = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = 'evidence_captures'
+    ) AS exists
+  `;
+  await assert(captureTable[0]?.exists === true, "evidence_captures table exists");
+  const usageTable = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = 'ai_usage_events'
+    ) AS exists
+  `;
+  await assert(usageTable[0]?.exists === true, "ai_usage_events table exists");
+  const captureCol = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'evidence' AND column_name = 'evidence_capture_id'
+    ) AS exists
+  `;
+  await assert(captureCol[0]?.exists === true, "evidence.evidence_capture_id exists");
+  const aiAssistedCol = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'evidence' AND column_name = 'ai_assisted'
+    ) AS exists
+  `;
+  await assert(aiAssistedCol[0]?.exists === true, "evidence.ai_assisted exists");
+
+  const {
+    searchAssumptionCandidates,
+  } = await import("../src/lib/db/assumption-candidates");
+  const { matchEvidenceToAssumptions } = await import(
+    "../src/lib/domain/evidence-matching"
+  );
+  const { saveMatchedEvidenceCapture } = await import(
+    "../src/lib/db/evidence-matching-save"
+  );
+  const { MATCHING_LIMITS } = await import("../src/lib/ai/config");
+  const { displayName: dn } = await import("../src/lib/labels");
+
+  const durationQuery =
+    "They find it difficult to estimate how long tests will run.";
+  const candidates = await searchAssumptionCandidates(
+    workspace.id,
+    durationQuery,
+  );
+  await assert(candidates.length > 0, "Candidate search returns assumptions");
+  await assert(
+    candidates.length <= MATCHING_LIMITS.maxAssumptionCandidates,
+    "Candidate set bounded to matching limit",
+  );
+
+  const matchResult = await matchEvidenceToAssumptions({
+    workspaceId: workspace.id,
+    rawText: durationQuery,
+  });
+  // Without OPENAI_API_KEY: either deterministic success or graceful manual fallback.
+  if (matchResult.ok) {
+    await assert(matchResult.proposals.length >= 1, "Matching returns proposals");
+    await assert(
+      matchResult.candidatesConsidered <= MATCHING_LIMITS.maxAssumptionCandidates,
+      "Matching does not send unbounded candidates",
+    );
+    if (matchResult.path === "deterministic") {
+      await assert(
+        matchResult.usage.aiCalls === 0,
+        "Deterministic path avoids AI calls",
+      );
+    }
+  } else {
+    await assert(
+      matchResult.error.includes("manually") ||
+        matchResult.error.includes("too long"),
+      "AI unavailable fails safely for manual capture",
+    );
+    await assert(matchResult.preserveInput === true, "Input preserved on AI failure");
+  }
+
+  // Founder-authored AI-assisted save (no live model required)
+  const hostAssumption = assumptions.find((a) =>
+    a.statement.toLowerCase().includes("estimate"),
+  ) ?? assumptions[0];
+
+  const { capture, evidence: matchedEvidence } = await saveMatchedEvidenceCapture(
+    workspace.id,
+    "jon",
+    {
+      raw_text: durationQuery,
+      evidence_date: "2026-09-26",
+      items: [
+        {
+          title: "Difficulty estimating experiment duration",
+          description: durationQuery,
+          assumption_id: hostAssumption.id,
+          direction: "supports",
+          strength: 2,
+          evidence_type: "customer_interview",
+        },
+      ],
+    },
+  );
+  await assert(capture.captured_by === "jon", "Capture authored by Jon");
+  await assert(capture.ai_assisted === true, "Capture marked AI-assisted");
+  await assert(matchedEvidence.length === 1, "One evidence record saved");
+  await assert(
+    matchedEvidence[0].created_by === "jon",
+    "Evidence authored by founder Jon",
+  );
+  await assert(
+    matchedEvidence[0].ai_assisted === true,
+    "Evidence marked AI-assisted",
+  );
+  await assert(
+    matchedEvidence[0].evidence_capture_id === capture.id,
+    "Evidence linked to capture",
+  );
+  await assert(
+    dn(matchedEvidence[0].created_by) === "Jon",
+    "Display name remains Jon (not Knomera AI)",
+  );
+
+  // Ahmed attribution
+  const { evidence: ahmedEvidence } = await saveMatchedEvidenceCapture(
+    workspace.id,
+    "ahmed",
+    {
+      raw_text: "Ahmed capture smoke",
+      evidence_date: "2026-09-26",
+      items: [
+        {
+          title: "Ahmed smoke evidence",
+          description: "Ahmed capture smoke",
+          assumption_id: hostAssumption.id,
+          direction: "neutral",
+          strength: 2,
+          evidence_type: "customer_interview",
+        },
+      ],
+    },
+  );
+  await assert(
+    ahmedEvidence[0].created_by === "ahmed",
+    "Evidence authored by founder Ahmed",
+  );
+
+  const afterMatch = await getAssumption(workspace.id, hostAssumption.id);
+  await assert(
+    afterMatch?.confidence === hostAssumption.confidence,
+    "Matching/save does not auto-change confidence",
+  );
+
+  await sql`DELETE FROM evidence WHERE evidence_capture_id IN (
+    SELECT id FROM evidence_captures
+    WHERE raw_text = ${durationQuery} OR raw_text = ${"Ahmed capture smoke"}
+  )`;
+  await sql`DELETE FROM evidence_captures
+    WHERE raw_text = ${durationQuery} OR raw_text = ${"Ahmed capture smoke"}`;
+  console.log("  ✓ Cleaned up Stage 2 matching smoke data");
+
   console.log("\nAll smoke checks passed.");
   await sql.end({ timeout: 5 });
 }
