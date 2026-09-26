@@ -1,6 +1,7 @@
 import { getDb } from "@/lib/db/client";
 import { createEvidenceCapture } from "@/lib/db/evidence-captures";
 import { createEvidence, type EvidenceInput } from "@/lib/db/evidence";
+import { recordAiUsageEvent } from "@/lib/ai/usage";
 import type { Evidence, EvidenceCapture } from "@/lib/types";
 import type { NewEvidenceSourceInput } from "@/lib/domain/evidence-attribution";
 
@@ -27,15 +28,22 @@ export type SaveMatchedEvidenceInput = {
 /**
  * Persist capture + accepted atomic evidence in one logical operation.
  * Founder remains created_by; ai_assisted = true.
+ * Records latency_save_ms separately from match instrumentation.
  */
 export async function saveMatchedEvidenceCapture(
   workspaceId: string,
   capturedBy: string,
   input: SaveMatchedEvidenceInput,
-): Promise<{ capture: EvidenceCapture; evidence: Evidence[] }> {
+): Promise<{
+  capture: EvidenceCapture;
+  evidence: Evidence[];
+  latencySaveMs: number;
+}> {
   if (input.items.length === 0) {
     throw new Error("Select at least one evidence item to save.");
   }
+
+  const started = Date.now();
 
   const capture = await createEvidenceCapture(workspaceId, capturedBy, {
     raw_text: input.raw_text,
@@ -67,7 +75,20 @@ export async function saveMatchedEvidenceCapture(
     evidence.push(created);
   }
 
-  return { capture, evidence };
+  const latencySaveMs = Date.now() - started;
+
+  await recordAiUsageEvent({
+    workspaceId,
+    feature: "evidence_matching_save",
+    provider: "database",
+    modelRole: "none",
+    success: true,
+    latencyMs: latencySaveMs,
+    latencySaveMs,
+    handlerPath: "none",
+  });
+
+  return { capture, evidence, latencySaveMs };
 }
 
 export async function countAiUsageEvents(

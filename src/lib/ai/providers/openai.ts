@@ -2,7 +2,10 @@ import { z } from "zod";
 import {
   getOpenAiApiKey,
   getOpenAiModel,
+  maxCompletionTokensForRole,
+  reasoningEffortForRole,
   type AiModelRole,
+  type ReasoningEffort,
 } from "@/lib/ai/config";
 import { ProviderUnavailableError } from "@/lib/research/providers/types";
 import type { UsageStats } from "@/lib/research/providers/types";
@@ -17,6 +20,7 @@ export type OpenAiStructuredCallResult<T> = {
   usage: UsageStats;
   model: string;
   role: AiModelRole;
+  reasoningEffort: ReasoningEffort;
   latencyMs: number;
 };
 
@@ -32,6 +36,8 @@ export async function openAiStructuredJson<T>(options: {
   schema: Record<string, unknown>;
   zodSchema: z.ZodType<T>;
   temperature?: number;
+  reasoningEffort?: ReasoningEffort;
+  maxCompletionTokens?: number;
 }): Promise<OpenAiStructuredCallResult<T>> {
   const apiKey = getOpenAiApiKey();
   if (!apiKey) {
@@ -42,16 +48,22 @@ export async function openAiStructuredJson<T>(options: {
   }
 
   const model = getOpenAiModel(options.role);
+  const reasoningEffort =
+    options.reasoningEffort ?? reasoningEffortForRole(options.role);
+  const maxCompletionTokens =
+    options.maxCompletionTokens ?? maxCompletionTokensForRole(options.role);
   const started = Date.now();
 
-  // Many newer models (o-series / gpt-5+) only allow the default temperature.
-  // Omit unless the caller explicitly opts in for a model that supports it.
+  // Many newer models only allow the default temperature — omit unless opted in.
   const body: Record<string, unknown> = {
     model,
     messages: options.messages.map((m) => ({
       role: m.role === "developer" ? "system" : m.role,
       content: m.content,
     })),
+    // Chat Completions uses top-level reasoning_effort (not nested reasoning.effort).
+    reasoning_effort: reasoningEffort,
+    max_completion_tokens: maxCompletionTokens,
     response_format: {
       type: "json_schema",
       json_schema: {
@@ -121,6 +133,7 @@ export async function openAiStructuredJson<T>(options: {
     },
     model,
     role: options.role,
+    reasoningEffort,
     latencyMs,
   };
 }

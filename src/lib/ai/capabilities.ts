@@ -6,36 +6,41 @@ import {
   type EvidenceMatchOutput,
 } from "@/lib/ai/schemas/evidence-match";
 import { openAiStructuredJson } from "@/lib/ai/providers/openai";
-import type { AiModelRole } from "@/lib/ai/config";
+import type { AiModelRole, ReasoningEffort } from "@/lib/ai/config";
 import type { UsageStats } from "@/lib/research/providers/types";
 
-function strengthRules(): string {
-  return EVIDENCE_STRENGTH.map(
+/**
+ * Stable system prefix for OpenAI prompt caching.
+ * Keep static: no timestamps, usernames, or per-request IDs.
+ */
+function stableSystemPrompt(): string {
+  const strengthLines = EVIDENCE_STRENGTH.map(
     (s) => `${s.value} ${s.label}: ${s.explanation}`,
   ).join("\n");
-}
 
-function systemPrompt(): string {
-  return `You help Knomera founders structure discovery evidence against existing assumptions.
+  return `You structure founder discovery notes into atomic evidence claims matched to Knomera assumptions.
+
+Return one structured JSON object with claims[] only. One batched result covers: claim split, assumption id, direction, strength, title, confidence, and optional new-assumption suggestion.
 
 Rules:
-- Split the observation into atomic claims only when they are materially distinct.
-- Prefer matching an existing candidate assumption over inventing a new one.
-- Prefer "related existing" / no match over near-duplicate new assumptions.
-- Direction must be supports, challenges, or neutral. Closest wording does NOT imply supports.
-- Do not exaggerate beyond the original observation.
-- suggested_strength must use ONLY these definitions:
-${strengthRules()}
-- Founder discovery notes are usually strength 2 (Qualitative) unless clearly stronger.
-- If no candidate fits, set no_meaningful_match=true and candidate_assumption_id=null.
-- Only propose new_assumption_suggestion when the belief is materially distinct from all candidates.
-- New assumptions must be falsifiable beliefs, not product feature requests.
-- Set needs_reasoning_fallback=true when the match is ambiguous, contradictory, or you are unsure.
-- Keep reason concise and user-facing (no chain-of-thought).
+- Split into atomic claims only when materially distinct; otherwise one claim.
+- Prefer an existing candidate_assumption_id over inventing a new assumption.
+- Prefer related existing / no match over near-duplicates.
+- Direction is supports, challenges, or neutral. Closest wording does NOT imply supports.
+- Do not exaggerate beyond the observation.
+- suggested_strength uses ONLY:
+${strengthLines}
+- Discovery notes are usually strength 2 unless clearly stronger.
+- If no candidate fits: no_meaningful_match=true and candidate_assumption_id=null.
+- Propose new_assumption_suggestion only for a materially distinct falsifiable belief (not a feature request).
+- needs_reasoning_fallback=true only when genuinely ambiguous or contradictory.
+- reason: one short sentence (≤160 chars), user-facing, no chain-of-thought.
+- suggested_title: concise (≤80 chars).
 - candidate_assumption_id must be one of the provided candidate ids or null.`;
 }
 
-function userPrompt(
+/** Dynamic suffix only — observation + shortlisted candidates. */
+function dynamicUserPrompt(
   rawText: string,
   candidates: AssumptionCandidate[],
 ): string {
@@ -56,11 +61,13 @@ export type StructuredExtractionResult = {
   usage: UsageStats;
   model: string;
   role: AiModelRole;
+  reasoningEffort: ReasoningEffort;
   latencyMs: number;
 };
 
 /**
- * Capability: structuredExtraction — split/match/direction/strength in one call.
+ * Single batched structured extraction call (split + match + direction + strength).
+ * Fast role → reasoning_effort none; reasoning role → low.
  */
 export async function structuredExtraction(options: {
   rawText: string;
@@ -74,8 +81,11 @@ export async function structuredExtraction(options: {
     schema: evidenceMatchJsonSchema as unknown as Record<string, unknown>,
     zodSchema: evidenceMatchOutputSchema,
     messages: [
-      { role: "system", content: systemPrompt() },
-      { role: "user", content: userPrompt(options.rawText, options.candidates) },
+      { role: "system", content: stableSystemPrompt() },
+      {
+        role: "user",
+        content: dynamicUserPrompt(options.rawText, options.candidates),
+      },
     ],
   });
   return {
@@ -83,13 +93,11 @@ export async function structuredExtraction(options: {
     usage: result.usage,
     model: result.model,
     role: result.role,
+    reasoningEffort: result.reasoningEffort,
     latencyMs: result.latencyMs,
   };
 }
 
-/**
- * Capability: reasoning — same schema, stronger configured model.
- */
 export async function reasoningExtraction(options: {
   rawText: string;
   candidates: AssumptionCandidate[];

@@ -14,14 +14,14 @@ export const newAssumptionSuggestionSchema = z.object({
 });
 
 export const evidenceClaimMatchSchema = z.object({
-  claim: z.string().min(1),
-  suggested_title: z.string().min(1),
+  claim: z.string().min(1).max(800),
+  suggested_title: z.string().min(1).max(120),
   candidate_assumption_id: z
     .union([z.string().uuid(), z.null(), z.literal("")])
     .transform((value) => (value === "" ? null : value)),
   direction: z.enum(EVIDENCE_DIRECTIONS),
   match_confidence: z.enum(matchConfidenceLevels),
-  reason: z.string().min(1),
+  reason: z.string().min(1).max(200),
   suggested_strength: z.number().int().min(1).max(5),
   needs_reasoning_fallback: z.boolean(),
   no_meaningful_match: z.boolean(),

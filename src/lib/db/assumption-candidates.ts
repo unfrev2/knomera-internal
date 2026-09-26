@@ -161,6 +161,8 @@ export async function searchAssumptionCandidates(
     LIMIT ${Math.min(capped * 4, 48)}
   `;
 
+  const normalisedQuery = query.toLowerCase().replace(/\s+/g, " ").trim();
+
   const scored = rows.map((row) => {
     const hay =
       `${row.statement} ${row.category}`.toLowerCase();
@@ -168,9 +170,34 @@ export async function searchAssumptionCandidates(
     for (const token of tokens) {
       if (hay.includes(token)) hits += 1;
     }
-    const overlap = hits / tokens.length;
-    // Prefer multi-token overlap; ts_rank alone is often tiny.
-    const score = Math.min(1, Number(row.rank) * 6 + overlap * 0.85 + hits * 0.05);
+    const overlap = tokens.length > 0 ? hits / tokens.length : 0;
+    // Keep headroom below 1 so near-exact boosts remain distinguishable.
+    let score = Math.min(
+      0.9,
+      Number(row.rank) * 6 + overlap * 0.7 + hits * 0.03,
+    );
+
+    const normalisedStatement = row.statement
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .trim();
+    const exact =
+      normalisedStatement === normalisedQuery ||
+      (normalisedQuery.length >= 24 &&
+        (normalisedStatement === normalisedQuery ||
+          normalisedStatement.startsWith(`${normalisedQuery} `) ||
+          normalisedQuery.startsWith(`${normalisedStatement} `)));
+
+    if (exact) {
+      score = 1;
+    } else if (
+      normalisedQuery.length >= 40 &&
+      (normalisedStatement.startsWith(normalisedQuery.slice(0, 48)) ||
+        normalisedQuery.startsWith(normalisedStatement.slice(0, 48)))
+    ) {
+      score = Math.max(score, 0.93);
+    }
+
     return {
       id: row.id,
       statement: row.statement,
@@ -179,11 +206,13 @@ export async function searchAssumptionCandidates(
       confidence: row.confidence,
       score,
       hits,
+      exact,
     };
   });
 
   scored.sort(
     (a, b) =>
+      Number(b.exact) - Number(a.exact) ||
       b.score - a.score ||
       b.hits - a.hits ||
       a.statement.localeCompare(b.statement),
@@ -193,7 +222,9 @@ export async function searchAssumptionCandidates(
   const withHits = scored.filter((c) => c.hits > 0);
   const pool = withHits.length > 0 ? withHits : scored;
 
-  return pool.slice(0, capped).map(({ hits: _hits, ...rest }) => rest);
+  return pool
+    .slice(0, capped)
+    .map(({ hits: _hits, exact: _exact, ...rest }) => rest);
 }
 
 /**
@@ -223,6 +254,16 @@ export function isDominantSingleMatch(
     (rawText.match(/[.!?]/g) ?? []).length <= 1;
 
   if (!simple) return null;
+
+  const normalisedQuery = rawText
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+  const normalisedTop = top.statement.toLowerCase().replace(/\s+/g, " ").trim();
+  if (normalisedTop === normalisedQuery) {
+    return top;
+  }
+
   if (top.score < HIGH_MATCH_CONFIDENCE) return null;
   if (
     second &&

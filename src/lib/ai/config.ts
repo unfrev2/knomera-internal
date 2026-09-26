@@ -10,6 +10,8 @@
 
 export type AiModelRole = "fast" | "reasoning";
 
+export type ReasoningEffort = "none" | "low" | "medium" | "high";
+
 export const MATCHING_LIMITS = {
   /** Max assumptions sent to an evidence-matching AI call. */
   maxAssumptionCandidates: 20,
@@ -37,6 +39,17 @@ export const MATCHING_LIMITS = {
 
   /** Max atomic claims returned from one matching request. */
   maxClaimsPerCapture: 8,
+
+  /**
+   * Soft ceiling on completion tokens for structured match JSON.
+   * Sized for ≤8 concise claims — not free-form essays.
+   */
+  maxCompletionTokensFast: 900,
+
+  maxCompletionTokensReasoning: 1200,
+
+  /** Max characters for the user-facing match reason. */
+  maxReasonChars: 160,
 } as const;
 
 /** Prefer RESEARCH_LIMITS.maxCandidateAssumptions for research; keep in sync. */
@@ -53,6 +66,24 @@ export const HIGH_MATCH_CONFIDENCE = MATCHING_LIMITS.highMatchConfidence;
 export const REASONING_FALLBACK_THRESHOLD = "low" as const;
 
 export const MAX_INPUT_LENGTH = MATCHING_LIMITS.maxInputLength;
+
+/** Fast path (e.g. gpt-6-luna): no hidden reasoning. */
+export const FAST_REASONING_EFFORT: ReasoningEffort = "none";
+
+/** Reasoning fallback (e.g. gpt-6-sol): low effort unless evals say otherwise. */
+export const REASONING_FALLBACK_EFFORT: ReasoningEffort = "low";
+
+export function reasoningEffortForRole(role: AiModelRole): ReasoningEffort {
+  return role === "reasoning"
+    ? REASONING_FALLBACK_EFFORT
+    : FAST_REASONING_EFFORT;
+}
+
+export function maxCompletionTokensForRole(role: AiModelRole): number {
+  return role === "reasoning"
+    ? MATCHING_LIMITS.maxCompletionTokensReasoning
+    : MATCHING_LIMITS.maxCompletionTokensFast;
+}
 
 export function getOpenAiApiKey(): string | null {
   const key = process.env.OPENAI_API_KEY?.trim();

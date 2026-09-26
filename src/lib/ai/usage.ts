@@ -1,5 +1,11 @@
 import { getDb } from "@/lib/db/client";
-import type { AiModelRole } from "@/lib/ai/config";
+import type { AiModelRole, ReasoningEffort } from "@/lib/ai/config";
+
+export type MatchingHandlerPath =
+  | "deterministic"
+  | "fast"
+  | "reasoning"
+  | "none";
 
 export type AiUsageEventInput = {
   workspaceId: string;
@@ -9,10 +15,18 @@ export type AiUsageEventInput = {
   modelName?: string | null;
   inputTokens?: number;
   outputTokens?: number;
+  /** Wall time for the primary model call (fast or reasoning alone). */
   latencyMs?: number | null;
   success: boolean;
   fallbackUsed?: boolean;
   error?: string | null;
+  /** Which path handled the request for latency/quality comparison. */
+  handlerPath?: MatchingHandlerPath | null;
+  latencyCandidateMs?: number | null;
+  latencyFastMs?: number | null;
+  latencyReasoningMs?: number | null;
+  latencySaveMs?: number | null;
+  reasoningEffort?: ReasoningEffort | null;
 };
 
 /**
@@ -34,7 +48,13 @@ export async function recordAiUsageEvent(
       latency_ms,
       success,
       fallback_used,
-      error
+      error,
+      handler_path,
+      latency_candidate_ms,
+      latency_fast_ms,
+      latency_reasoning_ms,
+      latency_save_ms,
+      reasoning_effort
     ) VALUES (
       ${input.workspaceId},
       ${input.feature},
@@ -46,7 +66,13 @@ export async function recordAiUsageEvent(
       ${input.latencyMs ?? null},
       ${input.success},
       ${input.fallbackUsed ?? false},
-      ${input.error ?? null}
+      ${input.error ?? null},
+      ${input.handlerPath ?? null},
+      ${input.latencyCandidateMs ?? null},
+      ${input.latencyFastMs ?? null},
+      ${input.latencyReasoningMs ?? null},
+      ${input.latencySaveMs ?? null},
+      ${input.reasoningEffort ?? null}
     )
   `;
 }

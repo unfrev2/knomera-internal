@@ -1377,8 +1377,17 @@ CREATE TABLE IF NOT EXISTS ai_usage_events (
   success BOOLEAN NOT NULL DEFAULT true,
   fallback_used BOOLEAN NOT NULL DEFAULT false,
   error TEXT,
+  handler_path TEXT,
+  latency_candidate_ms INTEGER,
+  latency_fast_ms INTEGER,
+  latency_reasoning_ms INTEGER,
+  latency_save_ms INTEGER,
+  reasoning_effort TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE INDEX IF NOT EXISTS ai_usage_events_feature_handler_idx
+  ON ai_usage_events (workspace_id, feature, handler_path, created_at DESC);
 
 REVOKE ALL ON TABLE evidence_captures FROM anon, authenticated;
 REVOKE ALL ON TABLE ai_usage_events FROM anon, authenticated;
