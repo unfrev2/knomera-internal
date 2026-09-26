@@ -16,8 +16,56 @@ import {
   searchAssumptionCandidates,
   type RankedAssumptionCandidate,
 } from "@/lib/db/assumption-candidates";
-import { ProviderUnavailableError } from "@/lib/research/providers/types";
 import { addUsage, createUsageAccumulator } from "@/lib/research/usage";
+
+const isDev = process.env.NODE_ENV === "development";
+
+export type MatchingDebugInfo = {
+  inputLength: number;
+  inputPreview: string;
+  forceReasoning: boolean;
+  openaiConfigured: boolean;
+  thresholds: {
+    maxCandidates: number;
+    highMatchConfidence: number;
+    dominantCandidateMargin: number;
+    simpleClaimMaxLength: number;
+    maxInputLength: number;
+  };
+  candidates: Array<{
+    id: string;
+    statement: string;
+    category: string;
+    score: number;
+  }>;
+  dominantCandidate: {
+    id: string;
+    statement: string;
+    score: number;
+  } | null;
+  usedDeterministicPath: boolean;
+  skippedAiBecause?: string;
+  fastModel?: {
+    model: string;
+    role: string;
+    latencyMs: number;
+    claimCount: number;
+    triggeredReasoningFallback: boolean;
+  };
+  reasoningModel?: {
+    model: string;
+    role: string;
+    latencyMs: number;
+    claimCount: number;
+  };
+  aiClaims?: EvidenceClaimMatch[];
+  newAssumptionSecondPass?: Array<{
+    proposedStatement: string;
+    redirectedToExisting: string | null;
+  }>;
+  finalPath?: "deterministic" | "fast" | "reasoning";
+  error?: string;
+};
 
 export type ProposedEvidenceItem = {
   claim: string;
@@ -52,13 +100,57 @@ export type EvidenceMatchingResult = {
     outputTokens: number;
     aiCalls: number;
   };
+  /** Present only in development — for browser/server console inspection. */
+  debug?: MatchingDebugInfo;
 };
 
 export type EvidenceMatchingFailure = {
   ok: false;
   error: string;
   preserveInput: true;
+  debug?: MatchingDebugInfo;
 };
+
+function debugBase(
+  rawText: string,
+  forceReasoning: boolean,
+  candidates: RankedAssumptionCandidate[],
+  dominant: RankedAssumptionCandidate | null,
+): MatchingDebugInfo {
+  return {
+    inputLength: rawText.length,
+    inputPreview:
+      rawText.length > 200 ? `${rawText.slice(0, 200)}…` : rawText,
+    forceReasoning,
+    openaiConfigured: isOpenAiConfigured(),
+    thresholds: {
+      maxCandidates: MATCHING_LIMITS.maxAssumptionCandidates,
+      highMatchConfidence: HIGH_MATCH_CONFIDENCE,
+      dominantCandidateMargin: MATCHING_LIMITS.dominantCandidateMargin,
+      simpleClaimMaxLength: MATCHING_LIMITS.simpleClaimMaxLength,
+      maxInputLength: MAX_INPUT_LENGTH,
+    },
+    candidates: candidates.map((c) => ({
+      id: c.id,
+      statement: c.statement,
+      category: c.category,
+      score: Number(c.score.toFixed(4)),
+    })),
+    dominantCandidate: dominant
+      ? {
+          id: dominant.id,
+          statement: dominant.statement,
+          score: Number(dominant.score.toFixed(4)),
+        }
+      : null,
+    usedDeterministicPath: false,
+  };
+}
+
+function logMatchingDebug(debug: MatchingDebugInfo) {
+  if (!isDev) return;
+  console.info("[evidence-matching]", debug);
+}
 
 function toProposal(
   claim: EvidenceClaimMatch,
@@ -114,19 +206,50 @@ export async function matchEvidenceToAssumptions(options: {
   forceReasoning?: boolean;
 }): Promise<EvidenceMatchingResult | EvidenceMatchingFailure> {
   const rawText = options.rawText.trim();
+  const forceReasoning = options.forceReasoning ?? false;
+
   if (!rawText) {
-    return {
+    const failure: EvidenceMatchingFailure = {
       ok: false,
       error: "Enter what you learned before finding matching assumptions.",
       preserveInput: true,
     };
+    if (isDev) {
+      failure.debug = {
+        inputLength: 0,
+        inputPreview: "",
+        forceReasoning,
+        openaiConfigured: isOpenAiConfigured(),
+        thresholds: {
+          maxCandidates: MATCHING_LIMITS.maxAssumptionCandidates,
+          highMatchConfidence: HIGH_MATCH_CONFIDENCE,
+          dominantCandidateMargin: MATCHING_LIMITS.dominantCandidateMargin,
+          simpleClaimMaxLength: MATCHING_LIMITS.simpleClaimMaxLength,
+          maxInputLength: MAX_INPUT_LENGTH,
+        },
+        candidates: [],
+        dominantCandidate: null,
+        usedDeterministicPath: false,
+        error: failure.error,
+      };
+      logMatchingDebug(failure.debug);
+    }
+    return failure;
   }
   if (rawText.length > MAX_INPUT_LENGTH) {
-    return {
+    const failure: EvidenceMatchingFailure = {
       ok: false,
       error: `This text is too long for evidence matching (max ${MAX_INPUT_LENGTH} characters). Paste only the relevant section.`,
       preserveInput: true,
     };
+    if (isDev) {
+      failure.debug = {
+        ...debugBase(rawText, forceReasoning, [], null),
+        error: failure.error,
+      };
+      logMatchingDebug(failure.debug);
+    }
+    return failure;
   }
 
   const candidates = await searchAssumptionCandidates(
@@ -135,7 +258,11 @@ export async function matchEvidenceToAssumptions(options: {
   );
 
   const dominant = isDominantSingleMatch(candidates, rawText);
-  if (dominant && !options.forceReasoning) {
+  const debug = isDev
+    ? debugBase(rawText, forceReasoning, candidates, dominant)
+    : null;
+
+  if (dominant && !forceReasoning) {
     await recordAiUsageEvent({
       workspaceId: options.workspaceId,
       feature: "evidence_matching",
@@ -147,7 +274,7 @@ export async function matchEvidenceToAssumptions(options: {
       outputTokens: 0,
     });
 
-    return {
+    const result: EvidenceMatchingResult = {
       ok: true,
       path: "deterministic",
       analysedDeeper: false,
@@ -172,6 +299,17 @@ export async function matchEvidenceToAssumptions(options: {
       ],
       usage: { inputTokens: 0, outputTokens: 0, aiCalls: 0 },
     };
+
+    if (debug) {
+      debug.usedDeterministicPath = true;
+      debug.finalPath = "deterministic";
+      debug.skippedAiBecause =
+        "Dominant single-claim text match above highMatchConfidence threshold";
+      result.debug = debug;
+      logMatchingDebug(debug);
+    }
+
+    return result;
   }
 
   if (!isOpenAiConfigured()) {
@@ -183,17 +321,19 @@ export async function matchEvidenceToAssumptions(options: {
       success: false,
       error: "OPENAI_API_KEY not configured",
     });
-    return {
+    const failure: EvidenceMatchingFailure = {
       ok: false,
       error:
         "We couldn't analyse this evidence automatically. You can still add it manually.",
       preserveInput: true,
     };
-  }
-
-  if (candidates.length === 0) {
-    // Still allow AI to suggest a new assumption with an empty candidate set —
-    // but prefer asking founder to add manually if nothing exists to match.
+    if (debug) {
+      debug.skippedAiBecause = "OPENAI_API_KEY not configured";
+      debug.error = failure.error;
+      failure.debug = debug;
+      logMatchingDebug(debug);
+    }
+    return failure;
   }
 
   const usageAcc = createUsageAccumulator();
@@ -202,7 +342,7 @@ export async function matchEvidenceToAssumptions(options: {
   let analysedDeeperReason: string | null = null;
 
   try {
-    let extraction = options.forceReasoning
+    let extraction = forceReasoning
       ? await reasoningExtraction({ rawText, candidates })
       : await structuredExtraction({ rawText, candidates, role: "fast" });
 
@@ -220,10 +360,33 @@ export async function matchEvidenceToAssumptions(options: {
       fallbackUsed: false,
     });
 
-    if (
-      !options.forceReasoning &&
-      needsReasoningFallback(extraction.output.claims)
-    ) {
+    if (debug) {
+      if (forceReasoning) {
+        debug.reasoningModel = {
+          model: extraction.model,
+          role: extraction.role,
+          latencyMs: extraction.latencyMs,
+          claimCount: extraction.output.claims.length,
+        };
+      } else {
+        debug.fastModel = {
+          model: extraction.model,
+          role: extraction.role,
+          latencyMs: extraction.latencyMs,
+          claimCount: extraction.output.claims.length,
+          triggeredReasoningFallback: false,
+        };
+      }
+    }
+
+    const shouldFallback =
+      !forceReasoning && needsReasoningFallback(extraction.output.claims);
+
+    if (debug?.fastModel) {
+      debug.fastModel.triggeredReasoningFallback = shouldFallback;
+    }
+
+    if (shouldFallback) {
       const deeper = await reasoningExtraction({ rawText, candidates });
       addUsage(usageAcc, deeper.usage);
       await recordAiUsageEvent({
@@ -243,13 +406,25 @@ export async function matchEvidenceToAssumptions(options: {
       analysedDeeper = true;
       analysedDeeperReason =
         "Analysed more deeply because no clear assumption match was found.";
-    } else if (options.forceReasoning) {
+      if (debug) {
+        debug.reasoningModel = {
+          model: deeper.model,
+          role: deeper.role,
+          latencyMs: deeper.latencyMs,
+          claimCount: deeper.output.claims.length,
+        };
+      }
+    } else if (forceReasoning) {
       path = "reasoning";
       analysedDeeper = true;
       analysedDeeperReason = "Analysed more deeply at your request.";
     }
 
-    // Second-pass check for proposed new assumptions.
+    if (debug) {
+      debug.aiClaims = extraction.output.claims;
+      debug.newAssumptionSecondPass = [];
+    }
+
     const proposals: ProposedEvidenceItem[] = [];
     for (const claim of extraction.output.claims.slice(
       0,
@@ -274,12 +449,21 @@ export async function matchEvidenceToAssumptions(options: {
           proposal.reason = `This may relate to an existing assumption: ${near.statement}`;
           proposal.matchConfidence = "medium";
           proposal.included = true;
+          debug?.newAssumptionSecondPass?.push({
+            proposedStatement: claim.new_assumption_suggestion!.statement,
+            redirectedToExisting: near.statement,
+          });
+        } else {
+          debug?.newAssumptionSecondPass?.push({
+            proposedStatement: proposal.newAssumptionSuggestion.statement,
+            redirectedToExisting: null,
+          });
         }
       }
       proposals.push(proposal);
     }
 
-    return {
+    const result: EvidenceMatchingResult = {
       ok: true,
       path,
       analysedDeeper,
@@ -292,13 +476,17 @@ export async function matchEvidenceToAssumptions(options: {
         aiCalls: usageAcc.aiCalls,
       },
     };
+
+    if (debug) {
+      debug.finalPath = path;
+      result.debug = debug;
+      logMatchingDebug(debug);
+    }
+
+    return result;
   } catch (error) {
     const message =
-      error instanceof ProviderUnavailableError
-        ? "We couldn't analyse this evidence automatically. You can still add it manually."
-        : error instanceof Error
-          ? `We couldn't analyse this evidence automatically. You can still add it manually.`
-          : "We couldn't analyse this evidence automatically. You can still add it manually.";
+      "We couldn't analyse this evidence automatically. You can still add it manually.";
 
     await recordAiUsageEvent({
       workspaceId: options.workspaceId,
@@ -309,11 +497,17 @@ export async function matchEvidenceToAssumptions(options: {
       error: error instanceof Error ? error.message.slice(0, 500) : "unknown",
     });
 
-    void message;
-    return {
+    const failure: EvidenceMatchingFailure = {
       ok: false,
       error: message,
       preserveInput: true,
     };
+    if (debug) {
+      debug.error =
+        error instanceof Error ? error.message : "unknown matching error";
+      failure.debug = debug;
+      logMatchingDebug(debug);
+    }
+    return failure;
   }
 }

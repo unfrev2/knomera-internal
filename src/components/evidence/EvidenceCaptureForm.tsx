@@ -132,6 +132,24 @@ export function EvidenceCaptureForm({
           rawText,
           forceReasoning,
         });
+        if (process.env.NODE_ENV === "development" && result.debug) {
+          console.info(
+            "[evidence-matching] Find matching assumptions",
+            result.debug,
+          );
+          console.info(
+            "[evidence-matching] Result",
+            result.ok
+              ? {
+                  path: result.path,
+                  analysedDeeper: result.analysedDeeper,
+                  candidatesConsidered: result.candidatesConsidered,
+                  usage: result.usage,
+                  proposals: result.proposals,
+                }
+              : { error: result.error },
+          );
+        }
         if (!result.ok) {
           setError(result.error);
           return;

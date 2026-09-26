@@ -25,8 +25,9 @@ export default async function AppLayout({
           </h1>
           <p className="text-sm leading-relaxed text-muted">
             We could not reach the Supabase database. Check{" "}
-            <code className="text-navy">DATABASE_URL</code> and your network
-            connection, then refresh.
+            <code className="text-navy">DATABASE_URL_POOLED</code> (transaction
+            pooler) / <code className="text-navy">DATABASE_URL</code> and your
+            network connection, then refresh.
           </p>
         </PageFrame>
       </AppShell>

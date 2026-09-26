@@ -9,18 +9,70 @@ export type RankedAssumptionCandidate = AssumptionCandidate & {
   score: number;
 };
 
+/** Stopwords that add noise to candidate retrieval. */
+const STOP = new Set([
+  "that",
+  "this",
+  "with",
+  "from",
+  "have",
+  "has",
+  "been",
+  "were",
+  "will",
+  "would",
+  "could",
+  "should",
+  "about",
+  "their",
+  "there",
+  "which",
+  "when",
+  "what",
+  "they",
+  "them",
+  "also",
+  "into",
+  "than",
+  "then",
+  "some",
+  "more",
+  "most",
+  "only",
+  "over",
+  "such",
+  "very",
+  "just",
+  "like",
+  "because",
+  "does",
+  "dont",
+  "didn't",
+  "it's",
+  "its",
+]);
+
 function significantTokens(text: string): string[] {
-  return text
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of text
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, " ")
-    .split(/\s+/)
-    .filter((t) => t.length >= 4)
-    .slice(0, 24);
+    .split(/\s+/)) {
+    if (raw.length < 4) continue;
+    if (STOP.has(raw)) continue;
+    if (seen.has(raw)) continue;
+    seen.add(raw);
+    out.push(raw);
+    if (out.length >= 16) break;
+  }
+  return out;
 }
 
 /**
  * Deterministic candidate retrieval for evidence matching.
- * Uses PostgreSQL full-text ranking plus token overlap; no vectors.
+ * Prefer recall over precision — AI ranks within the shortlist.
+ * Uses OR-based FTS + per-token ILIKE; no vectors.
  */
 export async function searchAssumptionCandidates(
   workspaceId: string,
@@ -36,11 +88,28 @@ export async function searchAssumptionCandidates(
   if (!query) return [];
 
   const tokens = significantTokens(query);
-  const ftsQuery = tokens.join(" ") || query.slice(0, 120);
-  const firstToken = tokens[0] ?? query.slice(0, 40);
-  const likeFirst = `%${firstToken}%`;
+  if (tokens.length === 0) {
+    // Extremely short / stopword-only input — return nothing rather than all assumptions.
+    return [];
+  }
 
-  const ftsRows = await sql<
+  // websearch OR query: match assumptions containing ANY significant token.
+  const ftsOr = tokens.join(" OR ");
+  // Build OR of ILIKE clauses — postgres.js does not bind JS arrays as PG arrays by default.
+  const likeClause = tokens
+    .map((token) => {
+      const pattern = `%${token}%`;
+      return sql`(
+        a.statement ILIKE ${pattern}
+        OR coalesce(a.description, '') ILIKE ${pattern}
+        OR a.category ILIKE ${pattern}
+        OR coalesce(a.next_action, '') ILIKE ${pattern}
+        OR coalesce(problem_text.titles, '') ILIKE ${pattern}
+      )`;
+    })
+    .reduce((acc, part, index) => (index === 0 ? part : sql`${acc} OR ${part}`));
+
+  const rows = await sql<
     {
       id: string;
       statement: string;
@@ -63,7 +132,7 @@ export async function searchAssumptionCandidates(
         setweight(to_tsvector('english', coalesce(a.next_action, '')), 'C') ||
         setweight(to_tsvector('english', coalesce(problem_text.titles, '')), 'B') ||
         setweight(to_tsvector('english', coalesce(problem_text.descriptions, '')), 'C'),
-        plainto_tsquery('english', ${ftsQuery})
+        websearch_to_tsquery('english', ${ftsOr})
       )::float8 AS rank
     FROM assumptions a
     LEFT JOIN LATERAL (
@@ -85,33 +154,23 @@ export async function searchAssumptionCandidates(
           setweight(to_tsvector('english', coalesce(a.next_action, '')), 'C') ||
           setweight(to_tsvector('english', coalesce(problem_text.titles, '')), 'B') ||
           setweight(to_tsvector('english', coalesce(problem_text.descriptions, '')), 'C')
-        ) @@ plainto_tsquery('english', ${ftsQuery})
-        OR a.statement ILIKE ${likeFirst}
-        OR coalesce(a.description, '') ILIKE ${likeFirst}
-        OR a.category ILIKE ${likeFirst}
-        OR coalesce(a.next_action, '') ILIKE ${likeFirst}
-        OR coalesce(problem_text.titles, '') ILIKE ${likeFirst}
+        ) @@ websearch_to_tsquery('english', ${ftsOr})
+        OR (${likeClause})
       )
     ORDER BY rank DESC, a.statement ASC
-    LIMIT ${capped * 2}
+    LIMIT ${Math.min(capped * 4, 48)}
   `;
 
-  const scored = ftsRows.map((row) => {
-    const hay = `${row.statement} ${row.category}`.toLowerCase();
-    const needle = query.toLowerCase();
+  const scored = rows.map((row) => {
+    const hay =
+      `${row.statement} ${row.category}`.toLowerCase();
     let hits = 0;
     for (const token of tokens) {
       if (hay.includes(token)) hits += 1;
     }
-    const overlap = tokens.length === 0 ? 0 : hits / tokens.length;
-    let score = Math.min(1, Number(row.rank) * 8 + overlap * 0.7);
-    // Strong literal containment boosts deterministic path.
-    if (
-      hay.includes(needle.slice(0, Math.min(needle.length, 60))) ||
-      tokens.filter((t) => hay.includes(t)).length >= Math.min(4, tokens.length)
-    ) {
-      score = Math.max(score, 0.55 + overlap * 0.4);
-    }
+    const overlap = hits / tokens.length;
+    // Prefer multi-token overlap; ts_rank alone is often tiny.
+    const score = Math.min(1, Number(row.rank) * 6 + overlap * 0.85 + hits * 0.05);
     return {
       id: row.id,
       statement: row.statement,
@@ -119,47 +178,22 @@ export async function searchAssumptionCandidates(
       importance: row.importance,
       confidence: row.confidence,
       score,
+      hits,
     };
   });
 
   scored.sort(
-    (a, b) => b.score - a.score || a.statement.localeCompare(b.statement),
+    (a, b) =>
+      b.score - a.score ||
+      b.hits - a.hits ||
+      a.statement.localeCompare(b.statement),
   );
 
-  if (scored.length === 0 && tokens.length > 0) {
-    const pattern = `%${tokens.slice(0, 3).join("%")}%`;
-    const fallback = await sql<
-      {
-        id: string;
-        statement: string;
-        category: string;
-        importance: string;
-        confidence: string;
-      }[]
-    >`
-      SELECT
-        id,
-        statement,
-        category,
-        importance::text,
-        confidence::text
-      FROM assumptions
-      WHERE workspace_id = ${workspaceId}
-        AND (
-          statement ILIKE ${pattern}
-          OR coalesce(description, '') ILIKE ${pattern}
-          OR category ILIKE ${`%${tokens[0]}%`}
-        )
-      ORDER BY statement ASC
-      LIMIT ${capped}
-    `;
-    return fallback.map((row, index) => ({
-      ...row,
-      score: Math.max(0.15, 0.45 - index * 0.03),
-    }));
-  }
+  // Prefer candidates that share at least one content token when possible.
+  const withHits = scored.filter((c) => c.hits > 0);
+  const pool = withHits.length > 0 ? withHits : scored;
 
-  return scored.slice(0, capped);
+  return pool.slice(0, capped).map(({ hits: _hits, ...rest }) => rest);
 }
 
 /**

@@ -44,28 +44,34 @@ export async function openAiStructuredJson<T>(options: {
   const model = getOpenAiModel(options.role);
   const started = Date.now();
 
+  // Many newer models (o-series / gpt-5+) only allow the default temperature.
+  // Omit unless the caller explicitly opts in for a model that supports it.
+  const body: Record<string, unknown> = {
+    model,
+    messages: options.messages.map((m) => ({
+      role: m.role === "developer" ? "system" : m.role,
+      content: m.content,
+    })),
+    response_format: {
+      type: "json_schema",
+      json_schema: {
+        name: options.schemaName,
+        strict: true,
+        schema: options.schema,
+      },
+    },
+  };
+  if (typeof options.temperature === "number") {
+    body.temperature = options.temperature;
+  }
+
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      model,
-      temperature: options.temperature ?? 0.2,
-      messages: options.messages.map((m) => ({
-        role: m.role === "developer" ? "system" : m.role,
-        content: m.content,
-      })),
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: options.schemaName,
-          strict: true,
-          schema: options.schema,
-        },
-      },
-    }),
+    body: JSON.stringify(body),
   });
 
   const latencyMs = Date.now() - started;
