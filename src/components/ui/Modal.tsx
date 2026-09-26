@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useCallback, useEffect, useId, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import type { ReactNode } from "react";
 
 export type ModalProps = {
@@ -15,16 +15,8 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
   const titleId = useId();
   const panelRef = useRef<HTMLElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
-
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        onClose();
-      }
-    },
-    [onClose],
-  );
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return;
@@ -34,10 +26,18 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
         ? document.activeElement
         : null;
 
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onCloseRef.current();
+      }
+    }
+
     document.addEventListener("keydown", handleKeyDown);
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
+    // Focus the panel once when the dialog opens — not on every parent re-render.
     const focusTimer = window.setTimeout(() => {
       panelRef.current?.focus();
     }, 0);
@@ -48,7 +48,7 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
       document.body.style.overflow = prevOverflow;
       previouslyFocused.current?.focus();
     };
-  }, [open, handleKeyDown]);
+  }, [open]);
 
   if (!open) return null;
 
@@ -58,7 +58,7 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
         type="button"
         aria-label="Close dialog"
         className="absolute inset-0 bg-[#0b1f3a]/40 backdrop-blur-[1px]"
-        onClick={onClose}
+        onClick={() => onCloseRef.current()}
       />
       <aside
         ref={panelRef}
@@ -82,7 +82,7 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
           </h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => onCloseRef.current()}
             className="rounded p-1.5 text-[#0b1f3a]/60 transition-colors hover:bg-[#efece6] hover:text-[#0b1f3a]"
             aria-label="Close"
           >
