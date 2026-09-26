@@ -16,7 +16,10 @@ import { Modal } from "@/components/ui/Modal";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import type { EvidenceAttributionOption } from "@/lib/db/evidence";
-import type { ProposedEvidenceItem } from "@/lib/domain/evidence-matching";
+import type {
+  MatchingCandidateOption,
+  ProposedEvidenceItem,
+} from "@/lib/domain/evidence-matching";
 import type { LinkableObject } from "@/lib/domain/linkable";
 import { todayISO } from "@/lib/format";
 import {
@@ -58,6 +61,9 @@ export function EvidenceCaptureForm({
   const [evidenceDate, setEvidenceDate] = useState(todayISO());
   const [mode, setMode] = useState<"capture" | "review" | "manual">("capture");
   const [reviewItems, setReviewItems] = useState<ReviewItem[]>([]);
+  const [matchCandidates, setMatchCandidates] = useState<
+    MatchingCandidateOption[]
+  >([]);
   const [analysedDeeperReason, setAnalysedDeeperReason] = useState<string | null>(
     null,
   );
@@ -87,6 +93,7 @@ export function EvidenceCaptureForm({
     setEvidenceDate(todayISO());
     setMode("capture");
     setReviewItems([]);
+    setMatchCandidates([]);
     setAnalysedDeeperReason(null);
     setSourceSnapshot({});
   }
@@ -155,6 +162,7 @@ export function EvidenceCaptureForm({
           return;
         }
         setAnalysedDeeperReason(result.analysedDeeperReason);
+        setMatchCandidates(result.candidateAssumptions);
         setReviewItems(
           result.proposals.map((p, index) => ({
             ...p,
@@ -184,6 +192,18 @@ export function EvidenceCaptureForm({
     updateItem(key, {
       assumptionId: item.id,
       assumptionStatement: item.title,
+      noMeaningfulMatch: false,
+      included: true,
+    });
+  }
+
+  function handlePickCandidate(
+    key: string,
+    candidate: MatchingCandidateOption,
+  ) {
+    updateItem(key, {
+      assumptionId: candidate.id,
+      assumptionStatement: candidate.statement,
       noMeaningfulMatch: false,
       included: true,
     });
@@ -405,24 +425,67 @@ export function EvidenceCaptureForm({
                 </Field>
 
                 <div className="space-y-2">
-                  <ObjectPicker
-                    label="Assumption"
-                    types={["assumption"]}
-                    onSelect={(obj) => handleSelectAssumption(item.key, obj)}
-                    disabled={pending}
-                  />
+                  <p className="text-sm font-medium text-navy">Assumption</p>
                   {item.assumptionStatement ? (
-                    <p className="rounded border border-line bg-cream-tint/50 px-3 py-2 text-sm text-navy">
-                      {item.assumptionStatement}
+                    <p className="rounded border border-blue/30 bg-blue/5 px-3 py-2 text-sm text-navy">
+                      <span className="text-xs font-medium uppercase tracking-wide text-muted">
+                        Selected
+                      </span>
+                      <span className="mt-1 block">{item.assumptionStatement}</span>
                     </p>
                   ) : (
                     <p className="text-xs text-muted">
                       No strong existing assumption
                       {item.newAssumptionSuggestion
                         ? " — a new assumption was suggested below."
-                        : "."}
+                        : ". Pick one from the matches below or search."}
                     </p>
                   )}
+
+                  {matchCandidates.length > 0 ? (
+                    <div className="space-y-1.5">
+                      <p className="text-xs font-medium text-muted">
+                        Matching assumptions — click to select
+                      </p>
+                      <ul className="max-h-48 space-y-1 overflow-y-auto rounded border border-line bg-cream-tint/30 p-1.5">
+                        {matchCandidates.map((candidate) => {
+                          const selected = item.assumptionId === candidate.id;
+                          return (
+                            <li key={candidate.id}>
+                              <button
+                                type="button"
+                                disabled={pending}
+                                onClick={() =>
+                                  handlePickCandidate(item.key, candidate)
+                                }
+                                className={[
+                                  "w-full rounded px-2.5 py-2 text-left text-sm transition-colors",
+                                  selected
+                                    ? "bg-blue/15 text-navy ring-1 ring-blue/40"
+                                    : "text-navy/85 hover:bg-white hover:text-navy",
+                                ].join(" ")}
+                              >
+                                <span className="block leading-snug">
+                                  {candidate.statement}
+                                </span>
+                                <span className="mt-0.5 block text-xs text-muted">
+                                  {candidate.category}
+                                  {selected ? " · selected" : ""}
+                                </span>
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  ) : null}
+
+                  <ObjectPicker
+                    label="Or search all assumptions"
+                    types={["assumption"]}
+                    onSelect={(obj) => handleSelectAssumption(item.key, obj)}
+                    disabled={pending}
+                  />
                 </div>
 
                 {item.newAssumptionSuggestion ? (
@@ -550,6 +613,7 @@ export function EvidenceCaptureForm({
               onClick={() => {
                 setMode("capture");
                 setReviewItems([]);
+                setMatchCandidates([]);
               }}
             >
               Back

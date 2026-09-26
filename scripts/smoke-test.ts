@@ -742,7 +742,7 @@ async function main() {
     "URL canonicalisation strips tracking params",
   );
   await assert(
-    RESEARCH_LIMITS.maxCandidateAssumptions === 12,
+    RESEARCH_LIMITS.maxCandidateAssumptions === 20,
     "Research limits centralised",
   );
 

@@ -12,7 +12,7 @@ export type AiModelRole = "fast" | "reasoning";
 
 export const MATCHING_LIMITS = {
   /** Max assumptions sent to an evidence-matching AI call. */
-  maxAssumptionCandidates: 12,
+  maxAssumptionCandidates: 20,
 
   /**
    * Deterministic retrieval score (0–1 normalised) at/above which a single

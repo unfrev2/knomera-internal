@@ -88,12 +88,21 @@ export type ProposedEvidenceItem = {
   included: boolean;
 };
 
+export type MatchingCandidateOption = {
+  id: string;
+  statement: string;
+  category: string;
+  score: number;
+};
+
 export type EvidenceMatchingResult = {
   ok: true;
   path: "deterministic" | "fast" | "reasoning";
   analysedDeeper: boolean;
   analysedDeeperReason: string | null;
   candidatesConsidered: number;
+  /** Ranked shortlist shown in the review UI for one-click selection. */
+  candidateAssumptions: MatchingCandidateOption[];
   proposals: ProposedEvidenceItem[];
   usage: {
     inputTokens: number;
@@ -150,6 +159,17 @@ function debugBase(
 function logMatchingDebug(debug: MatchingDebugInfo) {
   if (!isDev) return;
   console.info("[evidence-matching]", debug);
+}
+
+function toCandidateOptions(
+  candidates: RankedAssumptionCandidate[],
+): MatchingCandidateOption[] {
+  return candidates.map((c) => ({
+    id: c.id,
+    statement: c.statement,
+    category: c.category,
+    score: Number(c.score.toFixed(4)),
+  }));
 }
 
 function toProposal(
@@ -280,6 +300,7 @@ export async function matchEvidenceToAssumptions(options: {
       analysedDeeper: false,
       analysedDeeperReason: null,
       candidatesConsidered: candidates.length,
+      candidateAssumptions: toCandidateOptions(candidates),
       proposals: [
         {
           claim: rawText,
@@ -469,6 +490,7 @@ export async function matchEvidenceToAssumptions(options: {
       analysedDeeper,
       analysedDeeperReason,
       candidatesConsidered: candidates.length,
+      candidateAssumptions: toCandidateOptions(candidates),
       proposals,
       usage: {
         inputTokens: usageAcc.inputTokens,
