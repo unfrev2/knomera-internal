@@ -8,13 +8,13 @@ import {
   unlinkEvidenceFromDecisionAction,
   unlinkProblemFromDecisionAction,
 } from "@/app/actions/decisions";
+import { EntityLink } from "@/components/links/EntityType";
 import { ObjectPicker } from "@/components/links/ObjectPicker";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import type { LinkableObject } from "@/lib/domain/linkable";
 import { rethrowNavigation } from "@/lib/navigation";
 import type { Assumption, Evidence, Problem } from "@/lib/types";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -93,13 +93,14 @@ export function DecisionAssumptionsPanel({
               className="flex items-start justify-between gap-3 py-3"
             >
               <div className="min-w-0 space-y-1.5">
-                <Link
+                <EntityLink
+                  type="assumption"
                   href={`/assumptions/${assumption.id}`}
-                  className="block text-sm font-medium text-navy hover:underline"
+                  className="text-sm"
                 >
                   {assumption.statement}
-                </Link>
-                <div className="flex flex-wrap gap-2">
+                </EntityLink>
+                <div className="flex flex-wrap gap-2 pl-7">
                   <Badge variant="confidence" value={assumption.confidence} />
                   <Badge variant="status" value={assumption.status} />
                 </div>
@@ -171,13 +172,19 @@ export function DecisionEvidencePanel({
               className="flex items-start justify-between gap-3 py-3"
             >
               <div className="min-w-0 space-y-1">
-                <p className="text-sm font-medium text-navy">{item.title}</p>
+                <EntityLink
+                  type="evidence"
+                  href={`/evidence#${item.id}`}
+                  className="text-sm"
+                >
+                  {item.title}
+                </EntityLink>
                 {item.assumption_statement ? (
-                  <p className="text-xs text-muted">
+                  <p className="pl-7 text-xs text-muted">
                     On: {item.assumption_statement}
                   </p>
                 ) : null}
-                <div className="flex flex-wrap gap-2 pt-1">
+                <div className="flex flex-wrap gap-2 pt-1 pl-7">
                   <Badge variant="direction" value={item.direction} />
                   <Badge
                     variant="neutral"
@@ -250,13 +257,14 @@ export function DecisionProblemsPanel({
               className="flex items-start justify-between gap-3 py-3"
             >
               <div className="min-w-0 space-y-1.5">
-                <Link
+                <EntityLink
+                  type="problem"
                   href={`/problems/${problem.id}`}
-                  className="block text-sm font-medium text-navy hover:underline"
+                  className="text-sm"
                 >
                   {problem.title}
-                </Link>
-                <div className="flex flex-wrap gap-2">
+                </EntityLink>
+                <div className="flex flex-wrap gap-2 pl-7">
                   <Badge variant="importance" value={problem.severity} />
                   <Badge variant="problem-status" value={problem.status} />
                 </div>

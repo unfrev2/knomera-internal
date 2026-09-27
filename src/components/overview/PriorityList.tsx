@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/Badge";
 import type { Confidence, Importance } from "@/lib/types";
-import Link from "next/link";
+import { EntityLink } from "@/components/links/EntityType";
 
 export type PriorityListItem = {
   assumptionId: string;
@@ -53,26 +53,31 @@ export function PriorityList({
 
           return (
             <li key={item.assumptionId}>
-              <Link
+              <EntityLink
+                type="assumption"
                 href={`/assumptions/${item.assumptionId}`}
-                className="flex flex-col gap-2 px-4 py-4 transition-colors hover:bg-cream-tint/50 sm:flex-row sm:items-start sm:justify-between sm:gap-6"
+                variant="block"
+                markSize="md"
+                className="px-4 py-4 no-underline transition-colors hover:bg-cream-tint/50 hover:no-underline sm:items-start"
               >
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium tabular-nums text-muted-light">
-                    {index + 1}
-                  </p>
-                  <p className="mt-0.5 text-sm font-medium leading-snug text-navy">
-                    {item.statement}
-                  </p>
-                  <p className="mt-1.5 text-sm leading-relaxed text-muted">
-                    {why}
-                  </p>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium tabular-nums text-muted-light">
+                      {index + 1}
+                    </p>
+                    <p className="mt-0.5 text-sm font-medium leading-snug text-navy">
+                      {item.statement}
+                    </p>
+                    <p className="mt-1.5 text-sm leading-relaxed text-muted">
+                      {why}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 flex-wrap gap-1.5 sm:justify-end">
+                    <Badge variant="importance" value={item.importance} />
+                    <Badge variant="confidence" value={item.confidence} />
+                  </div>
                 </div>
-                <div className="flex shrink-0 flex-wrap gap-1.5 sm:justify-end">
-                  <Badge variant="importance" value={item.importance} />
-                  <Badge variant="confidence" value={item.confidence} />
-                </div>
-              </Link>
+              </EntityLink>
             </li>
           );
         })}

@@ -1,13 +1,11 @@
 "use client";
 
-import { searchLinkableObjectsAction } from "@/app/actions/search";
-import {
-  LINKABLE_TYPE_LABELS,
-  type LinkableObject,
-} from "@/lib/domain/linkable";
+import { EntityTypeLabel } from "@/components/links/EntityType";
+import type { LinkableObject } from "@/lib/domain/linkable";
 import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
+import { searchLinkableObjectsAction } from "@/app/actions/search";
 
 export function GlobalSearch({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
@@ -114,9 +112,9 @@ export function GlobalSearch({ compact = false }: { compact?: boolean }) {
           ) : (
             Object.entries(grouped).map(([type, items]) => (
               <div key={type} className="border-b border-line last:border-b-0">
-                <p className="px-3 pt-2 pb-1 text-[11px] font-medium tracking-wide text-muted uppercase">
-                  {LINKABLE_TYPE_LABELS[type as LinkableObject["type"]]}
-                </p>
+                <div className="flex items-center gap-1.5 px-3 pt-2 pb-1">
+                  <EntityTypeLabel type={type} />
+                </div>
                 <ul>
                   {items.map((item) => {
                     const index = flat.indexOf(item);

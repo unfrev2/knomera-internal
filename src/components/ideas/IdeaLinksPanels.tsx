@@ -6,13 +6,13 @@ import {
   unlinkAssumptionFromIdeaAction,
   unlinkProblemFromIdeaAction,
 } from "@/app/actions/ideas";
+import { EntityLink } from "@/components/links/EntityType";
 import { ObjectPicker } from "@/components/links/ObjectPicker";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import type { LinkableObject } from "@/lib/domain/linkable";
 import { rethrowNavigation } from "@/lib/navigation";
 import type { Assumption, Problem } from "@/lib/types";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -88,12 +88,13 @@ export function IdeaProblemsPanel({
               key={problem.id}
               className="flex items-start justify-between gap-3 py-3"
             >
-              <Link
+              <EntityLink
+                type="problem"
                 href={`/problems/${problem.id}`}
-                className="text-sm font-medium text-navy hover:underline"
+                className="text-sm"
               >
                 {problem.title}
-              </Link>
+              </EntityLink>
               <Button
                 type="button"
                 variant="ghost"
@@ -157,12 +158,13 @@ export function IdeaAssumptionsPanel({
               className="flex items-start justify-between gap-3 py-3"
             >
               <div className="min-w-0 space-y-1.5">
-                <Link
+                <EntityLink
+                  type="assumption"
                   href={`/assumptions/${assumption.id}`}
-                  className="block text-sm font-medium text-navy hover:underline"
+                  className="text-sm"
                 >
                   {assumption.statement}
-                </Link>
+                </EntityLink>
                 <Badge variant="confidence" value={assumption.confidence} />
               </div>
               <Button

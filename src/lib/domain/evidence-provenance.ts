@@ -1,8 +1,10 @@
 import { formatDateShort } from "@/lib/format";
+import type { EntityVisualKind } from "@/lib/domain/entity-visuals";
 import type { Evidence } from "@/lib/types";
 
 export type ProvenancePart = {
   label: string;
+  entityType: EntityVisualKind;
   href?: string;
   external?: boolean;
 };
@@ -13,6 +15,7 @@ export function evidenceProvenanceParts(item: Evidence): ProvenancePart[] {
   if (item.organisation_id && item.organisation_name) {
     parts.push({
       label: item.organisation_name,
+      entityType: "organisation",
       href: `/organisations/${item.organisation_id}`,
     });
   }
@@ -21,6 +24,7 @@ export function evidenceProvenanceParts(item: Evidence): ProvenancePart[] {
     const role = item.contact_role ? ` · ${item.contact_role}` : "";
     parts.push({
       label: `${item.contact_name}${role}`,
+      entityType: "contact",
       href: `/contacts/${item.contact_id}`,
     });
   }
@@ -33,6 +37,7 @@ export function evidenceProvenanceParts(item: Evidence): ProvenancePart[] {
       label: date
         ? `${date} discovery call`
         : item.discovery_title ?? "Discovery call",
+      entityType: "discovery_session",
       href: `/discovery/${item.discovery_session_id}`,
     });
   }
@@ -40,6 +45,7 @@ export function evidenceProvenanceParts(item: Evidence): ProvenancePart[] {
   if (item.evidence_source_id && item.source_title) {
     parts.push({
       label: item.source_title,
+      entityType: "evidence_source",
       href: item.source_url ?? undefined,
       external: Boolean(item.source_url),
     });
@@ -49,7 +55,7 @@ export function evidenceProvenanceParts(item: Evidence): ProvenancePart[] {
     !item.discovery_session_id &&
     item.source
   ) {
-    parts.push({ label: item.source });
+    parts.push({ label: item.source, entityType: "evidence_source" });
   }
 
   return parts;

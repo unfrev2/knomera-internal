@@ -15,7 +15,7 @@ import {
 } from "@/lib/labels";
 import type { Opportunity } from "@/lib/types";
 import { OPPORTUNITY_STAGES } from "@/lib/types";
-import Link from "next/link";
+import { EntityLink } from "@/components/links/EntityType";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -127,21 +127,23 @@ export function OpportunitiesTable({
               {opportunities.map((opportunity) => (
                 <tr key={opportunity.id} className="hover:bg-cream-tint/40">
                   <td className="px-4 py-3">
-                    <Link
+                    <EntityLink
+                      type="opportunity"
                       href={`/commercial/${opportunity.id}`}
-                      className="font-medium text-navy hover:underline"
+                      className="text-sm"
                     >
                       {opportunity.title}
-                    </Link>
+                    </EntityLink>
                   </td>
                   <td className="px-4 py-3 text-navy/80">
                     {opportunity.organisation_name ? (
-                      <Link
+                      <EntityLink
+                        type="organisation"
                         href={`/organisations/${opportunity.organisation_id}`}
-                        className="hover:underline"
+                        className="text-sm"
                       >
                         {opportunity.organisation_name}
-                      </Link>
+                      </EntityLink>
                     ) : (
                       "—"
                     )}

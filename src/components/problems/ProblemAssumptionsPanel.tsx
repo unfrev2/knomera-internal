@@ -4,6 +4,7 @@ import {
   linkAssumptionToProblemAction,
   unlinkAssumptionFromProblemAction,
 } from "@/app/actions/problems";
+import { EntityLink } from "@/components/links/EntityType";
 import { ObjectPicker } from "@/components/links/ObjectPicker";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -11,7 +12,6 @@ import { PROBLEM_RELATIONSHIP_LABELS } from "@/lib/labels";
 import { rethrowNavigation } from "@/lib/navigation";
 import type { LinkableObject } from "@/lib/domain/linkable";
 import type { ProblemAssumptionLink } from "@/lib/types";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -95,12 +95,13 @@ export function ProblemAssumptionsPanel({
               className="flex items-start justify-between gap-3 py-3"
             >
               <div className="min-w-0 space-y-1.5">
-                <Link
+                <EntityLink
+                  type="assumption"
                   href={`/assumptions/${link.assumption_id}`}
-                  className="block text-sm font-medium text-navy hover:underline"
+                  className="text-sm"
                 >
                   {link.assumption_statement}
-                </Link>
+                </EntityLink>
                 <div className="flex flex-wrap gap-2">
                   <Badge
                     variant="neutral"

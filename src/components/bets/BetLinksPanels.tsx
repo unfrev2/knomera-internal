@@ -7,6 +7,7 @@ import {
   unlinkProblemFromBetAction,
 } from "@/app/actions/bets";
 import { BetOutcomeEvidenceForm } from "@/components/bets/BetOutcomeEvidenceForm";
+import { EntityLink } from "@/components/links/EntityType";
 import { ObjectPicker } from "@/components/links/ObjectPicker";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -25,7 +26,6 @@ import type {
 } from "@/lib/types";
 import { BET_ASSUMPTION_RELATIONSHIPS } from "@/lib/types";
 import { formatDateShort } from "@/lib/format";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -101,12 +101,13 @@ export function BetProblemsPanel({
               key={problem.id}
               className="flex items-start justify-between gap-3 py-3"
             >
-              <Link
+              <EntityLink
+                type="problem"
                 href={`/problems/${problem.id}`}
-                className="text-sm font-medium text-navy hover:underline"
+                className="text-sm"
               >
                 {problem.title}
-              </Link>
+              </EntityLink>
               <Button
                 type="button"
                 variant="ghost"
@@ -201,12 +202,13 @@ export function BetAssumptionsPanel({
               className="flex items-start justify-between gap-3 py-3"
             >
               <div className="min-w-0 space-y-1.5">
-                <Link
+                <EntityLink
+                  type="assumption"
                   href={`/assumptions/${link.assumption_id}`}
-                  className="block text-sm font-medium text-navy hover:underline"
+                  className="text-sm"
                 >
                   {link.assumption_statement}
-                </Link>
+                </EntityLink>
                 <div className="flex flex-wrap gap-2">
                   <Badge
                     variant="neutral"

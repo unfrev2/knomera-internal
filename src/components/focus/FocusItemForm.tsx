@@ -4,6 +4,7 @@ import {
   createFocusItemAction,
   updateFocusItemAction,
 } from "@/app/actions/focus";
+import { EntityTypeLabel } from "@/components/links/EntityType";
 import { ObjectPicker } from "@/components/links/ObjectPicker";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
@@ -178,9 +179,12 @@ export function FocusItemForm({
             onSelect={handleSelectLink}
             disabled={pending}
           />
-          {linkedLabel ? (
+          {linkedLabel && linkKind ? (
             <div className="flex items-center justify-between gap-2 rounded border border-line bg-cream-tint/50 px-3 py-2 text-sm text-navy">
-              <span className="min-w-0 truncate">{linkedLabel}</span>
+              <span className="flex min-w-0 items-center gap-2">
+                <EntityTypeLabel type={linkKind} />
+                <span className="truncate font-medium">{linkedLabel}</span>
+              </span>
               <Button type="button" variant="ghost" size="sm" onClick={clearLink}>
                 Clear
               </Button>

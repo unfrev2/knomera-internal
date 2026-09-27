@@ -4,13 +4,13 @@ import {
   linkProblemToDiscoveryAction,
   unlinkProblemFromDiscoveryAction,
 } from "@/app/actions/discovery";
+import { EntityLink } from "@/components/links/EntityType";
 import { ObjectPicker } from "@/components/links/ObjectPicker";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import type { LinkableObject } from "@/lib/domain/linkable";
 import { rethrowNavigation } from "@/lib/navigation";
 import type { Problem } from "@/lib/types";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -91,12 +91,13 @@ export function DiscoveryProblemsPanel({
               className="flex items-start justify-between gap-3 py-3"
             >
               <div className="min-w-0 space-y-1.5">
-                <Link
+                <EntityLink
+                  type="problem"
                   href={`/problems/${problem.id}`}
-                  className="block text-sm font-medium text-navy hover:underline"
+                  className="text-sm"
                 >
                   {problem.title}
-                </Link>
+                </EntityLink>
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="importance" value={problem.severity} />
                   <Badge variant="problem-status" value={problem.status} />

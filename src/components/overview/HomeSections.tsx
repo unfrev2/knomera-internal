@@ -1,4 +1,5 @@
 import { SectionHeading } from "@/components/layout/Page";
+import { EntityLink } from "@/components/links/EntityType";
 import type {
   HomeAttentionItem,
   HomeCloserMetrics,
@@ -41,14 +42,11 @@ function ItemList({
     <ul className="divide-y divide-line border-y border-line">
       {items.map((item) => (
         <li key={`${item.kind}:${item.id}`} className="py-3">
-          <Link
-            href={item.href}
-            className="block text-sm font-medium text-navy hover:underline"
-          >
+          <EntityLink type={item.kind} href={item.href} className="text-sm">
             {item.title}
-          </Link>
+          </EntityLink>
           {item.meta ? (
-            <p className="mt-0.5 text-xs text-muted">{item.meta}</p>
+            <p className="mt-0.5 pl-7 text-xs text-muted">{item.meta}</p>
           ) : null}
         </li>
       ))}
@@ -124,12 +122,9 @@ export function DoingSection({
             <ul className="space-y-2">
               {bets.slice(0, 4).map((bet) => (
                 <li key={bet.id}>
-                  <Link
-                    href={`/bets/${bet.id}`}
-                    className="text-sm font-medium text-navy hover:underline"
-                  >
+                  <EntityLink type="bet" href={`/bets/${bet.id}`} className="text-sm">
                     {bet.title}
-                  </Link>
+                  </EntityLink>
                   <p className="text-xs text-muted">{bet.status}</p>
                 </li>
               ))}
@@ -251,9 +246,9 @@ export function ActivitySection({ items }: { items: HomeLearningItem[] }) {
       <ul className="space-y-2">
         {items.map((item) => (
           <li key={`activity:${item.kind}:${item.id}`} className="text-sm">
-            <Link href={item.href} className="text-navy hover:underline">
+            <EntityLink type={item.kind} href={item.href} className="text-sm">
               {item.meta ?? item.title}
-            </Link>
+            </EntityLink>
             <span className="text-muted"> — {item.title}</span>
           </li>
         ))}

@@ -1,6 +1,6 @@
+import { EntityLink, EntityTypeMark } from "@/components/links/EntityType";
 import { evidenceProvenanceParts } from "@/lib/domain/evidence-provenance";
 import type { Evidence } from "@/lib/types";
-import Link from "next/link";
 
 export function EvidenceProvenance({
   evidence,
@@ -13,22 +13,41 @@ export function EvidenceProvenance({
   if (parts.length === 0) return null;
 
   return (
-    <p className={["text-xs text-muted", className].filter(Boolean).join(" ")}>
+    <p
+      className={[
+        "flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
       {parts.map((part, index) => (
-        <span key={`${part.label}:${part.href ?? index}`}>
-          {index > 0 ? <span className="text-muted-light"> → </span> : null}
+        <span
+          key={`${part.entityType}:${part.label}:${part.href ?? index}`}
+          className="inline-flex items-center gap-1"
+        >
+          {index > 0 ? (
+            <span className="text-muted-light" aria-hidden>
+              →
+            </span>
+          ) : null}
           {part.href ? (
-            <Link
+            <EntityLink
+              type={part.entityType}
               href={part.href}
               target={part.external ? "_blank" : undefined}
               rel={part.external ? "noreferrer" : undefined}
-              className="font-medium text-navy hover:underline"
+              className="text-xs"
+              markSize="sm"
             >
               {part.label}
               {part.external ? " ↗" : ""}
-            </Link>
+            </EntityLink>
           ) : (
-            <span className="font-medium text-navy">{part.label}</span>
+            <span className="inline-flex items-center gap-1.5 font-medium text-navy">
+              <EntityTypeMark type={part.entityType} size="sm" />
+              {part.label}
+            </span>
           )}
         </span>
       ))}

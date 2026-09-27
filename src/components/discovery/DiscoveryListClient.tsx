@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { displayName } from "@/lib/labels";
 import { formatDateShort } from "@/lib/format";
 import type { Contact, DiscoverySession, Organisation } from "@/lib/types";
-import Link from "next/link";
+import { EntityLink } from "@/components/links/EntityType";
 import { useState } from "react";
 
 export function DiscoveryListClient({
@@ -63,29 +63,33 @@ export function DiscoveryListClient({
                     {formatDateShort(session.session_date)}
                   </td>
                   <td className="px-4 py-3">
-                    <Link
+                    <EntityLink
+                      type="organisation"
                       href={`/organisations/${session.organisation_id}`}
-                      className="font-medium text-navy hover:underline"
+                      className="text-sm"
                     >
                       {session.organisation_name ?? "Organisation"}
-                    </Link>
-                    <p className="mt-0.5 text-xs text-muted">
-                      <Link
+                    </EntityLink>
+                    <p className="mt-0.5 pl-7 text-xs text-muted">
+                      <EntityLink
+                        type="discovery_session"
                         href={`/discovery/${session.id}`}
-                        className="hover:underline"
+                        className="text-xs"
+                        markSize="sm"
                       >
                         {session.title}
-                      </Link>
+                      </EntityLink>
                     </p>
                   </td>
                   <td className="px-4 py-3 text-navy/80">
                     {session.contact_id && session.contact_name ? (
-                      <Link
+                      <EntityLink
+                        type="contact"
                         href={`/contacts/${session.contact_id}`}
-                        className="hover:underline"
+                        className="text-sm"
                       >
                         {session.contact_name}
-                      </Link>
+                      </EntityLink>
                     ) : (
                       "—"
                     )}

@@ -1,12 +1,9 @@
 "use client";
 
 import { searchLinkableObjectsAction } from "@/app/actions/search";
+import { EntityTypeLabel, EntityTypeMark } from "@/components/links/EntityType";
 import { fieldControlClassName } from "@/components/ui/Field";
-import {
-  LINKABLE_TYPE_LABELS,
-  type LinkableObject,
-  type SearchableObjectType,
-} from "@/lib/domain/linkable";
+import type { LinkableObject, SearchableObjectType } from "@/lib/domain/linkable";
 import { Search } from "lucide-react";
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 
@@ -165,7 +162,7 @@ export function ObjectPicker({
               <button
                 type="button"
                 className={[
-                  "block w-full px-3 py-2 text-left",
+                  "flex w-full items-start gap-2.5 px-3 py-2 text-left",
                   index === highlight ? "bg-cream-tint" : "hover:bg-cream-tint",
                 ].join(" ")}
                 onMouseEnter={() => setHighlight(index)}
@@ -174,17 +171,18 @@ export function ObjectPicker({
                   selectItem(item);
                 }}
               >
-                <span className="text-[11px] font-medium tracking-wide text-muted uppercase">
-                  {LINKABLE_TYPE_LABELS[item.type]}
-                </span>
-                <span className="mt-0.5 block text-sm font-medium text-navy">
-                  {item.title}
-                </span>
-                {item.subtitle ? (
-                  <span className="mt-0.5 block truncate text-xs text-muted">
-                    {item.subtitle}
+                <EntityTypeMark type={item.type} size="md" className="mt-0.5" />
+                <span className="min-w-0 flex-1">
+                  <EntityTypeLabel type={item.type} showMark={false} />
+                  <span className="mt-0.5 block text-sm font-medium text-navy">
+                    {item.title}
                   </span>
-                ) : null}
+                  {item.subtitle ? (
+                    <span className="mt-0.5 block truncate text-xs text-muted">
+                      {item.subtitle}
+                    </span>
+                  ) : null}
+                </span>
               </button>
             </li>
           ))}

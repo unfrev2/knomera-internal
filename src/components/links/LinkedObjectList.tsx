@@ -1,8 +1,9 @@
 import {
-  LINKABLE_TYPE_LABELS,
-  type LinkableObject,
-  type LinkableObjectType,
-} from "@/lib/domain/linkable";
+  EntityLink,
+  EntityTypeLabel,
+  EntityTypeMark,
+} from "@/components/links/EntityType";
+import type { LinkableObject } from "@/lib/domain/linkable";
 import { X } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -16,14 +17,6 @@ export type LinkedObjectListProps = {
   onRemove?: (item: LinkableObject) => void;
   className?: string;
 };
-
-function TypeLabel({ type }: { type: LinkableObjectType }) {
-  return (
-    <span className="shrink-0 text-[11px] font-medium tracking-wide text-muted uppercase">
-      {LINKABLE_TYPE_LABELS[type]}
-    </span>
-  );
-}
 
 export function LinkedObjectList({
   title,
@@ -49,9 +42,14 @@ export function LinkedObjectList({
               key={`${item.type}:${item.id}`}
               className="flex items-start gap-3 py-2.5"
             >
+              <EntityTypeMark
+                type={item.type}
+                size="md"
+                className="mt-0.5"
+              />
               <div className="min-w-0 flex-1 space-y-0.5">
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <TypeLabel type={item.type} />
+                  <EntityTypeLabel type={item.type} showMark={false} />
                   {item.meta ? (
                     <span className="text-xs text-muted">{item.meta}</span>
                   ) : null}
@@ -100,13 +98,14 @@ export function LinkedObjectChips({
     <ul className="flex flex-wrap gap-1.5">
       {items.map((item) => (
         <li key={`${item.type}:${item.id}`}>
-          <Link
+          <EntityLink
+            type={item.type}
             href={item.href}
-            className="inline-flex max-w-[16rem] items-center rounded-sm bg-cream-tint px-2 py-0.5 text-xs font-medium text-navy ring-1 ring-line hover:bg-white"
+            variant="chip"
             title={item.title}
           >
-            <span className="truncate">{item.title}</span>
-          </Link>
+            {item.title}
+          </EntityLink>
         </li>
       ))}
     </ul>

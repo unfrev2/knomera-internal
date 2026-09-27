@@ -1,33 +1,17 @@
 "use client";
 
-import {
-  Briefcase,
-  Building2,
-  CircleHelp,
-  Compass,
-  Crosshair,
-  FileSearch,
-  LayoutDashboard,
-  Lightbulb,
-  ListChecks,
-  LogOut,
-  Menu,
-  MessagesSquare,
-  Scale,
-  Target,
-  Users,
-  X,
-} from "lucide-react";
+import { GlobalSearch } from "@/components/layout/GlobalSearch";
+import { getEntityVisual } from "@/lib/domain/entity-visuals";
+import { LogOut, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { GlobalSearch } from "@/components/layout/GlobalSearch";
 
 type NavItem = {
   href: string;
   label: string;
-  icon: typeof LayoutDashboard;
+  visual: ReturnType<typeof getEntityVisual>;
   match: (path: string) => boolean;
 };
 
@@ -35,79 +19,79 @@ const NAV_ITEMS: NavItem[] = [
   {
     href: "/",
     label: "Home",
-    icon: LayoutDashboard,
+    visual: getEntityVisual("home"),
     match: (path) => path === "/" || path.startsWith("/overview"),
   },
   {
     href: "/focus",
     label: "Focus",
-    icon: Crosshair,
+    visual: getEntityVisual("focus"),
     match: (path) => path.startsWith("/focus"),
   },
   {
     href: "/strategy",
     label: "Strategy",
-    icon: Compass,
+    visual: getEntityVisual("strategy"),
     match: (path) => path.startsWith("/strategy"),
   },
   {
     href: "/problems",
     label: "Problems",
-    icon: CircleHelp,
+    visual: getEntityVisual("problem"),
     match: (path) => path.startsWith("/problems"),
   },
   {
     href: "/assumptions",
     label: "Assumptions",
-    icon: ListChecks,
+    visual: getEntityVisual("assumption"),
     match: (path) => path.startsWith("/assumptions"),
   },
   {
     href: "/discovery",
     label: "Discovery",
-    icon: MessagesSquare,
+    visual: getEntityVisual("discovery_session"),
     match: (path) => path.startsWith("/discovery"),
   },
   {
     href: "/organisations",
     label: "Organisations",
-    icon: Building2,
+    visual: getEntityVisual("organisation"),
     match: (path) => path.startsWith("/organisations"),
   },
   {
     href: "/contacts",
     label: "Contacts",
-    icon: Users,
+    visual: getEntityVisual("contact"),
     match: (path) => path.startsWith("/contacts"),
   },
   {
     href: "/decisions",
     label: "Decisions",
-    icon: Scale,
+    visual: getEntityVisual("decision"),
     match: (path) => path.startsWith("/decisions"),
   },
   {
     href: "/ideas",
     label: "Ideas",
-    icon: Lightbulb,
+    visual: getEntityVisual("idea"),
     match: (path) => path.startsWith("/ideas"),
   },
   {
     href: "/bets",
     label: "Bets",
-    icon: Target,
+    visual: getEntityVisual("bet"),
     match: (path) => path.startsWith("/bets"),
   },
   {
     href: "/commercial",
     label: "Commercial",
-    icon: Briefcase,
+    visual: getEntityVisual("opportunity"),
     match: (path) => path.startsWith("/commercial"),
   },
   {
     href: "/evidence",
     label: "Evidence",
-    icon: FileSearch,
+    visual: getEntityVisual("evidence"),
     match: (path) => path.startsWith("/evidence"),
   },
 ];
@@ -133,7 +117,7 @@ function NavLinks({
     <nav className="flex flex-col gap-0.5 px-3" aria-label="Main">
       {NAV_ITEMS.map((item) => {
         const active = item.match(pathname);
-        const Icon = item.icon;
+        const Icon = item.visual.icon;
         return (
           <Link
             key={item.href}
@@ -147,7 +131,13 @@ function NavLinks({
             ].join(" ")}
             aria-current={active ? "page" : undefined}
           >
-            <Icon className="size-[18px] shrink-0 opacity-80" aria-hidden />
+            <Icon
+              className={[
+                "size-[18px] shrink-0",
+                active ? item.visual.tone.accent : "opacity-80",
+              ].join(" ")}
+              aria-hidden
+            />
             {item.label}
           </Link>
         );

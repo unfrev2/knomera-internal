@@ -9,7 +9,7 @@ import {
   strengthMeta,
 } from "@/lib/labels";
 import type { Evidence } from "@/lib/types";
-import Link from "next/link";
+import { EntityLink } from "@/components/links/EntityType";
 
 export type EvidenceFeedProps = {
   items: Evidence[];
@@ -39,12 +39,13 @@ export function EvidenceFeed({
               <div className="min-w-0 flex-1">
                 <h3 className="text-sm font-semibold text-navy">{item.title}</h3>
                 {item.assumption_statement ? (
-                  <Link
+                  <EntityLink
+                    type="assumption"
                     href={`/assumptions/${item.assumption_id}`}
-                    className="mt-1 block text-sm text-blue hover:underline"
+                    className="mt-1 text-sm"
                   >
                     {item.assumption_statement}
-                  </Link>
+                  </EntityLink>
                 ) : null}
                 {item.description ? (
                   <p className="mt-2 text-sm leading-relaxed text-navy/75">

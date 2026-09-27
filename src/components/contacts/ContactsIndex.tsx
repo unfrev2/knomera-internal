@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/Input";
 import type { Contact, Organisation } from "@/lib/types";
-import Link from "next/link";
+import { EntityLink } from "@/components/links/EntityType";
 import { useState } from "react";
 
 export function ContactsIndex({
@@ -70,21 +70,23 @@ export function ContactsIndex({
               {contacts.map((contact) => (
                 <tr key={contact.id} className="hover:bg-cream-tint/40">
                   <td className="px-4 py-3">
-                    <Link
+                    <EntityLink
+                      type="contact"
                       href={`/contacts/${contact.id}`}
-                      className="font-medium text-navy hover:underline"
+                      className="text-sm"
                     >
                       {contact.name}
-                    </Link>
+                    </EntityLink>
                   </td>
                   <td className="px-4 py-3 text-navy/80">{contact.role ?? "—"}</td>
                   <td className="px-4 py-3">
-                    <Link
+                    <EntityLink
+                      type="organisation"
                       href={`/organisations/${contact.organisation_id}`}
-                      className="text-navy hover:underline"
+                      className="text-sm"
                     >
                       {contact.organisation_name ?? "Organisation"}
-                    </Link>
+                    </EntityLink>
                   </td>
                   <td className="px-4 py-3 text-navy/80">
                     {contact.discovery_count ?? 0}
