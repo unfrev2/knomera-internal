@@ -9,10 +9,268 @@ import { listEvidenceByAssumptionIds } from "../src/lib/db/evidence";
 import { searchWorkspaceObjects } from "../src/lib/db/search";
 import { getDb } from "../src/lib/db/client";
 import { createSessionToken, readSessionToken } from "../src/lib/auth/session";
+import type postgres from "postgres";
 
 async function assert(condition: boolean, message: string) {
   if (!condition) throw new Error(message);
   console.log(`  ✓ ${message}`);
+}
+
+/**
+ * Remove leftover smoke-test rows by naming conventions.
+ * Safe to run at start/end/on failure — only matches smoke prefixes/patterns.
+ */
+async function cleanupSmokeArtifacts(
+  sql: postgres.Sql,
+  workspaceId: string,
+): Promise<void> {
+  const assumptionIds = (
+    await sql<{ id: string }[]>`
+      SELECT id FROM assumptions
+      WHERE workspace_id = ${workspaceId}
+        AND (
+          statement ILIKE 'Smoke test assumption %'
+          OR statement ILIKE 'Research foundation smoke %'
+          OR statement ILIKE 'Stage 3 research smoke %'
+        )
+    `
+  ).map((r) => r.id);
+
+  const orgIds = (
+    await sql<{ id: string }[]>`
+      SELECT id FROM organisations
+      WHERE workspace_id = ${workspaceId}
+        AND (
+          name ILIKE 'Smoke Org %'
+          OR name ILIKE 'Smoke Competitor %'
+        )
+    `
+  ).map((r) => r.id);
+
+  const decisionIds = (
+    await sql<{ id: string }[]>`
+      SELECT id FROM decisions
+      WHERE workspace_id = ${workspaceId}
+        AND title ILIKE 'Smoke decision %'
+    `
+  ).map((r) => r.id);
+
+  const betIds = (
+    await sql<{ id: string }[]>`
+      SELECT id FROM bets
+      WHERE workspace_id = ${workspaceId}
+        AND title ILIKE 'Smoke bet %'
+    `
+  ).map((r) => r.id);
+
+  const opportunityIds = (
+    await sql<{ id: string }[]>`
+      SELECT id FROM opportunities
+      WHERE workspace_id = ${workspaceId}
+        AND title ILIKE 'Smoke opportunity %'
+    `
+  ).map((r) => r.id);
+
+  const runIds = (
+    await sql<{ id: string }[]>`
+      SELECT id FROM research_runs
+      WHERE workspace_id = ${workspaceId}
+        AND (notes ILIKE '%smoke%' OR notes ILIKE 'Smoke %')
+    `
+  ).map((r) => r.id);
+
+  const focusIds = (
+    await sql<{ id: string }[]>`
+      SELECT id FROM focus_items
+      WHERE workspace_id = ${workspaceId}
+        AND title ILIKE 'Smoke focus %'
+    `
+  ).map((r) => r.id);
+
+  const sessionIds = (
+    await sql<{ id: string }[]>`
+      SELECT id FROM discovery_sessions
+      WHERE workspace_id = ${workspaceId}
+        AND title ILIKE 'Smoke discovery%'
+    `
+  ).map((r) => r.id);
+
+  const sourceIds = (
+    await sql<{ id: string }[]>`
+      SELECT id FROM evidence_sources
+      WHERE workspace_id = ${workspaceId}
+        AND (
+          url ILIKE 'https://example.com/releases/smoke-%'
+          OR url ILIKE 'https://example.com/rumour-%'
+          OR description ILIKE '%smoke%'
+        )
+    `
+  ).map((r) => r.id);
+
+  const captureIds = (
+    await sql<{ id: string }[]>`
+      SELECT id FROM evidence_captures
+      WHERE workspace_id = ${workspaceId}
+        AND (
+          raw_text ILIKE '%smoke%'
+          OR raw_text ILIKE 'Ahmed capture smoke%'
+        )
+    `
+  ).map((r) => r.id);
+
+  if (runIds.length > 0) {
+    await sql`
+      DELETE FROM evidence
+      WHERE workspace_id = ${workspaceId}
+        AND research_finding_id IN (
+          SELECT id FROM research_findings
+          WHERE workspace_id = ${workspaceId}
+            AND research_run_id IN ${sql(runIds)}
+        )
+    `;
+    await sql`
+      DELETE FROM research_findings
+      WHERE workspace_id = ${workspaceId}
+        AND research_run_id IN ${sql(runIds)}
+    `;
+    await sql`
+      DELETE FROM research_runs
+      WHERE workspace_id = ${workspaceId}
+        AND id IN ${sql(runIds)}
+    `;
+  }
+
+  await sql`
+    DELETE FROM evidence
+    WHERE workspace_id = ${workspaceId}
+      AND (
+        title ILIKE '%smoke%'
+        OR title = 'Company signed a £20k pilot'
+        OR title = 'Smoke market research claim'
+        OR title = 'Competitor capacity planning announcement'
+      )
+  `;
+
+  if (assumptionIds.length > 0) {
+    await sql`
+      DELETE FROM evidence
+      WHERE workspace_id = ${workspaceId}
+        AND assumption_id IN ${sql(assumptionIds)}
+    `;
+    await sql`
+      DELETE FROM assumption_history
+      WHERE workspace_id = ${workspaceId}
+        AND assumption_id IN ${sql(assumptionIds)}
+    `;
+  }
+
+  if (captureIds.length > 0) {
+    await sql`
+      DELETE FROM evidence_captures
+      WHERE workspace_id = ${workspaceId}
+        AND id IN ${sql(captureIds)}
+    `;
+  }
+
+  if (focusIds.length > 0) {
+    await sql`
+      DELETE FROM focus_items
+      WHERE workspace_id = ${workspaceId}
+        AND id IN ${sql(focusIds)}
+    `;
+  }
+
+  if (opportunityIds.length > 0) {
+    await sql`
+      DELETE FROM opportunities
+      WHERE workspace_id = ${workspaceId}
+        AND id IN ${sql(opportunityIds)}
+    `;
+  }
+
+  if (betIds.length > 0) {
+    await sql`
+      DELETE FROM bets
+      WHERE workspace_id = ${workspaceId}
+        AND id IN ${sql(betIds)}
+    `;
+  }
+
+  if (decisionIds.length > 0) {
+    await sql`
+      DELETE FROM decisions
+      WHERE workspace_id = ${workspaceId}
+        AND id IN ${sql(decisionIds)}
+    `;
+  }
+
+  if (assumptionIds.length > 0) {
+    await sql`
+      DELETE FROM assumptions
+      WHERE workspace_id = ${workspaceId}
+        AND id IN ${sql(assumptionIds)}
+    `;
+  }
+
+  if (sessionIds.length > 0) {
+    await sql`
+      DELETE FROM discovery_sessions
+      WHERE workspace_id = ${workspaceId}
+        AND id IN ${sql(sessionIds)}
+    `;
+  }
+
+  if (orgIds.length > 0) {
+    await sql`
+      DELETE FROM organisations
+      WHERE workspace_id = ${workspaceId}
+        AND id IN ${sql(orgIds)}
+    `;
+  }
+
+  if (sourceIds.length > 0) {
+    await sql`
+      DELETE FROM evidence_sources
+      WHERE workspace_id = ${workspaceId}
+        AND id IN ${sql(sourceIds)}
+    `;
+  }
+
+  const historyIds = [
+    ...assumptionIds,
+    ...orgIds,
+    ...decisionIds,
+    ...betIds,
+    ...opportunityIds,
+    ...focusIds,
+    ...sessionIds,
+  ];
+  if (historyIds.length > 0) {
+    await sql`
+      DELETE FROM entity_history
+      WHERE workspace_id = ${workspaceId}
+        AND entity_id IN ${sql(historyIds)}
+    `;
+  }
+
+  const leftoverOrgs = await sql<{ count: number }[]>`
+    SELECT COUNT(*)::int AS count FROM organisations
+    WHERE workspace_id = ${workspaceId}
+      AND (name ILIKE 'Smoke Org %' OR name ILIKE 'Smoke Competitor %')
+  `;
+  const leftoverAssumptions = await sql<{ count: number }[]>`
+    SELECT COUNT(*)::int AS count FROM assumptions
+    WHERE workspace_id = ${workspaceId}
+      AND (
+        statement ILIKE 'Smoke test assumption %'
+        OR statement ILIKE 'Research foundation smoke %'
+        OR statement ILIKE 'Stage 3 research smoke %'
+      )
+  `;
+
+  console.log(
+    `  ✓ Smoke cleanup (orgs left=${leftoverOrgs[0]?.count ?? 0}, assumptions left=${leftoverAssumptions[0]?.count ?? 0})`,
+  );
 }
 
 async function main() {
@@ -45,13 +303,17 @@ async function main() {
   console.log("Workspace + seed");
   const workspace = await getWorkspaceBySlug("knomera");
   await assert(workspace.slug === "knomera", "Knomera workspace exists");
+  const sql = getDb();
+
+  console.log("Pre-run smoke cleanup");
+  await cleanupSmokeArtifacts(sql, workspace.id);
+
   const assumptions = await listAssumptions(workspace.id);
   await assert(assumptions.length === 122, `122 assumptions present (got ${assumptions.length})`);
   const categories = new Set(assumptions.map((a) => a.category));
   await assert(categories.size === 11, "11 categories present");
 
   console.log("Stage 1 migration tracking");
-  const sql = getDb();
   const migrationTable = await sql<{ exists: boolean }[]>`
     SELECT EXISTS (
       SELECT 1 FROM information_schema.tables
@@ -1194,12 +1456,23 @@ async function main() {
   await sql`DELETE FROM organisations WHERE id = ${competitorOrg[0].id}`;
   console.log("  ✓ Cleaned up Stage 3 research smoke data");
 
+  console.log("Post-run smoke cleanup");
+  await cleanupSmokeArtifacts(sql, workspace.id);
+
   console.log("\nAll smoke checks passed.");
   await sql.end({ timeout: 5 });
 }
 
 main().catch(async (error) => {
   console.error(error);
+  try {
+    const sql = getDb();
+    const workspace = await getWorkspaceBySlug("knomera");
+    console.log("Failure smoke cleanup");
+    await cleanupSmokeArtifacts(sql, workspace.id);
+  } catch (cleanupError) {
+    console.error("Smoke cleanup after failure also failed:", cleanupError);
+  }
   try {
     await getDb().end({ timeout: 5 });
   } catch {

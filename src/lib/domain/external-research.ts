@@ -16,6 +16,7 @@ import { AI_ACTOR_ID } from "@/lib/domain/actors";
 import {
   assumptionFocusedCompetitorQuery,
   competitorQueriesForOrganisation,
+  isWebResultAboutOrganisation,
   marketQueriesForAssumption,
 } from "@/lib/domain/research-queries";
 import { RESEARCH_LIMITS } from "@/lib/research/limits";
@@ -211,6 +212,7 @@ export async function runManualCompetitorSweep(options: {
   workspaceId: string;
   triggeredBy: string;
   assumptionId?: string | null;
+  organisationId?: string | null;
 }): Promise<ResearchRunResult> {
   if (!isWebResearchConfigured()) {
     throw new ProviderUnavailableError(
@@ -220,14 +222,20 @@ export async function runManualCompetitorSweep(options: {
   }
 
   const web = getWebResearchProvider();
+  const runNotes = options.organisationId
+    ? options.assumptionId
+      ? `Manual competitor sweep for organisation ${options.organisationId}, assumption ${options.assumptionId}`
+      : `Manual competitor sweep for organisation ${options.organisationId}`
+    : options.assumptionId
+      ? `Manual competitor sweep focused on assumption ${options.assumptionId}`
+      : "Manual competitor sweep";
+
   const run = await createResearchRun(options.workspaceId, {
     research_type: "competitor",
     trigger_type: "manual",
     triggered_by: options.triggeredBy,
     search_provider: web.providerId,
-    notes: options.assumptionId
-      ? `Manual competitor sweep focused on assumption ${options.assumptionId}`
-      : "Manual competitor sweep",
+    notes: runNotes,
   });
   await markResearchRunRunning(options.workspaceId, run.id);
 
@@ -243,7 +251,35 @@ export async function runManualCompetitorSweep(options: {
       listAnalysedCanonicalUrls(options.workspaceId),
     ]);
 
-    const competitors = orgs.filter((o) => o.organisation_type === "competitor");
+    let competitors = orgs.filter((o) => o.organisation_type === "competitor");
+    if (options.organisationId) {
+      const focused = orgs.find((o) => o.id === options.organisationId);
+      if (!focused) {
+        const failed = await finishRun(options.workspaceId, run.id, "failed", {
+          ...usageToRunFields(usageAcc),
+          error: "Organisation not found.",
+        });
+        return {
+          run: failed,
+          findingsCreated: 0,
+          message: "Organisation not found.",
+        };
+      }
+      if (focused.organisation_type !== "competitor") {
+        const completed = await finishRun(options.workspaceId, run.id, "completed", {
+          ...usageToRunFields(usageAcc),
+          notes:
+            "Organisation is not typed as Competitor. Set type to Competitor to research it.",
+        });
+        return {
+          run: completed,
+          findingsCreated: 0,
+          message: "Organisation is not a competitor.",
+        };
+      }
+      competitors = [focused];
+    }
+
     if (competitors.length === 0) {
       const completed = await finishRun(options.workspaceId, run.id, "completed", {
         ...usageToRunFields(usageAcc),
@@ -294,6 +330,14 @@ export async function runManualCompetitorSweep(options: {
         searchQueries += 1;
 
         for (const result of search.results) {
+          if (
+            !isWebResultAboutOrganisation(result, {
+              name: competitor.name,
+              website: competitor.website,
+            })
+          ) {
+            continue;
+          }
           const canonical = canonicaliseUrl(result.url);
           if (!canonical) continue;
           if (analysed.has(canonical)) continue;

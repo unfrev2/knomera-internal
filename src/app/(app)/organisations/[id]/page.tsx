@@ -8,6 +8,7 @@ import { getOrganisationDetail, listOrganisations } from "@/lib/db/organisations
 import { hrefForLinkable } from "@/lib/domain/linkable";
 import { formatDateShort } from "@/lib/format";
 import { ORGANISATION_TYPE_LABELS } from "@/lib/labels";
+import { isWebResearchConfigured } from "@/lib/research/providers/index";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -78,6 +79,7 @@ export default async function OrganisationDetailPage({
           <OrganisationDetailActions
             organisation={organisation}
             organisations={organisations}
+            webConfigured={isWebResearchConfigured()}
           />
         </div>
 

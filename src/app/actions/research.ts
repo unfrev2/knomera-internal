@@ -43,6 +43,22 @@ export async function runCompetitorSweepAction() {
   return result;
 }
 
+export async function runOrganisationCompetitorSweepAction(input: {
+  organisationId: string;
+}) {
+  const { user, workspace } = await requirePageContext();
+  const organisationId = z.string().uuid().parse(input.organisationId);
+  const result = await runManualCompetitorSweep({
+    workspaceId: workspace.id,
+    triggeredBy: user.id,
+    organisationId,
+  });
+  revalidatePath(`/organisations/${organisationId}`);
+  revalidatePath("/evidence");
+  revalidatePath("/evidence/research");
+  return result;
+}
+
 export async function runMarketSweepAction() {
   const { user, workspace } = await requirePageContext();
   const result = await runManualMarketSweep({
