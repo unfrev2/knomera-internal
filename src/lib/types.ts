@@ -247,6 +247,8 @@ export type Evidence = {
   evidence_capture_id?: string | null;
   research_finding_id?: string | null;
   reviewed_by?: string | null;
+  /** Model confidence from research claim extraction (0–1), when accepted from a finding. */
+  ai_confidence?: number | null;
   discovery_session_id?: string | null;
   bet_outcome_id?: string | null;
   opportunity_id?: string | null;

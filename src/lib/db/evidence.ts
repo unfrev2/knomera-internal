@@ -35,6 +35,7 @@ export type EvidenceInput = {
   ai_assisted?: boolean;
   research_finding_id?: string | null;
   reviewed_by?: string | null;
+  ai_confidence?: number | null;
 };
 
 export type EvidenceFilters = {
@@ -232,6 +233,7 @@ export async function listEvidenceForAssumption(
       e.created_by,
       e.created_at::text,
       e.ai_assisted,
+      e.ai_confidence,
       e.research_finding_id,
       e.reviewed_by,
       e.evidence_capture_id,
@@ -299,6 +301,7 @@ export async function listEvidence(
       e.created_by,
       e.created_at::text,
       e.ai_assisted,
+      e.ai_confidence,
       e.research_finding_id,
       e.reviewed_by,
       e.evidence_capture_id,
@@ -388,6 +391,7 @@ export async function getEvidence(
       e.created_by,
       e.created_at::text,
       e.ai_assisted,
+      e.ai_confidence,
       e.research_finding_id,
       e.reviewed_by,
       e.evidence_capture_id,
@@ -482,7 +486,8 @@ export async function createEvidence(
       evidence_capture_id,
       ai_assisted,
       research_finding_id,
-      reviewed_by
+      reviewed_by,
+      ai_confidence
     ) VALUES (
       ${workspaceId},
       ${input.assumption_id},
@@ -504,7 +509,8 @@ export async function createEvidence(
       ${input.evidence_capture_id ?? null},
       ${input.ai_assisted ?? false},
       ${input.research_finding_id ?? null},
-      ${input.reviewed_by ?? null}
+      ${input.reviewed_by ?? null},
+      ${input.ai_confidence ?? null}
     )
     RETURNING id
   `;
@@ -598,6 +604,7 @@ export async function listEvidenceByAssumptionIds(
       e.created_by,
       e.created_at::text,
       e.ai_assisted,
+      e.ai_confidence,
       e.research_finding_id,
       e.reviewed_by,
       e.evidence_capture_id,
@@ -631,6 +638,10 @@ export async function listEvidenceForOrganisation(
       e.evidence_date::text,
       e.created_by,
       e.created_at::text,
+      e.ai_assisted,
+      e.ai_confidence,
+      e.research_finding_id,
+      e.reviewed_by,
       e.discovery_session_id,
       e.bet_outcome_id,
       e.opportunity_id,
@@ -685,6 +696,10 @@ export async function listEvidenceForContact(
       e.evidence_date::text,
       e.created_by,
       e.created_at::text,
+      e.ai_assisted,
+      e.ai_confidence,
+      e.research_finding_id,
+      e.reviewed_by,
       e.discovery_session_id,
       e.organisation_id,
       e.contact_id,

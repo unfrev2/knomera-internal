@@ -31,17 +31,27 @@ export function EvidenceProvenance({
               →
             </span>
           ) : null}
-          {part.href ? (
+          {part.href && part.external ? (
+            <a
+              href={part.href}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex max-w-full items-center gap-1.5 font-medium text-navy hover:underline"
+            >
+              <EntityTypeMark type={part.entityType} size="sm" />
+              <span className="min-w-0 truncate">
+                {part.label}
+                {" ↗"}
+              </span>
+            </a>
+          ) : part.href ? (
             <EntityLink
               type={part.entityType}
               href={part.href}
-              target={part.external ? "_blank" : undefined}
-              rel={part.external ? "noreferrer" : undefined}
               className="text-xs"
               markSize="sm"
             >
               {part.label}
-              {part.external ? " ↗" : ""}
             </EntityLink>
           ) : (
             <span className="inline-flex items-center gap-1.5 font-medium text-navy">

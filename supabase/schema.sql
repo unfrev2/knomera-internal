@@ -1369,6 +1369,8 @@ ALTER TABLE evidence
   ADD COLUMN IF NOT EXISTS research_finding_id UUID;
 ALTER TABLE evidence
   ADD COLUMN IF NOT EXISTS reviewed_by TEXT;
+ALTER TABLE evidence
+  ADD COLUMN IF NOT EXISTS ai_confidence NUMERIC(4, 3);
 
 CREATE TABLE IF NOT EXISTS ai_usage_events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

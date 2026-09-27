@@ -49,13 +49,14 @@ export function evidenceProvenanceParts(item: Evidence): ProvenancePart[] {
       href: item.source_url ?? undefined,
       external: Boolean(item.source_url),
     });
-  } else if (
-    !item.organisation_id &&
-    !item.contact_id &&
-    !item.discovery_session_id &&
-    item.source
-  ) {
-    parts.push({ label: item.source, entityType: "evidence_source" });
+  } else if (item.source) {
+    // Legacy free-text source — still show when a structured source is missing.
+    parts.push({
+      label: item.source,
+      entityType: "evidence_source",
+      href: item.source_url ?? undefined,
+      external: Boolean(item.source_url),
+    });
   }
 
   return parts;

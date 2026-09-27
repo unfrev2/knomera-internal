@@ -5,6 +5,11 @@ import {
 } from "@/lib/labels";
 import type { Evidence } from "@/lib/types";
 
+function formatAiConfidence(value: number | null | undefined): string | null {
+  if (value == null || Number.isNaN(Number(value))) return null;
+  return `${Math.round(Number(value) * 100)}%`;
+}
+
 /**
  * Authorship + class line for evidence rows.
  * Distinguishes direct vs secondary vs internal without colour alone.
@@ -16,6 +21,7 @@ export function EvidenceAuthorship({ evidence }: { evidence: Evidence }) {
   const reviewer = evidence.reviewed_by
     ? displayName(evidence.reviewed_by)
     : null;
+  const aiConfidence = formatAiConfidence(evidence.ai_confidence);
 
   if (evidence.evidence_class === "secondary") {
     return (
@@ -25,6 +31,10 @@ export function EvidenceAuthorship({ evidence }: { evidence: Evidence }) {
         </span>
         <span className="mx-1.5 text-muted-light">·</span>
         {author}
+        {evidence.ai_assisted || evidence.research_finding_id
+          ? " · AI-assisted"
+          : ""}
+        {aiConfidence ? ` · AI confidence ${aiConfidence}` : ""}
         {reviewer ? ` · Reviewed by ${reviewer}` : ""}
       </p>
     );
@@ -37,6 +47,7 @@ export function EvidenceAuthorship({ evidence }: { evidence: Evidence }) {
         <span className="mx-1.5 text-muted-light">·</span>
         Added by {author}
         {evidence.ai_assisted ? " · AI-assisted" : ""}
+        {aiConfidence ? ` · AI confidence ${aiConfidence}` : ""}
       </p>
     );
   }
@@ -47,6 +58,7 @@ export function EvidenceAuthorship({ evidence }: { evidence: Evidence }) {
       <span className="mx-1.5 text-muted-light">·</span>
       Added by {author}
       {evidence.ai_assisted ? " · AI-assisted" : ""}
+      {aiConfidence ? ` · AI confidence ${aiConfidence}` : ""}
       <span className="sr-only"> ({classLabel})</span>
     </p>
   );

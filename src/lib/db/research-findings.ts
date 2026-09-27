@@ -394,10 +394,11 @@ export async function acceptResearchFinding(
     evidence_date: input.evidence_date,
     organisation_id: finding.organisation_id,
     evidence_source_id: primarySource?.evidence_source_id ?? null,
-    source: primarySource?.title ?? null,
+    source: primarySource?.title ?? primarySource?.url ?? null,
     research_finding_id: finding.id,
     reviewed_by: reviewedBy,
-    ai_assisted: false,
+    ai_assisted: true,
+    ai_confidence: finding.ai_confidence,
   });
 
   const sql = getDb();
