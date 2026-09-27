@@ -118,7 +118,13 @@ function FindingCard({ finding }: { finding: ResearchFindingDetail }) {
       ? "competitor_research"
       : "market_research";
 
-  const [title, setTitle] = useState(finding.claim.slice(0, 120));
+  const [title, setTitle] = useState(() => {
+    const claim = finding.claim.trim();
+    if (claim.length <= 200) return claim;
+    const truncated = claim.slice(0, 200);
+    const lastSpace = truncated.lastIndexOf(" ");
+    return (lastSpace > 120 ? truncated.slice(0, lastSpace) : truncated).trim();
+  });
   const [description, setDescription] = useState(finding.summary ?? "");
   const [assumptionId, setAssumptionId] = useState(
     primaryAssumption?.assumption_id ?? "",
@@ -310,6 +316,7 @@ function FindingCard({ finding }: { finding: ResearchFindingDetail }) {
                 <Input
                   id={`title-${finding.id}`}
                   value={title}
+                  maxLength={200}
                   onChange={(e) => setTitle(e.target.value)}
                 />
               </Field>
