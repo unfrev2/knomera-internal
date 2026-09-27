@@ -22,6 +22,7 @@ import {
   RESEARCH_FINDING_STATUS_LABELS,
   RESEARCH_TYPE_LABELS,
   displayName,
+  searchProviderLabel,
 } from "@/lib/labels";
 import { rethrowNavigation } from "@/lib/navigation";
 import type { ResearchRun } from "@/lib/types";
@@ -88,11 +89,7 @@ export function ResearchQueueActions({
         </Button>
       </div>
       {!webConfigured ? (
-        <p className="text-sm text-muted">
-          External research needs{" "}
-          <code className="text-xs">WEB_RESEARCH_PROVIDER=tavily</code> and{" "}
-          <code className="text-xs">WEB_RESEARCH_API_KEY</code>.
-        </p>
+        <p className="text-sm text-muted">Web research is not configured.</p>
       ) : (
         <p className="text-sm text-muted">
           Findings land here for review. Nothing is written to Evidence until you
@@ -464,6 +461,7 @@ export function ResearchRunsList({ runs }: { runs: ResearchRun[] }) {
             <th className="px-4 py-3 font-medium">Type</th>
             <th className="px-4 py-3 font-medium">Status</th>
             <th className="px-4 py-3 font-medium">Findings</th>
+            <th className="px-4 py-3 font-medium">Search provider</th>
             <th className="px-4 py-3 font-medium">Notes</th>
           </tr>
         </thead>
@@ -478,6 +476,9 @@ export function ResearchRunsList({ runs }: { runs: ResearchRun[] }) {
               </td>
               <td className="px-4 py-3">{run.status}</td>
               <td className="px-4 py-3 tabular-nums">{run.findings_created}</td>
+              <td className="px-4 py-3 text-muted">
+                {searchProviderLabel(run.search_provider)}
+              </td>
               <td className="px-4 py-3 text-muted">
                 {run.error ?? run.notes ?? "—"}
               </td>

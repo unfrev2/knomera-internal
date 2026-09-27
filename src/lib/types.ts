@@ -302,6 +302,8 @@ export type ResearchRun = {
   started_at: string | null;
   completed_at: string | null;
   triggered_by: string | null;
+  /** Active WebResearchProvider.providerId when the run was created. */
+  search_provider: string | null;
   assumptions_considered: number;
   sources_examined: number;
   findings_created: number;

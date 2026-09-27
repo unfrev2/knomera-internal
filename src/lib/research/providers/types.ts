@@ -116,7 +116,11 @@ export type WebFetchResult = {
 };
 
 export interface WebResearchProvider {
-  readonly name: string;
+  /**
+   * Stable provider identifier recorded on research_runs.search_provider
+   * (e.g. "tavily", "openai", "exa"). Not inferred from env key names.
+   */
+  readonly providerId: string;
   search(request: WebSearchRequest): Promise<{
     results: WebSearchResult[];
     usage: UsageStats;

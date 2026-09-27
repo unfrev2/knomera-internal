@@ -109,6 +109,17 @@ export const RESEARCH_RUN_STATUS_LABELS: Record<ResearchRunStatus, string> = {
   failed: "Failed",
 };
 
+/** Human label for research_runs.search_provider (diagnostics only). */
+export function searchProviderLabel(providerId: string | null | undefined): string {
+  if (!providerId) return "—";
+  const known: Record<string, string> = {
+    tavily: "Tavily",
+    openai: "OpenAI",
+    exa: "Exa",
+  };
+  return known[providerId] ?? providerId;
+}
+
 export const RESEARCH_FINDING_STATUS_LABELS: Record<
   ResearchFindingStatus,
   string

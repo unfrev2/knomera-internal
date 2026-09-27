@@ -1243,6 +1243,7 @@ CREATE TABLE IF NOT EXISTS research_runs (
   input_tokens INTEGER NOT NULL DEFAULT 0,
   output_tokens INTEGER NOT NULL DEFAULT 0,
   estimated_cost NUMERIC(12, 6),
+  search_provider TEXT,
   error TEXT,
   notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),

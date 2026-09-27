@@ -215,14 +215,16 @@ export async function runManualCompetitorSweep(options: {
   if (!isWebResearchConfigured()) {
     throw new ProviderUnavailableError(
       "web-research",
-      "Configure WEB_RESEARCH_PROVIDER=tavily and WEB_RESEARCH_API_KEY first.",
+      "Web research is not configured.",
     );
   }
 
+  const web = getWebResearchProvider();
   const run = await createResearchRun(options.workspaceId, {
     research_type: "competitor",
     trigger_type: "manual",
     triggered_by: options.triggeredBy,
+    search_provider: web.providerId,
     notes: options.assumptionId
       ? `Manual competitor sweep focused on assumption ${options.assumptionId}`
       : "Manual competitor sweep",
@@ -269,7 +271,6 @@ export async function runManualCompetitorSweep(options: {
         : selectAssumptionsForManualMarket(assumptions, 40),
     );
 
-    const web = getWebResearchProvider();
     const sourceCandidates: SourceCandidate[] = [];
 
     for (const competitor of competitors) {
@@ -377,14 +378,16 @@ export async function runManualMarketSweep(options: {
   if (!isWebResearchConfigured()) {
     throw new ProviderUnavailableError(
       "web-research",
-      "Configure WEB_RESEARCH_PROVIDER=tavily and WEB_RESEARCH_API_KEY first.",
+      "Web research is not configured.",
     );
   }
 
+  const web = getWebResearchProvider();
   const run = await createResearchRun(options.workspaceId, {
     research_type: options.assumptionId ? "assumption" : "market",
     trigger_type: "manual",
     triggered_by: options.triggeredBy,
+    search_provider: web.providerId,
     notes: options.assumptionId
       ? `Manual assumption research for ${options.assumptionId}`
       : "Manual market sweep",
@@ -418,7 +421,6 @@ export async function runManualMarketSweep(options: {
       };
     }
 
-    const web = getWebResearchProvider();
     const sourceCandidates: SourceCandidate[] = [];
 
     for (const assumption of selected) {

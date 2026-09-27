@@ -22,10 +22,10 @@ function emptyUsage(): UsageStats {
 }
 
 /**
- * Tavily web search — set WEB_RESEARCH_PROVIDER=tavily and WEB_RESEARCH_API_KEY.
+ * Tavily web search — selected when WEB_RESEARCH_PROVIDER=tavily.
  */
 export class TavilyWebResearchProvider implements WebResearchProvider {
-  readonly name = "tavily";
+  readonly providerId = "tavily";
 
   constructor(private readonly apiKey: string) {}
 
@@ -65,7 +65,8 @@ export class TavilyWebResearchProvider implements WebResearchProvider {
         typeof payload.detail === "string"
           ? payload.detail
           : payload.detail?.error ?? `Tavily search failed (${response.status})`;
-      throw new Error(detail);
+      console.error("[tavily]", detail);
+      throw new Error("Web research failed.");
     }
 
     const results: WebSearchResult[] = (payload.results ?? [])
@@ -129,42 +130,38 @@ export class TavilyWebResearchProvider implements WebResearchProvider {
   }
 }
 
+/**
+ * Factory: only this module selects the concrete WebResearchProvider.
+ * Default provider is tavily when WEB_RESEARCH_PROVIDER is unset.
+ */
 export function createWebResearchProviderFromEnv(): WebResearchProvider {
-  const provider = process.env.WEB_RESEARCH_PROVIDER?.trim().toLowerCase();
+  const provider =
+    process.env.WEB_RESEARCH_PROVIDER?.trim().toLowerCase() || "tavily";
   const apiKey = process.env.WEB_RESEARCH_API_KEY?.trim();
 
-  if (provider === "tavily") {
-    if (!apiKey) {
-      throw new ProviderUnavailableError(
-        "tavily",
-        "WEB_RESEARCH_API_KEY is required when WEB_RESEARCH_PROVIDER=tavily.",
-      );
+  switch (provider) {
+    case "tavily": {
+      if (!apiKey) {
+        throw new ProviderUnavailableError(
+          "tavily",
+          "WEB_RESEARCH_API_KEY is required when WEB_RESEARCH_PROVIDER=tavily.",
+        );
+      }
+      return new TavilyWebResearchProvider(apiKey);
     }
-    return new TavilyWebResearchProvider(apiKey);
+    default:
+      throw new ProviderUnavailableError(
+        provider,
+        `Unsupported web research provider: ${provider}`,
+      );
   }
-
-  if (provider && provider !== "stub") {
-    throw new ProviderUnavailableError(
-      provider,
-      `Unknown WEB_RESEARCH_PROVIDER "${provider}". Supported: tavily, stub.`,
-    );
-  }
-
-  // Allow Tavily when only the API key is set.
-  if (apiKey && (!provider || provider === "tavily")) {
-    return new TavilyWebResearchProvider(apiKey);
-  }
-
-  throw new ProviderUnavailableError(
-    "web-research",
-    "Set WEB_RESEARCH_PROVIDER=tavily and WEB_RESEARCH_API_KEY to enable external research.",
-  );
 }
 
 export function isWebResearchConfigured(): boolean {
-  const provider = process.env.WEB_RESEARCH_PROVIDER?.trim().toLowerCase();
-  const apiKey = process.env.WEB_RESEARCH_API_KEY?.trim();
-  if (provider === "tavily" && apiKey) return true;
-  if (apiKey && (!provider || provider === "tavily")) return true;
-  return false;
+  try {
+    createWebResearchProviderFromEnv();
+    return true;
+  } catch {
+    return false;
+  }
 }

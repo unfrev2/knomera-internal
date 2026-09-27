@@ -125,7 +125,7 @@ export class OpenAiAnalysisProvider implements AiAnalysisProvider {
  * Stub web research provider.
  */
 export class StubWebResearchProvider implements WebResearchProvider {
-  readonly name = "stub-web";
+  readonly providerId = "stub";
 
   async search(_request: WebSearchRequest): Promise<{
     results: never[];
@@ -133,8 +133,8 @@ export class StubWebResearchProvider implements WebResearchProvider {
   }> {
     void _request;
     throw new ProviderUnavailableError(
-      this.name,
-      "Web research is not configured (set WEB_RESEARCH_PROVIDER=tavily and WEB_RESEARCH_API_KEY).",
+      this.providerId,
+      "Web research is not configured.",
     );
   }
 }

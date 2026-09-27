@@ -12,6 +12,7 @@ export type CreateResearchRunInput = {
   research_type: ResearchType;
   trigger_type?: ResearchTriggerType;
   triggered_by?: string | null;
+  search_provider?: string | null;
   notes?: string | null;
 };
 
@@ -32,6 +33,7 @@ export type UpdateResearchRunUsageInput = {
 function mapRun(row: ResearchRun): ResearchRun {
   return {
     ...row,
+    search_provider: row.search_provider ?? null,
     estimated_cost:
       row.estimated_cost === null || row.estimated_cost === undefined
         ? null
@@ -51,6 +53,7 @@ export async function createResearchRun(
       trigger_type,
       status,
       triggered_by,
+      search_provider,
       notes
     ) VALUES (
       ${workspaceId},
@@ -58,6 +61,7 @@ export async function createResearchRun(
       ${input.trigger_type ?? "manual"},
       'queued',
       ${input.triggered_by ?? null},
+      ${input.search_provider ?? null},
       ${input.notes ?? null}
     )
     RETURNING
@@ -69,6 +73,7 @@ export async function createResearchRun(
       started_at::text,
       completed_at::text,
       triggered_by,
+      search_provider,
       assumptions_considered,
       sources_examined,
       findings_created,
@@ -105,6 +110,7 @@ export async function markResearchRunRunning(
       started_at::text,
       completed_at::text,
       triggered_by,
+      search_provider,
       assumptions_considered,
       sources_examined,
       findings_created,
@@ -153,6 +159,7 @@ export async function completeResearchRun(
       started_at::text,
       completed_at::text,
       triggered_by,
+      search_provider,
       assumptions_considered,
       sources_examined,
       findings_created,
@@ -184,6 +191,7 @@ export async function getResearchRun(
       started_at::text,
       completed_at::text,
       triggered_by,
+      search_provider,
       assumptions_considered,
       sources_examined,
       findings_created,
@@ -218,6 +226,7 @@ export async function listResearchRuns(
       started_at::text,
       completed_at::text,
       triggered_by,
+      search_provider,
       assumptions_considered,
       sources_examined,
       findings_created,
