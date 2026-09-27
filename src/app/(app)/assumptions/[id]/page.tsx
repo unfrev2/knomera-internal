@@ -1,4 +1,5 @@
 import { AssumptionDetailActions } from "@/components/assumptions/AssumptionDetailActions";
+import { AssumptionResearchPanel } from "@/components/assumptions/AssumptionResearchPanel";
 import { ConfidencePrompt } from "@/components/assumptions/ConfidencePrompt";
 import { EvidenceTimeline } from "@/components/assumptions/EvidenceTimeline";
 import { HistoryList } from "@/components/history/HistoryList";
@@ -16,6 +17,7 @@ import { listDiscoverySessionsForAssumption } from "@/lib/db/discovery";
 import { listDecisionsForAssumption } from "@/lib/db/decisions";
 import { listBetsForAssumption } from "@/lib/db/bets";
 import { listIdeasForAssumption } from "@/lib/db/ideas";
+import { listPendingFindingsForAssumption } from "@/lib/db/research-findings";
 import { hrefForLinkable } from "@/lib/domain/linkable";
 import { suggestConfidence } from "@/lib/domain/suggested-confidence";
 import { formatDate, formatDateShort } from "@/lib/format";
@@ -24,6 +26,7 @@ import {
   CONFIDENCE_LABELS,
   displayName,
 } from "@/lib/labels";
+import { isWebResearchConfigured } from "@/lib/research/providers/index";
 import { notFound } from "next/navigation";
 
 export default async function AssumptionDetailPage({
@@ -52,6 +55,9 @@ export default async function AssumptionDetailPage({
     [];
   let relatedBets: Awaited<ReturnType<typeof listBetsForAssumption>> = [];
   let relatedIdeas: Awaited<ReturnType<typeof listIdeasForAssumption>> = [];
+  let pendingFindings: Awaited<
+    ReturnType<typeof listPendingFindingsForAssumption>
+  > = [];
 
   try {
     assumption = await getAssumption(workspace.id, id);
@@ -67,6 +73,7 @@ export default async function AssumptionDetailPage({
       relatedDecisions,
       relatedBets,
       relatedIdeas,
+      pendingFindings,
     ] = await Promise.all([
       listEvidenceForAssumption(workspace.id, id),
       listAssumptionHistory(workspace.id, id),
@@ -77,6 +84,7 @@ export default async function AssumptionDetailPage({
       listDecisionsForAssumption(workspace.id, id),
       listBetsForAssumption(workspace.id, id),
       listIdeasForAssumption(workspace.id, id),
+      listPendingFindingsForAssumption(workspace.id, id),
     ]);
   } catch {
     return (
@@ -89,6 +97,14 @@ export default async function AssumptionDetailPage({
   }
 
   const suggestion = suggestConfidence(evidence);
+  const directCount = evidence.filter((e) => e.evidence_class === "direct").length;
+  const secondaryCount = evidence.filter(
+    (e) => e.evidence_class === "secondary",
+  ).length;
+  const supportingCount = evidence.filter((e) => e.direction === "supports").length;
+  const challengingCount = evidence.filter(
+    (e) => e.direction === "challenges",
+  ).length;
 
   return (
     <PageFrame width="narrow">
@@ -195,6 +211,16 @@ export default async function AssumptionDetailPage({
         <h2 className="text-lg font-semibold text-navy">Evidence</h2>
         <EvidenceTimeline items={evidence} sourceOptions={sourceOptions} />
       </section>
+
+      <AssumptionResearchPanel
+        assumptionId={assumption.id}
+        pendingFindings={pendingFindings}
+        directCount={directCount}
+        secondaryCount={secondaryCount}
+        supportingCount={supportingCount}
+        challengingCount={challengingCount}
+        webConfigured={isWebResearchConfigured()}
+      />
 
       <LinkedObjectList
         title="Related problems"

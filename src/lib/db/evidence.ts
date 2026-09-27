@@ -33,6 +33,8 @@ export type EvidenceInput = {
   new_source?: NewEvidenceSourceInput | null;
   evidence_capture_id?: string | null;
   ai_assisted?: boolean;
+  research_finding_id?: string | null;
+  reviewed_by?: string | null;
 };
 
 export type EvidenceFilters = {
@@ -230,6 +232,8 @@ export async function listEvidenceForAssumption(
       e.created_by,
       e.created_at::text,
       e.ai_assisted,
+      e.research_finding_id,
+      e.reviewed_by,
       e.evidence_capture_id,
       e.discovery_session_id,
       e.bet_outcome_id,
@@ -295,6 +299,8 @@ export async function listEvidence(
       e.created_by,
       e.created_at::text,
       e.ai_assisted,
+      e.research_finding_id,
+      e.reviewed_by,
       e.evidence_capture_id,
       e.discovery_session_id,
       e.bet_outcome_id,
@@ -382,6 +388,8 @@ export async function getEvidence(
       e.created_by,
       e.created_at::text,
       e.ai_assisted,
+      e.research_finding_id,
+      e.reviewed_by,
       e.evidence_capture_id,
       e.discovery_session_id,
       e.bet_outcome_id,
@@ -472,7 +480,9 @@ export async function createEvidence(
       contact_id,
       evidence_source_id,
       evidence_capture_id,
-      ai_assisted
+      ai_assisted,
+      research_finding_id,
+      reviewed_by
     ) VALUES (
       ${workspaceId},
       ${input.assumption_id},
@@ -492,7 +502,9 @@ export async function createEvidence(
       ${attribution.contact_id},
       ${attribution.evidence_source_id},
       ${input.evidence_capture_id ?? null},
-      ${input.ai_assisted ?? false}
+      ${input.ai_assisted ?? false},
+      ${input.research_finding_id ?? null},
+      ${input.reviewed_by ?? null}
     )
     RETURNING id
   `;
@@ -586,6 +598,8 @@ export async function listEvidenceByAssumptionIds(
       e.created_by,
       e.created_at::text,
       e.ai_assisted,
+      e.research_finding_id,
+      e.reviewed_by,
       e.evidence_capture_id,
       e.discovery_session_id,
       e.organisation_id,

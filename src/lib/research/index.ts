@@ -6,6 +6,7 @@ export {
   setAiAnalysisProvider,
   setWebResearchProvider,
   emptyUsageStats,
+  isWebResearchConfigured,
 } from "@/lib/research/providers/index";
 
 export { ProviderUnavailableError } from "@/lib/research/providers/types";

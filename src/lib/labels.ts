@@ -154,6 +154,7 @@ export const ORGANISATION_TYPE_LABELS: Record<OrganisationType, string> = {
   prospect: "Prospect",
   customer: "Customer",
   partner: "Partner",
+  competitor: "Competitor",
   other: "Other",
 };
 

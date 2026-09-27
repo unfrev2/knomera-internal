@@ -10,7 +10,11 @@ import type {
 } from "@/lib/research/providers/types";
 import { ProviderUnavailableError } from "@/lib/research/providers/types";
 import { isOpenAiConfigured } from "@/lib/ai/config";
-import { structuredExtraction } from "@/lib/ai/capabilities";
+import {
+  extractResearchClaimsStructured,
+  structuredExtraction,
+} from "@/lib/ai/capabilities";
+import { createWebResearchProviderFromEnv } from "@/lib/research/providers/web";
 
 const emptyUsage = (): UsageStats => ({
   inputTokens: 0,
@@ -42,15 +46,13 @@ export class StubAiAnalysisProvider implements AiAnalysisProvider {
     void _request;
     throw new ProviderUnavailableError(
       this.name,
-      "AI research extraction is not configured yet.",
+      "AI research extraction is not configured (set OPENAI_API_KEY).",
     );
   }
 }
 
 /**
- * OpenAI-backed private-data AI analysis (Stage 2).
- * Domain code should prefer matchEvidenceToAssumptions() which adds
- * deterministic retrieval and reasoning fallback.
+ * OpenAI-backed AI analysis (evidence matching + research claim extraction).
  */
 export class OpenAiAnalysisProvider implements AiAnalysisProvider {
   readonly name = "openai";
@@ -92,18 +94,35 @@ export class OpenAiAnalysisProvider implements AiAnalysisProvider {
   }
 
   async extractResearchClaims(
-    _request: ResearchClaimExtractionRequest,
+    request: ResearchClaimExtractionRequest,
   ): Promise<ResearchClaimExtractionResponse> {
-    void _request;
-    throw new ProviderUnavailableError(
-      this.name,
-      "Research claim extraction arrives in Stage 3.",
-    );
+    const result = await extractResearchClaimsStructured({
+      sourceTitle: request.sourceTitle,
+      sourceUrl: request.sourceUrl,
+      excerpts: request.excerpts,
+      organisationName: request.organisationName,
+      candidates: request.candidateAssumptions,
+      role: "fast",
+    });
+    return {
+      claims: result.output.claims.map((c) => ({
+        claim: c.claim,
+        summary: c.summary,
+        direction: c.direction,
+        candidateAssumptionId: c.candidate_assumption_id,
+        relevance: c.relevance,
+        reason: c.reason,
+        aiConfidence: c.ai_confidence,
+        suggestedStrength: c.suggested_strength,
+        useful: c.useful,
+      })),
+      usage: result.usage,
+    };
   }
 }
 
 /**
- * Stub web research provider — Stage 3+.
+ * Stub web research provider.
  */
 export class StubWebResearchProvider implements WebResearchProvider {
   readonly name = "stub-web";
@@ -115,13 +134,13 @@ export class StubWebResearchProvider implements WebResearchProvider {
     void _request;
     throw new ProviderUnavailableError(
       this.name,
-      "Web research is not configured yet (Stage 3+).",
+      "Web research is not configured (set WEB_RESEARCH_PROVIDER=tavily and WEB_RESEARCH_API_KEY).",
     );
   }
 }
 
 let aiProviderOverride: AiAnalysisProvider | null = null;
-let webProvider: WebResearchProvider = new StubWebResearchProvider();
+let webProviderOverride: WebResearchProvider | null = null;
 
 export function getAiAnalysisProvider(): AiAnalysisProvider {
   if (aiProviderOverride) return aiProviderOverride;
@@ -130,7 +149,12 @@ export function getAiAnalysisProvider(): AiAnalysisProvider {
 }
 
 export function getWebResearchProvider(): WebResearchProvider {
-  return webProvider;
+  if (webProviderOverride) return webProviderOverride;
+  try {
+    return createWebResearchProviderFromEnv();
+  } catch {
+    return new StubWebResearchProvider();
+  }
 }
 
 /** Test/override hook. */
@@ -139,9 +163,20 @@ export function setAiAnalysisProvider(provider: AiAnalysisProvider): void {
 }
 
 export function setWebResearchProvider(provider: WebResearchProvider): void {
-  webProvider = provider;
+  webProviderOverride = provider;
 }
 
 export function emptyUsageStats(): UsageStats {
   return emptyUsage();
 }
+
+export function isWebResearchConfigured(): boolean {
+  try {
+    createWebResearchProviderFromEnv();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export { createWebResearchProviderFromEnv } from "@/lib/research/providers/web";

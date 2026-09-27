@@ -1,4 +1,5 @@
 import { EvidenceFeed } from "@/components/evidence/EvidenceFeed";
+import { EvidenceAreaTabs } from "@/components/evidence/EvidenceAreaTabs";
 import { PageAlert, PageFrame, PageHeader } from "@/components/layout/Page";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -122,6 +123,7 @@ export default async function EvidencePage({
         title="Evidence"
         description="All workspace evidence, newest first."
       />
+      <EvidenceAreaTabs currentPath="/evidence" />
 
       {dbError ? <PageAlert>{dbError}</PageAlert> : null}
 

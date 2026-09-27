@@ -1,10 +1,11 @@
 import { EvidenceItemActions } from "@/components/assumptions/EvidenceItemActions";
+import { EvidenceAuthorship } from "@/components/evidence/EvidenceAuthorship";
 import { EvidenceProvenance } from "@/components/evidence/EvidenceProvenance";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatDate } from "@/lib/format";
 import {
-  displayName,
+  EVIDENCE_CLASS_LABELS,
   EVIDENCE_TYPE_LABELS,
   strengthMeta,
 } from "@/lib/labels";
@@ -61,6 +62,10 @@ export function EvidenceFeed({
               </time>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
+              <Badge
+                variant="neutral"
+                label={EVIDENCE_CLASS_LABELS[item.evidence_class]}
+              />
               <Badge variant="neutral" label={EVIDENCE_TYPE_LABELS[item.evidence_type]} />
               <Badge variant="direction" value={item.direction} />
               <Badge
@@ -71,10 +76,7 @@ export function EvidenceFeed({
             <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
               <div className="space-y-1">
                 <EvidenceProvenance evidence={item} />
-                <p className="text-xs text-muted">
-                  Added by {displayName(item.created_by)}
-                  {item.ai_assisted ? " · AI-assisted" : ""}
-                </p>
+                <EvidenceAuthorship evidence={item} />
               </div>
               <EvidenceItemActions
                 evidence={item}

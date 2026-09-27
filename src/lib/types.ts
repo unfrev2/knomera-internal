@@ -101,6 +101,7 @@ export const ORGANISATION_TYPES = [
   "prospect",
   "customer",
   "partner",
+  "competitor",
   "other",
 ] as const;
 
@@ -244,6 +245,8 @@ export type Evidence = {
   created_at: string;
   ai_assisted?: boolean;
   evidence_capture_id?: string | null;
+  research_finding_id?: string | null;
+  reviewed_by?: string | null;
   discovery_session_id?: string | null;
   bet_outcome_id?: string | null;
   opportunity_id?: string | null;

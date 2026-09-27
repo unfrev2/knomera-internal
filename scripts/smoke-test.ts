@@ -988,6 +988,212 @@ async function main() {
     WHERE raw_text = ${durationQuery} OR raw_text = ${"Ahmed capture smoke"}`;
   console.log("  ✓ Cleaned up Stage 2 matching smoke data");
 
+  console.log("Stage 3 manual external research");
+  await assert(
+    migrations.some((row) => row.version === "20250927120000"),
+    "Stage 3 manual research migration recorded",
+  );
+  const competitorEnum = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1 FROM pg_enum e
+      JOIN pg_type t ON t.oid = e.enumtypid
+      WHERE t.typname = 'organisation_type' AND e.enumlabel = 'competitor'
+    ) AS exists
+  `;
+  await assert(competitorEnum[0]?.exists === true, "competitor organisation type exists");
+
+  const researchCols = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'evidence'
+        AND column_name = 'research_finding_id'
+    ) AS exists
+  `;
+  await assert(researchCols[0]?.exists === true, "evidence.research_finding_id exists");
+
+  const {
+    insertPendingResearchFinding,
+    acceptResearchFinding,
+    rejectResearchFinding,
+    getResearchFinding,
+  } = await import("../src/lib/db/research-findings");
+  const researchDb = await import("../src/lib/db/research");
+  const { assertSafePublicHttpUrl } = await import(
+    "../src/lib/research/url-safety"
+  );
+  const { marketQueriesForAssumption } = await import(
+    "../src/lib/domain/research-queries"
+  );
+  const { selectAssumptionsForManualMarket } = await import(
+    "../src/lib/domain/external-research"
+  );
+
+  let blocked = false;
+  try {
+    assertSafePublicHttpUrl("http://127.0.0.1/secret");
+  } catch {
+    blocked = true;
+  }
+  await assert(blocked, "SSRF guard blocks localhost");
+
+  const queries = marketQueriesForAssumption(assumptions[0]);
+  await assert(queries.length >= 1, "deterministic market queries produced");
+
+  const eligible = selectAssumptionsForManualMarket(assumptions, 5);
+  await assert(eligible.length > 0, "manual market eligibility selects assumptions");
+  await assert(
+    !eligible.some((a) => a.confidence === "proven"),
+    "proven assumptions excluded from manual market eligibility",
+  );
+
+  const competitorOrg = await sql<{ id: string }[]>`
+    INSERT INTO organisations (workspace_id, name, organisation_type, website, created_by)
+    VALUES (
+      ${workspace.id},
+      ${`Smoke Competitor ${Date.now()}`},
+      'competitor',
+      'https://example.com',
+      'jon'
+    )
+    RETURNING id
+  `;
+
+  const stage3Assumption = await createAssumption(workspace.id, "jon", {
+    statement: `Stage 3 research smoke ${Date.now()}`,
+    category: "Problem & Market",
+    importance: "high",
+    confidence: "low",
+    status: "untested",
+    owner: "jon",
+    next_action: "Review research findings",
+  });
+
+  const stage3Run = await researchDb.createResearchRun(workspace.id, {
+    research_type: "competitor",
+    trigger_type: "manual",
+    triggered_by: "jon",
+    notes: "Smoke research run",
+  });
+  await researchDb.markResearchRunRunning(workspace.id, stage3Run.id);
+
+  const finding = await insertPendingResearchFinding(workspace.id, "ai", {
+    research_run_id: stage3Run.id,
+    research_type: "competitor",
+    organisation_id: competitorOrg[0].id,
+    claim: "Competitor announced a capacity planning feature.",
+    summary: "Public release notes mention experiment capacity planning.",
+    ai_confidence: 0.7,
+    suggested_strength: 2,
+    assumptions: [
+      {
+        assumption_id: stage3Assumption.id,
+        direction: "supports",
+        relevance: "Directly related to capacity planning belief",
+        reason: "Release notes describe capacity planning for experiments.",
+      },
+    ],
+    sources: [
+      {
+        title: "Example release notes",
+        url: `https://example.com/releases/smoke-${Date.now()}`,
+        published_at: "2026-09-20",
+        description: "Smoke source",
+      },
+    ],
+  });
+  await assert(finding.status === "pending", "research finding starts pending");
+
+  const loadedFinding = await getResearchFinding(workspace.id, finding.id);
+  await assert(
+    (loadedFinding?.assumptions.length ?? 0) === 1,
+    "finding loads assumption links",
+  );
+  await assert(
+    (loadedFinding?.sources.length ?? 0) === 1,
+    "finding loads source links",
+  );
+
+  const accepted = await acceptResearchFinding(workspace.id, finding.id, "jon", {
+    assumption_id: stage3Assumption.id,
+    title: "Competitor capacity planning announcement",
+    description: finding.summary,
+    direction: "supports",
+    strength: 2,
+    evidence_type: "competitor_research",
+    evidence_date: "2026-09-20",
+  });
+  await assert(accepted.evidence.created_by === "ai", "accepted evidence authored by AI");
+  await assert(
+    accepted.evidence.reviewed_by === "jon",
+    "accepted evidence records reviewing founder",
+  );
+  await assert(
+    accepted.evidence.evidence_class === "secondary",
+    "accepted research evidence is secondary",
+  );
+  await assert(
+    accepted.finding.status === "accepted",
+    "finding marked accepted",
+  );
+
+  const afterAccept = await getAssumption(workspace.id, stage3Assumption.id);
+  await assert(
+    afterAccept?.confidence === "low",
+    "accepting research does not auto-change confidence",
+  );
+
+  // Second finding → reject
+  const stage3Run2 = await researchDb.createResearchRun(workspace.id, {
+    research_type: "market",
+    trigger_type: "manual",
+    triggered_by: "ahmed",
+  });
+  await researchDb.markResearchRunRunning(workspace.id, stage3Run2.id);
+  const finding2 = await insertPendingResearchFinding(workspace.id, "ai", {
+    research_run_id: stage3Run2.id,
+    research_type: "market",
+    claim: "Weak market rumour with no source quality.",
+    summary: "Should be rejected",
+    ai_confidence: 0.2,
+    suggested_strength: 1,
+    assumptions: [
+      {
+        assumption_id: stage3Assumption.id,
+        direction: "neutral",
+        reason: "Weak signal",
+      },
+    ],
+    sources: [
+      {
+        title: "Rumour page",
+        url: `https://example.com/rumour-${Date.now()}`,
+      },
+    ],
+  });
+  const rejected = await rejectResearchFinding(
+    workspace.id,
+    finding2.id,
+    "ahmed",
+    "weak source",
+  );
+  await assert(rejected?.status === "rejected", "finding can be rejected");
+  await researchDb.completeResearchRun(workspace.id, stage3Run.id, "completed", {
+    findings_created: 1,
+    notes: "Smoke complete",
+  });
+  await researchDb.completeResearchRun(workspace.id, stage3Run2.id, "completed", {
+    findings_created: 1,
+    notes: "Smoke reject path",
+  });
+
+  await sql`DELETE FROM evidence WHERE research_finding_id IN (${finding.id}, ${finding2.id})`;
+  await sql`DELETE FROM research_findings WHERE id IN (${finding.id}, ${finding2.id})`;
+  await sql`DELETE FROM research_runs WHERE id IN (${stage3Run.id}, ${stage3Run2.id})`;
+  await sql`DELETE FROM assumptions WHERE id = ${stage3Assumption.id}`;
+  await sql`DELETE FROM organisations WHERE id = ${competitorOrg[0].id}`;
+  console.log("  ✓ Cleaned up Stage 3 research smoke data");
+
   console.log("\nAll smoke checks passed.");
   await sql.end({ timeout: 5 });
 }

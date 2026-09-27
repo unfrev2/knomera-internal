@@ -103,6 +103,7 @@ DO $$ BEGIN
     'prospect',
     'customer',
     'partner',
+    'competitor',
     'other'
   );
 EXCEPTION WHEN duplicate_object THEN NULL;
@@ -1363,6 +1364,10 @@ ALTER TABLE evidence
   ADD COLUMN IF NOT EXISTS evidence_capture_id UUID;
 ALTER TABLE evidence
   ADD COLUMN IF NOT EXISTS ai_assisted BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE evidence
+  ADD COLUMN IF NOT EXISTS research_finding_id UUID;
+ALTER TABLE evidence
+  ADD COLUMN IF NOT EXISTS reviewed_by TEXT;
 
 CREATE TABLE IF NOT EXISTS ai_usage_events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
