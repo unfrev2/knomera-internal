@@ -304,7 +304,6 @@ export function registerAssumptionTools(server: McpServer) {
           by: h.changed_by,
           at: h.changed_at,
         })),
-        10,
       );
 
       return {

@@ -16,7 +16,7 @@ import {
   type SearchableObjectType,
 } from "@/lib/domain/linkable";
 import { getDb } from "@/lib/db/client";
-import { clampLimit } from "@/lib/mcp/limits";
+import { clampLimit, MCP_DEFAULT_LIMIT } from "@/lib/mcp/limits";
 import { absoluteAppPath, absoluteRecordUrl } from "@/lib/mcp/urls";
 import { withMcpTool } from "@/lib/mcp/tools/_helpers";
 
@@ -241,7 +241,7 @@ export function registerSearchTools(server: McpServer) {
       const query = String(args.query ?? "");
       const rows = await searchWorkspaceObjects(ctx.workspaceId, {
         query,
-        limit: 20,
+        limit: MCP_DEFAULT_LIMIT,
       });
       return {
         data: {

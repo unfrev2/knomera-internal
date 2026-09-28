@@ -22,7 +22,8 @@ export async function searchWorkspaceObjects(
 ): Promise<LinkableObject[]> {
   const sql = getDb();
   const query = options.query.trim();
-  const limit = Math.min(Math.max(options.limit ?? 20, 1), 50);
+  // Default 20 for UI callers; no hard max so MCP can request full result sets.
+  const limit = Math.max(1, Math.floor(options.limit ?? 20));
   const types = options.types?.length
     ? options.types
     : ([

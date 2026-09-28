@@ -1,6 +1,13 @@
-export const MCP_DEFAULT_LIMIT = 20;
-export const MCP_MAX_LIMIT = 50;
-export const MCP_CONTEXT_CHILD_CAP = 20;
+/**
+ * Result-size helpers for MCP tools.
+ *
+ * Limits are currently effectively unbounded so agents get full workspace
+ * context (e.g. all assumptions) and can then fetch a single record.
+ * Reintroduce tighter caps here if response size becomes a problem.
+ */
+export const MCP_DEFAULT_LIMIT = Number.MAX_SAFE_INTEGER;
+export const MCP_MAX_LIMIT = Number.MAX_SAFE_INTEGER;
+export const MCP_CONTEXT_CHILD_CAP = Number.MAX_SAFE_INTEGER;
 
 export function clampLimit(
   value: number | undefined | null,

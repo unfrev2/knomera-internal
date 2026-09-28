@@ -92,7 +92,6 @@ export function registerStrategyExecutionTools(server: McpServer) {
         WHERE o.workspace_id = ${ctx.workspaceId}
           AND dp.problem_id = ${id}
         ORDER BY o.name ASC
-        LIMIT 20
       `;
 
       const discovery = await sql<{ id: string; title: string; session_date: string }[]>`
@@ -103,7 +102,6 @@ export function registerStrategyExecutionTools(server: McpServer) {
         WHERE s.workspace_id = ${ctx.workspaceId}
           AND dp.problem_id = ${id}
         ORDER BY s.session_date DESC
-        LIMIT 20
       `;
 
       const evidenceSeen = new Set<string>();
