@@ -51,4 +51,18 @@ if [[ -n "${OPENAI_REASONING_MODEL:-}" ]]; then
   printf '%s' "$OPENAI_REASONING_MODEL" | npx wrangler secret put OPENAI_REASONING_MODEL
 fi
 
+# Optional MCP / OAuth secrets
+if [[ -n "${APP_BASE_URL:-}" ]]; then
+  printf '%s' "$APP_BASE_URL" | npx wrangler secret put APP_BASE_URL
+fi
+if [[ -n "${WORKSPACE_SLUG:-}" ]]; then
+  printf '%s' "$WORKSPACE_SLUG" | npx wrangler secret put WORKSPACE_SLUG
+fi
+if [[ -n "${MCP_OAUTH_SIGNING_SECRET:-}" ]]; then
+  printf '%s' "$MCP_OAUTH_SIGNING_SECRET" | npx wrangler secret put MCP_OAUTH_SIGNING_SECRET
+fi
+if [[ -n "${MCP_CONNECTOR_SECRET:-}" ]]; then
+  printf '%s' "$MCP_CONNECTOR_SECRET" | npx wrangler secret put MCP_CONNECTOR_SECRET
+fi
+
 echo "Done. Deploy with: npm run deploy"

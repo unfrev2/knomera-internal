@@ -343,6 +343,61 @@ Do not hard-code the hostname in the app.
 - [ ] Auth secrets stored as Cloudflare **Secrets**
 - [ ] Hyperdrive holds the DB connection string (not a public Worker var)
 - [ ] Founder passwords are strong and unique
+- [ ] MCP OAuth secrets (`MCP_OAUTH_SIGNING_SECRET`, `MCP_CONNECTOR_SECRET`) set for `/mcp`
+
+## MCP (Model Context Protocol)
+
+Knomera exposes a remote **Streamable HTTP** MCP server on the same deployment as the internal app:
+
+```text
+${APP_BASE_URL}/mcp
+```
+
+Example production hostname (configuration, not hard-coded): `https://internal.knomera.com/mcp`
+
+The MCP lets trusted AI clients (Claude, ChatGPT, Inspector) investigate the live knowledge graph with broad reads and narrow writes (research queue + sourced findings + promote to evidence). Beliefs and strategic decisions stay human-controlled.
+
+### Local testing
+
+1. Set in `.env.local` (in addition to normal app secrets):
+
+```bash
+APP_BASE_URL=http://localhost:3000
+WORKSPACE_SLUG=knomera
+MCP_OAUTH_SIGNING_SECRET=<openssl rand -hex 32>
+MCP_CONNECTOR_SECRET=<long random secret>
+```
+
+2. Apply the audit migration if needed: `npm run db:migrate`
+
+3. Start the app: `npm run dev`
+
+4. Open MCP Inspector:
+
+```bash
+npx @modelcontextprotocol/inspector@latest
+```
+
+5. Connect with **Streamable HTTP** to `http://localhost:3000/mcp`.
+
+6. Complete OAuth when prompted (register → authorize with `MCP_CONNECTOR_SECRET` → token). Health check (no auth): `GET /health` → `{ "ok": true }`.
+
+### What MCP can and cannot do
+
+| Allowed | Not allowed |
+| --- | --- |
+| Search / fetch domain objects | Arbitrary SQL |
+| Assumption / evidence / org / person / discovery / bet / decision context | Edit assumptions, confidence, status, importance |
+| Business snapshot + validation gaps | Edit strategy, make decisions, alter bets/opportunities |
+| Add research queue items (queued `research_runs`) | Delete / destructive archive |
+| Submit sourced research findings | Generic `create_evidence` |
+| Promote existing findings to Evidence | Auto-change beliefs |
+
+Attribution for MCP writes uses actor `external_ai` (never Jon/Ahmed), with MCP client hint (`claude` / `chatgpt`) where available.
+
+### Deploy notes
+
+Push MCP secrets with `./scripts/push-cloudflare-secrets.sh` (or `wrangler secret put`), set `APP_BASE_URL` to the public origin, then `npm run deploy`. UI cookie auth is unchanged; `/mcp`, `/oauth/*`, `/.well-known/*`, and `/health` are excluded from the session redirect.
 
 
 ## Scripts

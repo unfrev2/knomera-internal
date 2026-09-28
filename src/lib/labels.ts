@@ -25,7 +25,7 @@ import type {
   StrategyItemStatus,
   StrategyItemType,
 } from "@/lib/types";
-import { AI_ACTOR_ID } from "@/lib/domain/actors";
+import { AI_ACTOR_ID, EXTERNAL_AI_ACTOR_ID } from "@/lib/domain/actors";
 
 export const APP_USERS: Record<AppUserId, SessionUser> = {
   jon: {
@@ -45,6 +45,7 @@ export function displayName(userId: string | null | undefined): string {
   if (userId === "jon") return "Jon";
   if (userId === "ahmed") return "Ahmed";
   if (userId === AI_ACTOR_ID) return "Knomera AI";
+  if (userId === EXTERNAL_AI_ACTOR_ID) return "External AI";
   return userId.charAt(0).toUpperCase() + userId.slice(1);
 }
 

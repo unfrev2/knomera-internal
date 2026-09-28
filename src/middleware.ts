@@ -2,11 +2,20 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { SESSION_COOKIE } from "@/lib/auth/session";
 
+function isPublicPath(pathname: string): boolean {
+  if (pathname === "/api/auth/login") return true;
+  if (pathname === "/health") return true;
+  if (pathname === "/mcp" || pathname.startsWith("/mcp/")) return true;
+  if (pathname.startsWith("/oauth/")) return true;
+  if (pathname.startsWith("/.well-known/")) return true;
+  return false;
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hasSession = Boolean(request.cookies.get(SESSION_COOKIE)?.value);
 
-  if (pathname === "/api/auth/login") {
+  if (isPublicPath(pathname)) {
     return NextResponse.next();
   }
 

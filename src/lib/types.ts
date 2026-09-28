@@ -198,10 +198,10 @@ export type ResearchTriggerType = (typeof RESEARCH_TRIGGER_TYPES)[number];
 export type ResearchRunStatus = (typeof RESEARCH_RUN_STATUSES)[number];
 export type ResearchFindingStatus = (typeof RESEARCH_FINDING_STATUSES)[number];
 
-/** Login-capable founders only. System actor `ai` cannot authenticate. */
+/** Login-capable founders only. System actors cannot authenticate via UI. */
 export type AppUserId = "jon" | "ahmed";
 /** Attribution identity including non-login system actors. */
-export type ActorId = AppUserId | "ai";
+export type ActorId = AppUserId | "ai" | "external_ai";
 
 export type Workspace = {
   id: string;

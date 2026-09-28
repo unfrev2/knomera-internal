@@ -415,3 +415,76 @@ export async function acceptResearchFinding(
   if (!updated) throw new Error("Finding missing after acceptance.");
   return { finding: updated, evidence };
 }
+
+/**
+ * MCP promote path: evidence authored by external_ai with MCP reviewer attribution.
+ * Does not change assumption confidence/status. Requires verifiable sources.
+ */
+export async function promoteResearchFindingViaMcp(
+  workspaceId: string,
+  findingId: string,
+  reviewedBy: string,
+  input: AcceptFindingInput,
+): Promise<{ finding: ResearchFindingDetail; evidence: Evidence }> {
+  const finding = await getResearchFinding(workspaceId, findingId);
+  if (!finding) throw new Error("Research finding not found.");
+  if (finding.status !== "pending") {
+    throw new Error("Only pending findings can be promoted.");
+  }
+  if (finding.sources.length === 0) {
+    throw new Error("Finding has no verifiable sources.");
+  }
+
+  const linked = finding.assumptions.some(
+    (a) => a.assumption_id === input.assumption_id,
+  );
+  if (!linked) {
+    throw new Error("Selected assumption is not linked to this finding.");
+  }
+
+  const sql = getDb();
+  const existing = await sql<{ id: string }[]>`
+    SELECT id FROM evidence
+    WHERE workspace_id = ${workspaceId}
+      AND research_finding_id = ${findingId}
+      AND assumption_id = ${input.assumption_id}
+    LIMIT 1
+  `;
+  if (existing[0]) {
+    throw new Error(
+      "Canonical evidence already exists for this finding and assumption.",
+    );
+  }
+
+  const primarySource = finding.sources[0];
+  const evidence = await createEvidence(workspaceId, reviewedBy, {
+    assumption_id: input.assumption_id,
+    title: input.title.trim(),
+    description: input.description?.trim() || finding.summary,
+    evidence_type: input.evidence_type,
+    evidence_class: "secondary",
+    strength: input.strength,
+    direction: input.direction,
+    evidence_date: input.evidence_date,
+    organisation_id: finding.organisation_id,
+    evidence_source_id: primarySource.evidence_source_id,
+    source: primarySource.title ?? primarySource.url ?? null,
+    research_finding_id: finding.id,
+    reviewed_by: reviewedBy,
+    ai_assisted: true,
+    ai_confidence: finding.ai_confidence,
+  });
+
+  await sql`
+    UPDATE research_findings SET
+      status = 'accepted',
+      reviewed_by = ${reviewedBy},
+      reviewed_at = now(),
+      rejection_reason = NULL
+    WHERE workspace_id = ${workspaceId} AND id = ${findingId}
+  `;
+
+  const updated = await getResearchFinding(workspaceId, findingId);
+  if (!updated) throw new Error("Finding missing after promotion.");
+  return { finding: updated, evidence };
+}
